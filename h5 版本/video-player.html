@@ -1,0 +1,1593 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BGarea - 视频播放</title>
+    <!-- 引入Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- 引入Font Awesome -->
+    <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
+    
+    <!-- 配置Tailwind自定义颜色和字体 -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#165DFF',
+                        secondary: '#6B7280',
+                        light: '#F9FAFB',
+                        dark: '#1F2937',
+                        success: '#10B981',
+                        gray: {
+                            100: '#F7F8FA',
+                            200: '#E5E6EB',
+                            300: '#C9CDD4',
+                            400: '#86909C',
+                            500: '#4E5969',
+                            600: '#272E3B',
+                        },
+                        red: {
+                            500: '#F53F3F',
+                        },
+                        orange: {
+                            500: '#FF9F43',
+                        },
+                        yellow: {
+                            500: '#FF9F43',
+                        }
+                    },
+                    fontFamily: {
+                        inter: ['Inter', 'system-ui', 'sans-serif'],
+                    },
+                },
+            }
+        }
+    </script>
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', 'Microsoft YaHei', sans-serif;
+        }
+        
+        :root {
+            --primary-blue: #165DFF;
+            --secondary-blue: #6B7280;
+            --accent-green: #10B981;
+            --accent-yellow: #FF9F43;
+            --accent-red: #F53F3F;
+            --accent-purple: #1722b8;
+            --light-gray: #F7F8FA;
+            --medium-gray: #E5E6EB;
+            --dark-gray: #1F2937;
+            --text-gray: #4E5969;
+            --white: #ffffff;
+            --shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+            --radius: 8px;
+        }
+        
+        body {
+            background-color: #f8f9fa;
+            color: var(--dark-gray);
+            line-height: 1.6;
+        }
+        
+        /* 页面标题和导航 */
+        .page-header {
+            max-width: 1400px;
+            margin: 1rem auto 0;
+            padding: 0 1.5rem;
+        }
+        
+        .breadcrumb {
+            display: flex;
+            gap: 0.5rem;
+            color: var(--text-gray);
+            font-size: 0.9rem;
+            margin-bottom: 1rem;
+        }
+        
+        .breadcrumb a {
+            color: var(--primary-blue);
+            text-decoration: none;
+        }
+        
+        .breadcrumb a:hover {
+            text-decoration: underline;
+        }
+        
+        /* 主要内容区域 */
+        .main-content {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 1.5rem 3rem;
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 2rem;
+        }
+        
+        /* 左侧视频播放区域 */
+        .video-section {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+        
+        /* 视频播放器 */
+        .video-container {
+            background-color: #000;
+            border-radius: var(--radius);
+            overflow: hidden;
+            box-shadow: var(--shadow);
+        }
+        
+        .video-player {
+            width: 100%;
+            height: 500px;
+            background-color: #111;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--white);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .video-placeholder {
+            text-align: center;
+            color: var(--white);
+            z-index: 1;
+        }
+        
+        .video-placeholder i {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+            opacity: 0.7;
+            cursor: pointer;
+            transition: transform 0.3s;
+        }
+        
+        .video-placeholder i:hover {
+            transform: scale(1.1);
+        }
+        
+        .video-element {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            display: none;
+        }
+        
+        .video-playing .video-placeholder {
+            display: none;
+        }
+        
+        .video-playing .video-element {
+            display: block;
+        }
+        
+        .video-controls {
+            background-color: rgba(0, 0, 0, 0.8);
+            padding: 1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: opacity 0.3s;
+        }
+        
+        .control-group {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+        
+        .control-btn {
+            background: none;
+            border: none;
+            color: var(--white);
+            font-size: 1.2rem;
+            cursor: pointer;
+            transition: color 0.3s;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+        }
+        
+        .control-btn:hover {
+            background-color: rgba(255, 255, 255, 0.1);
+            color: var(--accent-yellow);
+        }
+        
+        .play-pause {
+            font-size: 1.5rem;
+        }
+        
+        .progress-container {
+            flex-grow: 1;
+            margin: 0 1rem;
+            position: relative;
+            cursor: pointer;
+        }
+        
+        .progress-bar {
+            height: 4px;
+            background-color: rgba(255, 255, 255, 0.3);
+            border-radius: 2px;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .progress-fill {
+            position: absolute;
+            height: 100%;
+            width: 0%;
+            background-color: var(--accent-yellow);
+            border-radius: 2px;
+            transition: width 0.1s;
+        }
+        
+        .progress-handle {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 12px;
+            height: 12px;
+            background-color: var(--accent-yellow);
+            border-radius: 50%;
+            left: 0%;
+            display: none;
+        }
+        
+        .progress-container:hover .progress-handle {
+            display: block;
+        }
+        
+        .time-display {
+            color: var(--white);
+            font-size: 0.9rem;
+            min-width: 100px;
+            text-align: center;
+        }
+        
+        .video-settings {
+            position: relative;
+        }
+        
+        .settings-menu {
+            position: absolute;
+            bottom: 100%;
+            right: 0;
+            background-color: rgba(0, 0, 0, 0.9);
+            border-radius: var(--radius);
+            padding: 0.8rem;
+            min-width: 150px;
+            display: none;
+            z-index: 10;
+        }
+        
+        .video-settings:hover .settings-menu {
+            display: block;
+        }
+        
+        .settings-item {
+            color: var(--white);
+            padding: 0.5rem;
+            cursor: pointer;
+            border-radius: 4px;
+            transition: background-color 0.3s;
+            font-size: 0.9rem;
+        }
+        
+        .settings-item:hover {
+            background-color: rgba(255, 255, 255, 0.1);
+        }
+        
+        .settings-item.active {
+            background-color: rgba(255, 255, 255, 0.15);
+            color: var(--accent-yellow);
+        }
+        
+        /* 字幕区域 */
+        .subtitle-container {
+            position: absolute;
+            bottom: 80px;
+            left: 0;
+            right: 0;
+            text-align: center;
+            z-index: 5;
+            padding: 0 2rem;
+        }
+        
+        .subtitle-text {
+            background-color: rgba(0, 0, 0, 0.7);
+            color: var(--white);
+            padding: 0.5rem 1rem;
+            border-radius: var(--radius);
+            display: inline-block;
+            font-size: 1.1rem;
+            max-width: 80%;
+        }
+        
+        /* 视频信息 */
+        .video-info {
+            background-color: var(--white);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            padding: 1.5rem;
+        }
+        
+        .current-video-title {
+            font-size: 1.5rem;
+            margin-bottom: 0.8rem;
+            color: var(--dark-gray);
+        }
+        
+        .video-description {
+            color: var(--text-gray);
+            margin-bottom: 1.2rem;
+            line-height: 1.6;
+        }
+        
+        .video-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1.5rem;
+            margin-top: 1.5rem;
+            padding-top: 1.5rem;
+            border-top: 1px solid var(--light-gray);
+        }
+        
+        .meta-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: var(--text-gray);
+            font-size: 0.9rem;
+        }
+        
+        .meta-item i {
+            color: var(--primary-blue);
+        }
+        
+        /* 学习工具 */
+        .learning-tools {
+            background-color: var(--white);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            padding: 1.5rem;
+        }
+        
+        .tools-title {
+            font-size: 1.2rem;
+            margin-bottom: 1.2rem;
+            color: var(--dark-gray);
+        }
+        
+        .tool-buttons {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+        
+        .tool-btn {
+            padding: 0.8rem;
+            border-radius: var(--radius);
+            border: 1px solid var(--light-gray);
+            background-color: var(--white);
+            color: var(--dark-gray);
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+            font-weight: 500;
+        }
+        
+        .tool-btn i {
+            font-size: 1.5rem;
+            color: var(--primary-blue);
+        }
+        
+        .tool-btn:hover, .tool-btn.active {
+            background-color: #f8fdff;
+            border-color: var(--primary-blue);
+        }
+        
+        .ai-assistant {
+            background-color: #f0f9ff;
+            border: 1px solid #c2e7ff;
+            border-radius: var(--radius);
+            padding: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .ai-assistant:hover {
+            background-color: #e1f5ff;
+        }
+        
+        .ai-icon {
+            width: 50px;
+            height: 50px;
+            background-color: var(--primary-blue);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--white);
+            font-size: 1.5rem;
+        }
+        
+        .ai-text h4 {
+            font-size: 1rem;
+            margin-bottom: 0.3rem;
+        }
+        
+        .ai-text p {
+            color: var(--text-gray);
+            font-size: 0.9rem;
+        }
+        
+        /* 课程目录 */
+        .course-directory {
+            background-color: var(--white);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            padding: 1.5rem;
+        }
+        
+        .directory-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+        
+        .directory-title {
+            font-size: 1.2rem;
+            color: var(--dark-gray);
+        }
+        
+        .course-progress {
+            background-color: #f0f9ff;
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            color: var(--primary-blue);
+            font-weight: 500;
+        }
+        
+        .directory-list {
+            list-style: none;
+            max-height: 600px;
+            overflow-y: auto;
+        }
+        
+        .directory-section {
+            margin-bottom: 1rem;
+        }
+        
+        .section-header {
+            padding: 0.8rem 1rem;
+            background-color: #f8f9fa;
+            border-radius: var(--radius);
+            font-weight: 600;
+            color: var(--dark-gray);
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: background-color 0.3s;
+        }
+        
+        .section-header:hover {
+            background-color: #f0f9ff;
+        }
+        
+        .section-header i {
+            transition: transform 0.3s;
+        }
+        
+        .section-header.collapsed i {
+            transform: rotate(-90deg);
+        }
+        
+        .lesson-list {
+            padding-left: 1rem;
+            margin-top: 0.5rem;
+            overflow: hidden;
+            transition: max-height 0.3s ease;
+        }
+        
+        .section-header.collapsed + .lesson-list {
+            max-height: 0;
+        }
+        
+        .lesson-item {
+            padding: 0.8rem 1rem;
+            border-radius: var(--radius);
+            margin-bottom: 0.5rem;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .lesson-item:hover {
+            background-color: #f8fdff;
+        }
+        
+        .lesson-item.active {
+            background-color: #f0f9ff;
+            border-left: 3px solid var(--primary-blue);
+        }
+        
+        .lesson-info {
+            display: flex;
+            align-items: center;
+            gap: 0.8rem;
+        }
+        
+        .lesson-icon {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            background-color: #f0f9ff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--primary-blue);
+            font-size: 0.9rem;
+        }
+        
+        .lesson-title {
+            font-weight: 500;
+        }
+        
+        .lesson-duration {
+            color: var(--text-gray);
+            font-size: 0.85rem;
+        }
+        
+        .lesson-completed {
+            color: var(--accent-green);
+            font-size: 0.9rem;
+        }
+        
+        /* 讨论区 */
+        .discussion-section {
+            background-color: var(--white);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            padding: 1.5rem;
+            margin-top: 1.5rem;
+        }
+        
+        .discussion-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+        
+        .discussion-title {
+            font-size: 1.2rem;
+            color: var(--dark-gray);
+        }
+        
+        .new-question-btn {
+            background-color: var(--primary-blue);
+            color: var(--white);
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: var(--radius);
+            font-weight: 500;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: background-color 0.3s;
+        }
+        
+        .new-question-btn:hover {
+            background-color: var(--secondary-blue);
+        }
+        
+        .question-list {
+            list-style: none;
+        }
+        
+        .question-item {
+            padding: 1.2rem;
+            border: 1px solid var(--light-gray);
+            border-radius: var(--radius);
+            margin-bottom: 1rem;
+        }
+        
+        .question-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 0.8rem;
+        }
+        
+        .questioner {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .questioner-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            overflow: hidden;
+            background-color: var(--light-gray);
+        }
+        
+        .questioner-avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        
+        .questioner-info h4 {
+            font-size: 1rem;
+            margin-bottom: 0.2rem;
+        }
+        
+        .question-date {
+            color: var(--medium-gray);
+            font-size: 0.9rem;
+        }
+        
+        .question-content {
+            color: var(--dark-gray);
+            line-height: 1.7;
+            margin-bottom: 1rem;
+        }
+        
+        .question-actions {
+            display: flex;
+            gap: 1rem;
+            font-size: 0.9rem;
+            color: var(--text-gray);
+        }
+        
+        .action-btn {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            cursor: pointer;
+            transition: color 0.3s;
+        }
+        
+        .action-btn:hover {
+            color: var(--primary-blue);
+        }
+        
+        /* 响应式设计 */
+        @media (max-width: 1200px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+            
+            .video-player {
+                height: 400px;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .video-player {
+                height: 300px;
+            }
+            
+            .tool-buttons {
+                grid-template-columns: 1fr;
+            }
+            
+            .control-group {
+                gap: 0.5rem;
+            }
+            
+            .progress-container {
+                margin: 0 0.5rem;
+            }
+        }
+        
+        @media (max-width: 576px) {
+            .main-content {
+                padding: 0 1rem 2rem;
+            }
+            
+            .video-info, .learning-tools, .course-directory, .discussion-section {
+                padding: 1.2rem;
+            }
+            
+            .current-video-title {
+                font-size: 1.3rem;
+            }
+            
+            .video-meta {
+                gap: 1rem;
+            }
+        }
+    </style>
+</head>
+
+<body class="font-inter min-h-screen flex-col">
+    <!-- 顶部导航栏（与index.html一致） -->
+    <header class="bg-white py-4 px-6 md:px-8 shadow-sm sticky top-0 z-30 border-b border-gray-200">
+        <div class="container mx-auto flex justify-between items-center">
+            <!-- 左侧Logo区域 -->
+            <div class="flex items-center gap-2">
+                <div class="bg-primary text-white p-1.5 rounded-md">
+                    <i class="fa fa-graduation-cap"></i>
+                </div>
+                <span class="text-lg font-semibold text-dark">BGarea</span>
+            </div>
+
+            <!-- 中间文字按钮区域 -->
+            <div class="hidden md:flex items-center gap-6">
+                <button class="text-black hover:text-primary text-sm font-medium transition-colors duration-200 flex items-center gap-1" onclick="window.location.href='index.html'">
+                    首页
+                </button>
+                <button class="text-black hover:text-primary text-sm font-medium transition-colors duration-200 flex items-center gap-1" onclick="window.location.href='Personal Information.html'">
+                    用户中心
+                </button>
+                <button class="text-black hover:text-primary text-sm font-medium transition-colors duration-200 flex items-center gap-1" onclick="window.location.href='Login.html'">
+                    登录界面
+                </button>
+                <button class="text-black hover:text-primary text-sm font-medium transition-colors duration-200 flex items-center gap-1" onclick="window.location.href='稿件管理界面.html'">
+                    稿件管理界面
+                </button>
+            </div>
+
+            <!-- 右侧用户操作区域 -->
+            <div class="flex items-center gap-4">
+                <button class="text-secondary hover:text-primary text-sm font-medium transition-colors duration-200 flex items-center gap-1">
+                    <i class="fa fa-search"></i>
+                </button>
+                <div class="w-8 h-8 rounded-full bg-primary/10 text-primary flex items-center justify-center cursor-pointer border border-primary/20">
+                    <span>A</span>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- 页面导航 -->
+    <div class="page-header">
+        <div class="breadcrumb">
+            <a href="index.html">我的课程</a> > 
+            <a href="course-detail.html">Python数据分析与可视化实战</a> > 
+            <span>1.2 Pandas数据结构详解</span>
+        </div>
+    </div>
+
+    <!-- 主要内容区域 -->
+    <div class="main-content">
+        <!-- 左侧视频播放区域 -->
+        <div class="video-section">
+            <!-- 视频播放器 -->
+            <div class="video-container">
+                <div class="video-player" id="videoPlayer">
+                    <div class="video-placeholder" id="videoPlaceholder">
+                        <i class="fas fa-play-circle" id="playIcon"></i>
+                        <p>点击播放视频</p>
+                    </div>
+                    <video class="video-element" id="videoElement" preload="metadata">
+                        <!-- 这里可以替换为实际视频源 -->
+                        <source src="https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4" type="video/mp4">
+                        您的浏览器不支持视频播放。
+                    </video>
+                    
+                    <!-- 字幕区域 -->
+                    <div class="subtitle-container" id="subtitleContainer" style="display: none;">
+                        <div class="subtitle-text" id="subtitleText">这里是AI生成的字幕内容</div>
+                    </div>
+                </div>
+                
+                <div class="video-controls" id="videoControls">
+                    <div class="control-group">
+                        <button class="control-btn play-pause" id="playPauseBtn">
+                            <i class="fas fa-play"></i>
+                        </button>
+                        <button class="control-btn" id="prevBtn">
+                            <i class="fas fa-step-backward"></i>
+                        </button>
+                        <button class="control-btn" id="nextBtn">
+                            <i class="fas fa-step-forward"></i>
+                        </button>
+                        
+                        <div class="progress-container" id="progressContainer">
+                            <div class="progress-bar">
+                                <div class="progress-fill" id="progressFill"></div>
+                                <div class="progress-handle" id="progressHandle"></div>
+                            </div>
+                        </div>
+                        
+                        <div class="time-display" id="timeDisplay">00:00 / 00:00</div>
+                    </div>
+                    
+                    <div class="control-group">
+                        <button class="control-btn" id="volumeBtn">
+                            <i class="fas fa-volume-up"></i>
+                        </button>
+                        
+                        <div class="video-settings">
+                            <button class="control-btn">
+                                <i class="fas fa-cog"></i>
+                            </button>
+                            <div class="settings-menu" id="settingsMenu">
+                                <div class="settings-item" data-speed="0.5">0.5x 速度</div>
+                                <div class="settings-item" data-speed="0.75">0.75x 速度</div>
+                                <div class="settings-item active" data-speed="1.0">正常速度</div>
+                                <div class="settings-item" data-speed="1.25">1.25x 速度</div>
+                                <div class="settings-item" data-speed="1.5">1.5x 速度</div>
+                                <div class="settings-item" data-speed="2.0">2.0x 速度</div>
+                                <div class="settings-item" id="subtitleToggle">开启AI字幕</div>
+                                <div class="settings-item" id="pipToggle">画中画模式</div>
+                            </div>
+                        </div>
+                        
+                        <button class="control-btn" id="fullscreenBtn">
+                            <i class="fas fa-expand"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 视频信息 -->
+            <div class="video-info">
+                <h2 class="current-video-title">1.2 Pandas数据结构详解</h2>
+                <p class="video-description">
+                    本节详细介绍Pandas的核心数据结构：Series和DataFrame。学习如何创建、访问和操作这些数据结构，为后续的数据分析打下坚实基础。
+                    我们将通过实际代码演示，展示如何从列表、字典和NumPy数组创建Series和DataFrame，并介绍常用的数据访问方法。
+                </p>
+                
+                <div class="video-meta">
+                    <div class="meta-item">
+                        <i class="fas fa-clock"></i>
+                        <span>时长: 24分35秒</span>
+                    </div>
+                    <div class="meta-item">
+                        <i class="fas fa-eye"></i>
+                        <span>已学习: 12分18秒</span>
+                    </div>
+                    <div class="meta-item">
+                        <i class="fas fa-closed-captioning"></i>
+                        <span>AI字幕: 已开启</span>
+                    </div>
+                    <div class="meta-item">
+                        <i class="fas fa-download"></i>
+                        <span>资料: 可下载</span>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 学习工具 -->
+            <div class="learning-tools">
+                <h2 class="tools-title">学习工具</h2>
+                
+                <div class="tool-buttons">
+                    <button class="tool-btn" id="qaBtn">
+                        <i class="fas fa-question-circle"></i>
+                        <span>课程问答</span>
+                    </button>
+                    <button class="tool-btn" id="notesBtn">
+                        <i class="fas fa-file-alt"></i>
+                        <span>课堂笔记</span>
+                    </button>
+                    <button class="tool-btn active" id="exerciseBtn">
+                        <i class="fas fa-tasks"></i>
+                        <span>章节习题</span>
+                    </button>
+                    <button class="tool-btn" id="downloadBtn">
+                        <i class="fas fa-download"></i>
+                        <span>资料下载</span>
+                    </button>
+                </div>
+                
+                <div class="ai-assistant" id="aiAssistant">
+                    <div class="ai-icon">
+                        <i class="fas fa-robot"></i>
+                    </div>
+                    <div class="ai-text">
+                        <h4>AI学习助手小翔</h4>
+                        <p>点击我可以解答学习疑问、生成个性化习题</p>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 讨论区 -->
+            <div class="discussion-section">
+                <div class="discussion-header">
+                    <h3 class="discussion-title">课程讨论区</h3>
+                    <button class="new-question-btn" id="newQuestionBtn">
+                        <i class="fas fa-plus"></i>
+                        <span>提问</span>
+                    </button>
+                </div>
+                
+                <ul class="question-list">
+                    <li class="question-item">
+                        <div class="question-header">
+                            <div class="questioner">
+                                <div class="questioner-avatar">
+                                    <img src="https://randomuser.me/api/portraits/women/32.jpg" alt="提问者头像">
+                                </div>
+                                <div class="questioner-info">
+                                    <h4>王同学</h4>
+                                    <div class="question-date">2023-10-15 14:23</div>
+                                </div>
+                            </div>
+                            <div class="question-ai-tag">
+                                <span style="background-color: #f0f9ff; color: var(--primary-blue); padding: 0.2rem 0.5rem; border-radius: 12px; font-size: 0.8rem;">
+                                    <i class="fas fa-robot"></i> AI已解答
+                                </span>
+                            </div>
+                        </div>
+                        <div class="question-content">
+                            Series和DataFrame在内存使用上有什么区别？在处理大数据集时应该如何选择？
+                        </div>
+                        <div class="question-actions">
+                            <div class="action-btn">
+                                <i class="fas fa-thumbs-up"></i>
+                                <span>12</span>
+                            </div>
+                            <div class="action-btn">
+                                <i class="fas fa-comment"></i>
+                                <span>5</span>
+                            </div>
+                            <div class="action-btn">
+                                <i class="fas fa-share"></i>
+                                <span>分享</span>
+                            </div>
+                        </div>
+                    </li>
+                </ul>
+            </div>
+        </div>
+        
+        <!-- 右侧课程目录区域 -->
+        <div class="course-sidebar">
+            <!-- 课程目录 -->
+            <div class="course-directory">
+                <div class="directory-header">
+                    <h3 class="directory-title">课程目录</h3>
+                    <div class="course-progress">
+                        <i class="fas fa-chart-line"></i>
+                        <span>已学 35%</span>
+                    </div>
+                </div>
+                
+                <ul class="directory-list">
+                    <li class="directory-section">
+                        <div class="section-header">
+                            <span>第一章：Python数据分析基础</span>
+                            <i class="fas fa-chevron-down"></i>
+                        </div>
+                        <ul class="lesson-list">
+                            <li class="lesson-item completed">
+                                <div class="lesson-info">
+                                    <div class="lesson-icon">
+                                        <i class="fas fa-play-circle"></i>
+                                    </div>
+                                    <div>
+                                        <div class="lesson-title">1.1 课程介绍与环境搭建</div>
+                                        <div class="lesson-duration">18分钟</div>
+                                    </div>
+                                </div>
+                                <div class="lesson-completed">
+                                    <i class="fas fa-check-circle"></i>
+                                </div>
+                            </li>
+                            <li class="lesson-item active">
+                                <div class="lesson-info">
+                                    <div class="lesson-icon">
+                                        <i class="fas fa-play-circle"></i>
+                                    </div>
+                                    <div>
+                                        <div class="lesson-title">1.2 Pandas数据结构详解</div>
+                                        <div class="lesson-duration">24分钟</div>
+                                    </div>
+                                </div>
+                                <div class="lesson-playing">
+                                    <i class="fas fa-volume-up" style="color: var(--accent-green);"></i>
+                                </div>
+                            </li>
+                            <li class="lesson-item">
+                                <div class="lesson-info">
+                                    <div class="lesson-icon">
+                                        <i class="fas fa-play-circle"></i>
+                                    </div>
+                                    <div>
+                                        <div class="lesson-title">1.3 数据导入与导出</div>
+                                        <div class="lesson-duration">22分钟</div>
+                                    </div>
+                                </div>
+                            </li>
+                        </ul>
+                    </li>
+                    
+                    <li class="directory-section">
+                        <div class="section-header collapsed">
+                            <span>第二章：数据清洗与预处理</span>
+                            <i class="fas fa-chevron-down"></i>
+                        </div>
+                        <ul class="lesson-list">
+                            <li class="lesson-item">
+                                <div class="lesson-info">
+                                    <div class="lesson-icon">
+                                        <i class="fas fa-play-circle"></i>
+                                    </div>
+                                    <div>
+                                        <div class="lesson-title">2.1 缺失值处理</div>
+                                        <div class="lesson-duration">28分钟</div>
+                                    </div>
+                                </div>
+                            </li>
+                            <li class="lesson-item">
+                                <div class="lesson-info">
+                                    <div class="lesson-icon">
+                                        <i class="fas fa-play-circle"></i>
+                                    </div>
+                                    <div>
+                                        <div class="lesson-title">2.2 异常值检测与处理</div>
+                                        <div class="lesson-duration">32分钟</div>
+                                    </div>
+                                </div>
+                            </li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+            
+            <!-- AI学习分析 -->
+            <div class="learning-tools" style="margin-top: 1.5rem;">
+                <h2 class="tools-title">AI学习分析</h2>
+                
+                <div style="margin-bottom: 1.5rem;">
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+                        <span style="font-size: 0.9rem;">当前章节掌握度</span>
+                        <span style="font-weight: 600; color: var(--primary-blue);">72%</span>
+                    </div>
+                    <div style="height: 8px; background-color: #f0f0f0; border-radius: 4px; overflow: hidden;">
+                        <div style="width: 72%; height: 100%; background-color: var(--accent-green); border-radius: 4px;"></div>
+                    </div>
+                </div>
+                
+                <div style="background-color: #fff8e1; border-left: 4px solid var(--accent-yellow); padding: 0.8rem; border-radius: 4px; margin-bottom: 1rem;">
+                    <div style="font-weight: 600; margin-bottom: 0.3rem; color: var(--dark-gray);">
+                        <i class="fas fa-lightbulb" style="color: var(--accent-yellow); margin-right: 5px;"></i>
+                        AI学习建议
+                    </div>
+                    <div style="font-size: 0.9rem; color: var(--text-gray);">
+                        您已掌握Series的基本操作，建议重点关注DataFrame的多维数据操作。
+                    </div>
+                </div>
+                
+                <button class="btn" style="width: 100%; background-color: #f0f9ff; color: var(--primary-blue); border: 1px solid #c2e7ff; padding: 0.8rem; border-radius: var(--radius); cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px;">
+                    <i class="fas fa-chart-bar"></i>
+                    <span>查看详细学习报告</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // 视频播放器元素
+            const videoPlayer = document.getElementById('videoPlayer');
+            const videoElement = document.getElementById('videoElement');
+            const videoPlaceholder = document.getElementById('videoPlaceholder');
+            const playIcon = document.getElementById('playIcon');
+            const playPauseBtn = document.getElementById('playPauseBtn');
+            const progressFill = document.getElementById('progressFill');
+            const progressHandle = document.getElementById('progressHandle');
+            const progressContainer = document.getElementById('progressContainer');
+            const timeDisplay = document.getElementById('timeDisplay');
+            const volumeBtn = document.getElementById('volumeBtn');
+            const fullscreenBtn = document.getElementById('fullscreenBtn');
+            const prevBtn = document.getElementById('prevBtn');
+            const nextBtn = document.getElementById('nextBtn');
+            const subtitleToggle = document.getElementById('subtitleToggle');
+            const subtitleContainer = document.getElementById('subtitleContainer');
+            const pipToggle = document.getElementById('pipToggle');
+            const settingsMenu = document.getElementById('settingsMenu');
+            
+            // 工具按钮
+            const qaBtn = document.getElementById('qaBtn');
+            const notesBtn = document.getElementById('notesBtn');
+            const exerciseBtn = document.getElementById('exerciseBtn');
+            const downloadBtn = document.getElementById('downloadBtn');
+            const aiAssistant = document.getElementById('aiAssistant');
+            const newQuestionBtn = document.getElementById('newQuestionBtn');
+            
+            // 目录部分
+            const sectionHeaders = document.querySelectorAll('.section-header');
+            
+            // 初始化视频
+            function initVideoPlayer() {
+                // 设置视频时长显示
+                videoElement.addEventListener('loadedmetadata', function() {
+                    updateTimeDisplay();
+                });
+                
+                // 更新播放进度
+                videoElement.addEventListener('timeupdate', function() {
+                    updateProgress();
+                    updateTimeDisplay();
+                    
+                    // 模拟字幕显示
+                    if (subtitleContainer.style.display !== 'none') {
+                        simulateSubtitles();
+                    }
+                });
+                
+                // 播放/暂停功能
+                function togglePlayPause() {
+                    if (videoElement.paused) {
+                        videoElement.play();
+                        videoPlayer.classList.add('video-playing');
+                        playPauseBtn.innerHTML = '<i class="fas fa-pause"></i>';
+                        playIcon.style.display = 'none';
+                        videoPlaceholder.querySelector('p').textContent = '正在播放...';
+                    } else {
+                        videoElement.pause();
+                        playPauseBtn.innerHTML = '<i class="fas fa-play"></i>';
+                    }
+                }
+                
+                // 点击播放图标
+                playIcon.addEventListener('click', togglePlayPause);
+                videoPlaceholder.addEventListener('click', togglePlayPause);
+                
+                // 点击播放/暂停按钮
+                playPauseBtn.addEventListener('click', togglePlayPause);
+                
+                // 点击视频区域切换播放/暂停
+                videoElement.addEventListener('click', togglePlayPause);
+                
+                // 更新播放进度
+                function updateProgress() {
+                    const progress = (videoElement.currentTime / videoElement.duration) * 100;
+                    progressFill.style.width = `${progress}%`;
+                    progressHandle.style.left = `${progress}%`;
+                }
+                
+                // 更新时间显示
+                function updateTimeDisplay() {
+                    const currentTime = formatTime(videoElement.currentTime);
+                    const duration = formatTime(videoElement.duration);
+                    timeDisplay.textContent = `${currentTime} / ${duration}`;
+                }
+                
+                // 格式化时间
+                function formatTime(seconds) {
+                    const mins = Math.floor(seconds / 60);
+                    const secs = Math.floor(seconds % 60);
+                    return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+                }
+                
+                // 进度条点击跳转
+                progressContainer.addEventListener('click', function(e) {
+                    const rect = this.getBoundingClientRect();
+                    const clickPosition = e.clientX - rect.left;
+                    const percentage = clickPosition / rect.width;
+                    
+                    videoElement.currentTime = percentage * videoElement.duration;
+                    updateProgress();
+                });
+                
+                // 音量控制
+                let isMuted = false;
+                let lastVolume = 1.0;
+                
+                volumeBtn.addEventListener('click', function() {
+                    if (isMuted) {
+                        videoElement.volume = lastVolume;
+                        volumeBtn.innerHTML = '<i class="fas fa-volume-up"></i>';
+                        isMuted = false;
+                    } else {
+                        lastVolume = videoElement.volume;
+                        videoElement.volume = 0;
+                        volumeBtn.innerHTML = '<i class="fas fa-volume-mute"></i>';
+                        isMuted = true;
+                    }
+                });
+                
+                // 全屏功能
+                fullscreenBtn.addEventListener('click', function() {
+                    if (!document.fullscreenElement) {
+                        videoContainer.requestFullscreen().catch(err => {
+                            console.log(`全屏请求失败: ${err.message}`);
+                        });
+                        fullscreenBtn.innerHTML = '<i class="fas fa-compress"></i>';
+                    } else {
+                        document.exitFullscreen();
+                        fullscreenBtn.innerHTML = '<i class="fas fa-expand"></i>';
+                    }
+                });
+                
+                // 倍速设置
+                const speedItems = settingsMenu.querySelectorAll('[data-speed]');
+                speedItems.forEach(item => {
+                    item.addEventListener('click', function() {
+                        const speed = parseFloat(this.getAttribute('data-speed'));
+                        videoElement.playbackRate = speed;
+                        
+                        // 更新激活状态
+                        speedItems.forEach(i => i.classList.remove('active'));
+                        this.classList.add('active');
+                        
+                        // 显示提示
+                        showNotification(`播放速度已设置为 ${speed}x`);
+                    });
+                });
+                
+                // 字幕开关
+                subtitleToggle.addEventListener('click', function() {
+                    if (subtitleContainer.style.display === 'none') {
+                        subtitleContainer.style.display = 'block';
+                        this.textContent = '关闭AI字幕';
+                        showNotification('AI字幕已开启');
+                    } else {
+                        subtitleContainer.style.display = 'none';
+                        this.textContent = '开启AI字幕';
+                        showNotification('AI字幕已关闭');
+                    }
+                });
+                
+                // 画中画模式
+                pipToggle.addEventListener('click', function() {
+                    if (document.pictureInPictureElement) {
+                        document.exitPictureInPicture();
+                    } else if (document.pictureInPictureEnabled) {
+                        videoElement.requestPictureInPicture();
+                    } else {
+                        showNotification('您的浏览器不支持画中画模式');
+                    }
+                });
+                
+                // 模拟字幕
+                function simulateSubtitles() {
+                    const subtitles = [
+                        "Pandas是Python中最重要的数据分析库之一",
+                        "它提供了两种核心数据结构：Series和DataFrame",
+                        "Series是一维数组，可以存储任意数据类型",
+                        "DataFrame是二维表格，可以看作多个Series的集合",
+                        "我们现在来看如何创建Series对象"
+                    ];
+                    
+                    const timeSegments = videoElement.duration / subtitles.length;
+                    const currentSegment = Math.floor(videoElement.currentTime / timeSegments);
+                    
+                    if (currentSegment < subtitles.length) {
+                        document.getElementById('subtitleText').textContent = subtitles[currentSegment];
+                    }
+                }
+                
+                // 上一节/下一节
+                prevBtn.addEventListener('click', function() {
+                    showNotification('切换到上一节内容');
+                    // 实际应用中这里会加载上一个视频
+                });
+                
+                nextBtn.addEventListener('click', function() {
+                    showNotification('切换到下一节内容');
+                    // 实际应用中这里会加载下一个视频
+                });
+                
+                // 视频播放结束
+                videoElement.addEventListener('ended', function() {
+                    playPauseBtn.innerHTML = '<i class="fas fa-play"></i>';
+                    showNotification('本节内容已学习完成，系统已记录您的学习进度');
+                    
+                    // 标记为已完成
+                    const currentLesson = document.querySelector('.lesson-item.active');
+                    if (currentLesson) {
+                        currentLesson.classList.remove('active');
+                        currentLesson.classList.add('completed');
+                        currentLesson.querySelector('.lesson-playing').innerHTML = '<i class="fas fa-check-circle"></i>';
+                        currentLesson.querySelector('.lesson-playing').className = 'lesson-completed';
+                    }
+                });
+            }
+            
+            // 工具按钮功能
+            function initToolButtons() {
+                const toolBtns = document.querySelectorAll('.tool-btn');
+                toolBtns.forEach(btn => {
+                    btn.addEventListener('click', function() {
+                        toolBtns.forEach(b => b.classList.remove('active'));
+                        this.classList.add('active');
+                        
+                        const toolName = this.querySelector('span').textContent;
+                        showNotification(`打开${toolName}功能`);
+                        
+                        // 根据不同工具显示不同内容
+                        if (toolName === '章节习题') {
+                            showExerciseModal();
+                        }
+                    });
+                });
+                
+                // AI助手
+                aiAssistant.addEventListener('click', function() {
+                    showAIModal();
+                });
+                
+                // 新建问题
+                newQuestionBtn.addEventListener('click', function() {
+                    showQuestionModal();
+                });
+            }
+            
+            // 目录折叠功能
+            function initDirectory() {
+                sectionHeaders.forEach(header => {
+                    header.addEventListener('click', function() {
+                        this.classList.toggle('collapsed');
+                    });
+                });
+                
+                // 课程项点击
+                const lessonItems = document.querySelectorAll('.lesson-item');
+                lessonItems.forEach(item => {
+                    item.addEventListener('click', function() {
+                        if (this.classList.contains('active')) return;
+                        
+                        lessonItems.forEach(i => i.classList.remove('active'));
+                        this.classList.add('active');
+                        
+                        const lessonTitle = this.querySelector('.lesson-title').textContent;
+                        document.querySelector('.current-video-title').textContent = lessonTitle;
+                        
+                        // 模拟切换视频
+                        showNotification(`正在加载: ${lessonTitle}`);
+                        
+                        // 重置视频
+                        videoElement.pause();
+                        videoPlayer.classList.remove('video-playing');
+                        playPauseBtn.innerHTML = '<i class="fas fa-play"></i>';
+                        progressFill.style.width = '0%';
+                        timeDisplay.textContent = '00:00 / 00:00';
+                    });
+                });
+            }
+            
+            // 显示习题模态框
+            function showExerciseModal() {
+                const modalHtml = `
+                    <div id="exerciseModal" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.7); z-index: 2000; display: flex; align-items: center; justify-content: center;">
+                        <div style="background-color: white; width: 90%; max-width: 600px; border-radius: var(--radius); padding: 2rem; max-height: 80vh; overflow-y: auto;">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+                                <h3 style="font-size: 1.3rem; color: var(--dark-gray);">AI生成习题</h3>
+                                <button id="closeExerciseModal" style="background: none; border: none; font-size: 1.5rem; cursor: pointer; color: var(--text-gray);">&times;</button>
+                            </div>
+                            
+                            <div style="margin-bottom: 1.5rem;">
+                                <div style="font-weight: 600; margin-bottom: 0.5rem;">选择题</div>
+                                <div style="background-color: #f8f9fa; padding: 1rem; border-radius: var(--radius); margin-bottom: 1rem;">
+                                    <p style="margin-bottom: 1rem;">Pandas中，用于创建一维数组的数据结构是？</p>
+                                    <div style="display: flex; flex-direction: column; gap: 0.8rem;">
+                                        <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                                            <input type="radio" name="q1" value="A">
+                                            <span>DataFrame</span>
+                                        </label>
+                                        <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                                            <input type="radio" name="q1" value="B">
+                                            <span>Series</span>
+                                        </label>
+                                        <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                                            <input type="radio" name="q1" value="C">
+                                            <span>Array</span>
+                                        </label>
+                                        <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                                            <input type="radio" name="q1" value="D">
+                                            <span>Matrix</span>
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div style="margin-bottom: 1.5rem;">
+                                <div style="font-weight: 600; margin-bottom: 0.5rem;">判断题</div>
+                                <div style="background-color: #f8f9fa; padding: 1rem; border-radius: var(--radius); margin-bottom: 1rem;">
+                                    <p style="margin-bottom: 1rem;">DataFrame可以看作是多个Series的集合。</p>
+                                    <div style="display: flex; gap: 1rem;">
+                                        <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                                            <input type="radio" name="q2" value="true">
+                                            <span>正确</span>
+                                        </label>
+                                        <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                                            <input type="radio" name="q2" value="false">
+                                            <span>错误</span>
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div style="display: flex; gap: 1rem; justify-content: flex-end;">
+                                <button style="padding: 0.7rem 1.5rem; border-radius: var(--radius); border: 1px solid var(--primary-blue); background-color: white; color: var(--primary-blue); font-weight: 600; cursor: pointer;">提交答案</button>
+                                <button style="padding: 0.7rem 1.5rem; border-radius: var(--radius); border: none; background-color: var(--primary-blue); color: white; font-weight: 600; cursor: pointer;">AI批改</button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                
+                document.body.insertAdjacentHTML('beforeend', modalHtml);
+                
+                document.getElementById('closeExerciseModal').addEventListener('click', function() {
+                    document.getElementById('exerciseModal').remove();
+                });
+                
+                // 点击模态框外部关闭
+                document.getElementById('exerciseModal').addEventListener('click', function(e) {
+                    if (e.target.id === 'exerciseModal') {
+                        this.remove();
+                    }
+                });
+            }
+            
+            // 显示AI助手模态框
+            function showAIModal() {
+                const modalHtml = `
+                    <div id="aiModal" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.7); z-index: 2000; display: flex; align-items: center; justify-content: center;">
+                        <div style="background-color: white; width: 90%; max-width: 500px; border-radius: var(--radius); padding: 2rem; max-height: 80vh; overflow-y: auto;">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+                                <div style="display: flex; align-items: center; gap: 1rem;">
+                                    <div style="width: 50px; height: 50px; background-color: var(--primary-blue); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-size: 1.5rem;">
+                                        <i class="fas fa-robot"></i>
+                                    </div>
+                                    <div>
+                                        <h3 style="font-size: 1.3rem; color: var(--dark-gray); margin-bottom: 0.2rem;">AI助手小翔</h3>
+                                        <p style="color: var(--text-gray); font-size: 0.9rem;">为您解答学习问题</p>
+                                    </div>
+                                </div>
+                                <button id="closeAiModal" style="background: none; border: none; font-size: 1.5rem; cursor: pointer; color: var(--text-gray);">&times;</button>
+                            </div>
+                            
+                            <div style="margin-bottom: 1.5rem;">
+                                <div style="background-color: #f0f9ff; padding: 1rem; border-radius: var(--radius); margin-bottom: 1rem;">
+                                    <p>您好！我是AI学习助手小翔，我可以：</p>
+                                    <ul style="margin-top: 0.5rem; padding-left: 1.2rem;">
+                                        <li>解答课程相关问题</li>
+                                        <li>生成个性化习题</li>
+                                        <li>规划学习路径</li>
+                                        <li>分析学习难点</li>
+                                    </ul>
+                                </div>
+                                
+                                <div style="margin-top: 1.5rem;">
+                                    <div style="font-weight: 600; margin-bottom: 0.5rem;">常见问题：</div>
+                                    <div style="display: flex; flex-direction: column; gap: 0.8rem;">
+                                        <button class="ai-question-btn" style="text-align: left; padding: 0.8rem; border: 1px solid var(--light-gray); border-radius: var(--radius); background-color: white; cursor: pointer; transition: all 0.3s;">
+                                            请解释Series和DataFrame的区别
+                                        </button>
+                                        <button class="ai-question-btn" style="text-align: left; padding: 0.8rem; border: 1px solid var(--light-gray); border-radius: var(--radius); background-color: white; cursor: pointer; transition: all 0.3s;">
+                                            生成关于Pandas数据结构的练习题
+                                        </button>
+                                        <button class="ai-question-btn" style="text-align: left; padding: 0.8rem; border: 1px solid var(--light-gray); border-radius: var(--radius); background-color: white; cursor: pointer; transition: all 0.3s;">
+                                            我下一步应该学习什么内容？
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div style="display: flex; gap: 0.5rem;">
+                                <input type="text" placeholder="输入您的问题..." style="flex-grow: 1; padding: 0.8rem; border: 1px solid var(--light-gray); border-radius: var(--radius);">
+                                <button style="padding: 0.8rem 1.5rem; border-radius: var(--radius); border: none; background-color: var(--primary-blue); color: white; font-weight: 600; cursor: pointer;">发送</button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                
+                document.body.insertAdjacentHTML('beforeend', modalHtml);
+                
+                document.getElementById('closeAiModal').addEventListener('click', function() {
+                    document.getElementById('aiModal').remove();
+                });
+                
+                // 点击模态框外部关闭
+                document.getElementById('aiModal').addEventListener('click', function(e) {
+                    if (e.target.id === 'aiModal') {
+                        this.remove();
+                    }
+                });
+                
+                // AI问题按钮
+                document.querySelectorAll('.ai-question-btn').forEach(btn => {
+                    btn.addEventListener('click', function() {
+                        const question = this.textContent;
+                        showNotification(`AI助手正在回答: ${question}`);
+                    });
+                });
+            }
+            
+            // 显示提问模态框
+            function showQuestionModal() {
+                showNotification('打开提问功能，实际应用中会显示提问表单');
+            }
+            
+            // 显示通知
+            function showNotification(message) {
+                // 创建通知元素
+                const notification = document.createElement('div');
+                notification.style.cssText = `
+                    position: fixed;
+                    top: 100px;
+                    right: 20px;
+                    background-color: var(--primary-blue);
+                    color: white;
+                    padding: 1rem 1.5rem;
+                    border-radius: var(--radius);
+                    box-shadow: var(--shadow);
+                    z-index: 1000;
+                    animation: slideIn 0.3s ease;
+                `;
+                
+                notification.innerHTML = `
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                        <i class="fas fa-info-circle"></i>
+                        <span>${message}</span>
+                    </div>
+                `;
+                
+                document.body.appendChild(notification);
+                
+                // 3秒后移除通知
+                setTimeout(() => {
+                    notification.style.animation = 'slideOut 0.3s ease';
+                    setTimeout(() => {
+                        document.body.removeChild(notification);
+                    }, 300);
+                }, 3000);
+                
+                // 添加CSS动画
+                if (!document.querySelector('#notification-styles')) {
+                    const style = document.createElement('style');
+                    style.id = 'notification-styles';
+                    style.textContent = `
+                        @keyframes slideIn {
+                            from { transform: translateX(100%); opacity: 0; }
+                            to { transform: translateX(0); opacity: 1; }
+                        }
+                        @keyframes slideOut {
+                            from { transform: translateX(0); opacity: 1; }
+                            to { transform: translateX(100%); opacity: 0; }
+                        }
+                    `;
+                    document.head.appendChild(style);
+                }
+            }
+            
+            // 初始化所有功能
+            initVideoPlayer();
+            initToolButtons();
+            initDirectory();
+            
+            // 显示页面加载提示
+            setTimeout(() => {
+                showNotification('欢迎来到BGarea学习平台，开始您的学习之旅吧！');
+            }, 1000);
+        });
+    </script>
+    
+    <!-- 添加Font Awesome图标库 -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js"></script>
+</body>
+</html>

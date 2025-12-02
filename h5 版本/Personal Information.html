@@ -1,0 +1,1186 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>BGArea - 个人中心</title>
+  <!-- 引入Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- 引入Font Awesome -->
+  <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
+  
+  <!-- 配置Tailwind自定义颜色和字体（使用注册页面的配色方案） -->
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            primary: '#165DFF',
+            secondary: '#6B7280',
+            light: '#F9FAFB',
+            dark: '#1F2937',
+            success: '#10B981',
+            gray: {
+              100: '#F7F8FA',
+              200: '#E5E6EB',
+              300: '#C9CDD4',
+              400: '#86909C',
+              500: '#4E5969',
+              600: '#272E3B',
+            }
+          },
+          fontFamily: {
+            inter: ['Inter', 'system-ui', 'sans-serif'],
+          },
+        },
+      }
+    }
+  </script>
+  
+  <!-- 自定义工具类（整合注册页面和原系统的工具类） -->
+  <style type="text/tailwindcss">
+    @layer utilities {
+      .content-auto {
+        content-visibility: auto;
+      }
+      .sidebar-parent {
+        @apply flex items-center justify-between px-4 py-3 text-gray-500 hover:bg-primary/5 hover:text-primary transition-all duration-200 cursor-pointer;
+      }
+      .sidebar-parent.active {
+        @apply bg-primary/10 text-primary font-medium;
+      }
+      .sidebar-parent-content {
+        @apply flex items-center gap-2;
+      }
+      .sidebar-child {
+        @apply flex items-center px-6 py-2 text-gray-500 hover:bg-primary/5 hover:text-primary transition-all duration-200 cursor-pointer text-sm;
+      }
+      .sidebar-child.active {
+        @apply bg-primary/10 text-primary font-medium;
+      }
+      .sidebar-child-text {
+        @apply ml-3;
+      }
+      .btn {
+        @apply px-3 py-1 text-sm rounded transition-all duration-200;
+      }
+      .btn-primary {
+        @apply w-full bg-primary hover:bg-primary/90 text-white font-medium py-2.5 rounded-md transition-all duration-200 transform hover:scale-[1.01] active:scale-[0.99] focus:outline-none focus:ring-2 focus:ring-primary/50;
+      }
+      .btn-text {
+        @apply text-primary hover:bg-primary/10 transition-all duration-200;
+      }
+      .card {
+        @apply bg-white rounded-lg border border-gray-200 shadow-sm;
+      }
+      .rotate-icon {
+        @apply transform transition-transform duration-200 rotate-90;
+      }
+      .sidebar-icon {
+        @apply w-4 text-center;
+      }
+      .card-shadow {
+        box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.02);
+      }
+      .text-link {
+        @apply text-primary hover:text-primary/80 transition-colors duration-200 cursor-pointer;
+      }
+      .input-field {
+        @apply w-full px-4 py-2.5 rounded-md border border-gray-300 focus:border-primary focus:ring-1 focus:ring-primary focus:outline-none transition-all duration-200;
+      }
+      .social-btn {
+        @apply flex items-center justify-center gap-2 px-4 py-2.5 rounded-md border border-gray-300 hover:bg-gray-50 transition-all duration-200;
+      }
+      /* 偏好设置相关样式 */
+      .preference-chip {
+        @apply px-4 py-2 rounded-full border border-gray-300 text-gray-700 bg-white hover:bg-gray-50 transition-all duration-200 cursor-pointer;
+      }
+      .preference-chip.selected {
+        @apply bg-primary text-white border-primary;
+      }
+    }
+  </style>
+</head>
+
+<body class="font-inter bg-gray-50 min-h-screen flex flex-col">
+  <!-- 顶部导航栏 -->
+  <header class="bg-white py-4 px-6 md:px-12 shadow-sm">
+    <div class="container mx-auto flex justify-between items-center">
+      <!-- 左侧Logo区域 -->
+      <div class="flex items-center gap-2">
+        <div class="bg-primary text-white p-1.5 rounded-md">
+          <i class="fa fa-graduation-cap"></i>
+        </div>
+        <span class="text-lg font-semibold text-dark">BGarea</span>
+      </div>
+	
+      <!-- 中间文字按钮区域 -->
+      <div class="hidden md:flex items-center gap-6">
+        <button class="text-black hover:text-primary text-sm font-medium transition-colors duration-200 flex items-center gap-1" onclick="window.location.href='index.html'">
+            首页
+        </button>
+        <button class="text-black hover:text-primary text-sm font-medium transition-colors duration-200 flex items-center gap-1" onclick="window.location.href='Personal Information.html'">
+            用户中心
+        </button>
+        <button class="text-black hover:text-primary text-sm font-medium transition-colors duration-200 flex items-center gap-1" onclick="window.location.href='Login.html'">
+            登录界面
+        </button>
+        <button class="text-black hover:text-primary text-sm font-medium transition-colors duration-200 flex items-center gap-1" onclick="window.location.href='稿件管理界面.html'">
+            稿件管理界面
+        </button>
+      </div>
+      
+      <!-- 右侧用户操作区域 -->
+      <div class="flex items-center gap-4">
+        <button class="text-secondary hover:text-primary text-sm font-medium transition-colors duration-200 flex items-center gap-1">
+          <i class="fa fa-search"></i>
+        </button>
+        <!-- 用户头像 -->
+        <div class="w-8 h-8 rounded-full bg-primary/10 text-primary flex items-center justify-center cursor-pointer border border-primary/20">
+          <span>A</span>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <div class="flex flex-1">
+    <!-- 侧边栏导航 -->
+    <aside class="w-64 bg-white border-r border-gray-200 flex-shrink-0 h-[calc(100vh-5rem)] sticky top-[5rem] overflow-y-auto z-30">
+      <nav class="py-4 space-y-1">
+        <!-- 教师管理 -->
+        <div class="sidebar-group">
+          <div class="sidebar-parent" data-target="submenu-dashboard">
+            <div class="sidebar-parent-content">
+              <i class="fa fa-tachometer sidebar-icon"></i>
+              <span>教师管理</span>
+            </div>
+            <i class="fa fa-angle-right text-xs transition-transform duration-200"></i>
+          </div>
+          <div id="submenu-dashboard" class="hidden bg-gray-50">
+            <div class="sidebar-child active" onclick="window.location.href='Work Engine.html'">
+              <i class="fa fa-circle-o text-xs sidebar-icon"></i>
+              <span class="sidebar-child-text">工作台</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- 管理员管理 -->
+        <div class="sidebar-group">
+          <div class="sidebar-parent" data-target="submenu-admin">
+            <div class="sidebar-parent-content">
+              <i class="fa fa-user-secret sidebar-icon"></i>
+              <span>管理员管理</span>
+            </div>
+            <i class="fa fa-angle-right text-xs transition-transform duration-200 rotate-icon"></i>
+          </div>
+          <div id="submenu-admin" class="hidden bg-gray-50">
+            <div class="sidebar-child" id="nav-course" onclick="window.location.href='course-management.html'">
+              <i class="fa fa-circle-o text-xs sidebar-icon"></i>
+              <span class="sidebar-child-text">课程管理</span>
+            </div>
+            <div class="sidebar-child" id="nav-user" onclick="window.location.href='user-management.html'">
+              <i class="fa fa-circle-o text-xs sidebar-icon"></i>
+              <span class="sidebar-child-text">用户管理</span>
+            </div>
+          </div>
+        </div>
+           
+<!-- 收藏管理（跳转到独立页面的不同锚点） -->
+<div class="sidebar-group">
+  <div class="sidebar-parent" data-target="submenu-favorites">
+    <div class="sidebar-parent-content">
+      <i class="fa fa-heart sidebar-icon"></i>
+      <span>收藏管理</span>
+    </div>
+    <i class="fa fa-angle-right text-xs transition-transform duration-200"></i>
+  </div>
+  <div id="submenu-favorites" class="hidden bg-gray-50">
+    <div class="sidebar-child" onclick="window.location.href='favorites-management.html#courses'">
+      <i class="fa fa-book text-xs sidebar-icon"></i>
+      <span class="sidebar-child-text">收藏的课程</span>
+    </div>
+    <div class="sidebar-child" onclick="window.location.href='favorites-management.html#videos'">
+      <i class="fa fa-video-camera text-xs sidebar-icon"></i>
+      <span class="sidebar-child-text">收藏的视频</span>
+    </div>
+    <div class="sidebar-child" onclick="window.location.href='favorites-management.html#teachers'">
+      <i class="fa fa-user text-xs sidebar-icon"></i>
+      <span class="sidebar-child-text">收藏的教师</span>
+    </div>
+  </div>
+</div>
+
+        <!-- 个人中心 -->
+        <div class="sidebar-group">
+          <div class="sidebar-parent active" data-target="submenu-user-center">
+            <div class="sidebar-parent-content">
+              <i class="fa fa-user-circle-o sidebar-icon"></i>
+              <span>个人中心</span>
+            </div>
+            <i class="fa fa-angle-right text-xs transition-transform duration-200 rotate-icon"></i>
+          </div>
+          <div id="submenu-user-center" class="bg-gray-50">
+            <div class="sidebar-child active" id="nav-user-info">
+              <i class="fa fa-id-card-o text-xs sidebar-icon"></i>
+              <span class="sidebar-child-text">用户信息</span>
+            </div>
+            <div class="sidebar-child" id="nav-user-settings">
+              <i class="fa fa-cog text-xs sidebar-icon"></i>
+              <span class="sidebar-child-text">用户设置</span>
+            </div>
+          </div>
+        </div>
+      </nav>
+    </aside>
+
+    <!-- 主内容区域 -->
+    <main class="flex-1 overflow-y-auto" style="max-height: calc(100vh - 5rem);">
+      <div class="p-6">
+        <!-- 面包屑导航 -->
+        <div class="text-sm text-secondary mb-6">
+          <span>用户中心</span>
+          <i class="fa fa-angle-right mx-1 text-gray-400"></i>
+          <span>个人中心</span>
+          <i class="fa fa-angle-right mx-1 text-gray-400"></i>
+          <span class="text-dark font-medium" id="breadcrumb-current">用户信息</span>
+        </div>
+
+        <!-- 页面内容容器 -->
+        <div class="space-y-6">
+          <!-- 用户信息页面 -->
+          <div id="page-user-info" class="space-y-6">
+            <!-- 用户资料卡片 -->
+            <div class="card p-6 card-shadow">
+              <div class="flex flex-col md:flex-row items-center md:items-start gap-6">
+                <div class="relative">
+                  <div class="w-24 h-24 rounded-full overflow-hidden border-4 border-white shadow-sm">
+                    <img src="https://picsum.photos/200/200?random=1" alt="用户头像" class="w-full h-full object-cover">
+                  </div>
+                </div>
+                
+                <div class="text-center md:text-left flex-1">
+                  <h2 class="text-2xl font-bold text-dark mb-2">谷名</h2>
+                  <div class="flex flex-wrap items-center gap-x-6 gap-y-2 text-sm text-secondary">
+                    <div class="flex items-center gap-1">
+                      <i class="fa fa-graduation-cap text-primary"></i>
+                      <span>北京理工大学</span>
+                    </div>
+                    <div class="flex items-center gap-1">
+                      <i class="fa fa-map-marker text-primary"></i>
+                      <span>北京</span>
+                    </div>
+                    <div class="flex items-center gap-1">
+                      <i class="fa fa-star text-yellow-500"></i>
+                      <span>粉丝数: 5000</span>
+                    </div>
+                    <div class="flex items-center gap-1">
+                      <i class="fa fa-book text-primary"></i>
+                      <span>发布课程: 20</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <!-- 课程和关注区域 -->
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              <!-- 我的课程 -->
+              <div class="lg:col-span-2 card p-6 card-shadow">
+                <div class="flex justify-between items-center mb-6">
+                  <h3 class="text-lg font-semibold text-dark">我的课程</h3>
+                  <button class="text-link text-sm hover:underline">查看更多</button>
+                </div>
+                
+                <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+                  <!-- 课程卡片 -->
+                  <div class="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow bg-white">
+                    <div class="text-dark font-medium mb-2">操作系统</div>
+                    <div class="text-sm text-secondary mb-3">Arco Design System</div>
+                    <div class="flex -space-x-2">
+                      <img src="https://picsum.photos/32/32?random=10" alt="学员" class="w-7 h-7 rounded-full border border-white">
+                      <img src="https://picsum.photos/32/32?random=11" alt="学员" class="w-7 h-7 rounded-full border border-white">
+                      <img src="https://picsum.photos/32/32?random=12" alt="学员" class="w-7 h-7 rounded-full border border-white">
+                      <div class="w-7 h-7 rounded-full bg-gray-100 border border-white flex items-center justify-center text-xs text-secondary">+5</div>
+                    </div>
+                  </div>
+                  
+                  <div class="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow bg-white">
+                    <div class="text-dark font-medium mb-2">互联网</div>
+                    <div class="text-sm text-secondary mb-3">Arco Design System</div>
+                    <div class="flex -space-x-2">
+                      <img src="https://picsum.photos/32/32?random=13" alt="学员" class="w-7 h-7 rounded-full border border-white">
+                      <img src="https://picsum.photos/32/32?random=14" alt="学员" class="w-7 h-7 rounded-full border border-white">
+                      <img src="https://picsum.photos/32/32?random=15" alt="学员" class="w-7 h-7 rounded-full border border-white">
+                      <div class="w-7 h-7 rounded-full bg-gray-100 border border-white flex items-center justify-center text-xs text-secondary">+8</div>
+                    </div>
+                  </div>
+                  
+                  <div class="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow bg-white">
+                    <div class="text-dark font-medium mb-2">操作系统</div>
+                    <div class="text-sm text-secondary mb-3">Arco Design System</div>
+                    <div class="flex -space-x-2">
+                      <img src="https://picsum.photos/32/32?random=16" alt="学员" class="w-7 h-7 rounded-full border border-white">
+                      <img src="https://picsum.photos/32/32?random=17" alt="学员" class="w-7 h-7 rounded-full border border-white">
+                      <img src="https://picsum.photos/32/32?random=18" alt="学员" class="w-7 h-7 rounded-full border border-white">
+                      <div class="w-7 h-7 rounded-full bg-gray-100 border border-white flex items-center justify-center text-xs text-secondary">+3</div>
+                    </div>
+                  </div>
+                  
+                  <div class="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow bg-white">
+                    <div class="text-dark font-medium mb-2">操作系统</div>
+                    <div class="text-sm text-secondary mb-3">Arco Design System</div>
+                    <div class="flex -space-x-2">
+                      <img src="https://picsum.photos/32/32?random=19" alt="学员" class="w-7 h-7 rounded-full border border-white">
+                      <img src="https://picsum.photos/32/32?random=20" alt="学员" class="w-7 h-7 rounded-full border border-white">
+                      <img src="https://picsum.photos/32/32?random=21" alt="学员" class="w-7 h-7 rounded-full border border-white">
+                      <div class="w-7 h-7 rounded-full bg-gray-100 border border-white flex items-center justify-center text-xs text-secondary">+6</div>
+                    </div>
+                  </div>
+                  
+                  <div class="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow bg-white">
+                    <div class="text-dark font-medium mb-2">操作系统</div>
+                    <div class="text-sm text-secondary mb-3">Arco Design System</div>
+                    <div class="flex -space-x-2">
+                      <img src="https://picsum.photos/32/32?random=22" alt="学员" class="w-7 h-7 rounded-full border border-white">
+                      <img src="https://picsum.photos/32/32?random=23" alt="学员" class="w-7 h-7 rounded-full border border-white">
+                      <img src="https://picsum.photos/32/32?random=24" alt="学员" class="w-7 h-7 rounded-full border border-white">
+                      <div class="w-7 h-7 rounded-full bg-gray-100 border border-white flex items-center justify-center text-xs text-secondary">+7</div>
+                    </div>
+                  </div>
+                  
+                  <div class="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow bg-white">
+                    <div class="text-dark font-medium mb-2">操作系统</div>
+                    <div class="text-sm text-secondary mb-3">Arco Design System</div>
+                    <div class="flex -space-x-2">
+                      <img src="https://picsum.photos/32/32?random=25" alt="学员" class="w-7 h-7 rounded-full border border-white">
+                      <img src="https://picsum.photos/32/32?random=26" alt="学员" class="w-7 h-7 rounded-full border border-white">
+                      <img src="https://picsum.photos/32/32?random=27" alt="学员" class="w-7 h-7 rounded-full border border-white">
+                      <div class="w-7 h-7 rounded-full bg-gray-100 border border-white flex items-center justify-center text-xs text-secondary">+4</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              
+              <!-- 我的关注 -->
+              <div class="card p-6 card-shadow">
+                <h3 class="text-lg font-semibold text-dark mb-6">我的关注</h3>
+                
+                <div class="space-y-4">
+                  <div class="flex items-center gap-3">
+                    <img src="https://picsum.photos/48/48?random=30" alt="关注用户" class="w-10 h-10 rounded-full">
+                    <div class="flex-1">
+                      <div class="font-medium text-dark">汪老师</div>
+                      <div class="text-xs text-secondary">计算机学院</div>
+                    </div>
+                  </div>
+                  
+                  <div class="flex items-center gap-3">
+                    <img src="https://picsum.photos/48/48?random=31" alt="关注用户" class="w-10 h-10 rounded-full">
+                    <div class="flex-1">
+                      <div class="font-medium text-dark">董老师</div>
+                      <div class="text-xs text-secondary">信息工程学院</div>
+                    </div>
+                  </div>
+                  
+                  <div class="flex items-center gap-3">
+                    <img src="https://picsum.photos/48/48?random=32" alt="关注用户" class="w-10 h-10 rounded-full">
+                    <div class="flex-1">
+                      <div class="font-medium text-dark">沈老师</div>
+                      <div class="text-xs text-secondary">软件学院</div>
+                    </div>
+                  </div>
+                  
+                  <div class="flex items-center gap-3">
+                    <img src="https://picsum.photos/48/48?random=33" alt="关注用户" class="w-10 h-10 rounded-full">
+                    <div class="flex-1">
+                      <div class="font-medium text-dark">何老师</div>
+                      <div class="text-xs text-secondary">数据科学系</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <!-- 我的签名 -->
+            <div class="card p-6 card-shadow">
+              <h3 class="text-lg font-semibold text-dark mb-4">我的签名</h3>
+              <div class="text-xl text-dark py-8 border-t border-b border-gray-200">
+                啊啊啊啊啊啊啊啊啊啊啊，摆烂摆烂
+              </div>
+            </div>
+          </div>
+          
+          <!-- 用户设置页面 -->
+          <div id="page-user-settings" class="hidden space-y-6">
+            <!-- 基本信息 -->
+            <div class="card p-6 card-shadow">
+              <div class="flex flex-col md:flex-row gap-8">
+                <div class="flex flex-col items-center md:items-start">
+                  <div class="w-24 h-24 rounded-full overflow-hidden border-4 border-white shadow-sm mb-3">
+                    <img src="https://picsum.photos/200/200?random=1" alt="用户头像" class="w-full h-full object-cover">
+                  </div>
+                  <button class="btn-text text-sm flex items-center gap-1 px-4 py-2 rounded-md">
+                    <i class="fa fa-upload"></i>
+                    <span>更换头像</span>
+                  </button>
+                </div>
+                
+                <div class="flex-1 grid grid-cols-1 md:grid-cols-3 gap-x-6 gap-y-4">
+                  <div>
+                    <div class="text-sm font-medium text-gray-700 mb-1">用户名</div>
+                    <div class="flex items-center gap-2">
+                      <span class="font-medium text-dark">dsfuis</span>
+                      <button class="text-link text-sm hover:underline">修改</button>
+                    </div>
+                  </div>
+                  
+                  <div>
+                    <div class="text-sm font-medium text-gray-700 mb-1">实名认证</div>
+                    <div class="flex items-center gap-2">
+                      <span class="text-success font-medium">已认证</span>
+                      <button class="text-link text-sm hover:underline">修改</button>
+                    </div>
+                  </div>
+                  
+                  <div>
+                    <div class="text-sm font-medium text-gray-700 mb-1">姓名</div>
+                    <div class="flex items-center gap-2">
+                      <span class="font-medium text-dark">dsfuis</span>
+                      <button class="text-link text-sm hover:underline">修改</button>
+                    </div>
+                  </div>
+                  
+                  <div>
+                    <div class="text-sm font-medium text-gray-700 mb-1">账号ID</div>
+                    <div class="font-medium text-dark">2489372598</div>
+                  </div>
+                  
+                  <div>
+                    <div class="text-sm font-medium text-gray-700 mb-1">手机号码</div>
+                    <div class="flex items-center gap-2">
+                      <span class="font-medium text-dark">2489372598</span>
+                      <button class="text-link text-sm hover:underline">修改</button>
+                    </div>
+                  </div>
+                  
+                  <div>
+                    <div class="text-sm font-medium text-gray-700 mb-1">位置</div>
+                    <div class="flex items-center gap-1">
+                      <span class="font-medium text-dark">北京</span>
+                      <i class="fa fa-map-marker text-primary"></i>
+                    </div>
+                  </div>
+                  
+                  <div>
+                    <div class="text-sm font-medium text-gray-700 mb-1">注册时间</div>
+                    <div class="font-medium text-dark">2021-06-30</div>
+                  </div>
+                  
+                  <div>
+                    <div class="text-sm font-medium text-gray-700 mb-1">教师资格认证</div>
+                    <div class="text-success font-medium">已认证</div>
+                  </div>
+                  
+                  <div>
+                    <div class="text-sm font-medium text-gray-700 mb-1">我的粉丝</div>
+                    <div class="font-medium text-dark">2489372598</div>
+                  </div>
+                  
+                  <div class="md:col-span-3">
+                    <div class="text-sm font-medium text-gray-700 mb-1">个人简介</div>
+                    <textarea class="input-field" rows="3" placeholder="请输入内容"></textarea>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <!-- 安全设置、教师认证和偏好设置 -->
+            <div class="card p-6 card-shadow">
+              <!-- 标签切换 -->
+              <div class="border-b border-gray-200 mb-6">
+                <div class="flex">
+                  <button class="px-4 py-2 text-primary border-b-2 border-primary font-medium" id="tab-security">安全设置</button>
+                  <button class="px-4 py-2 text-secondary hover:text-primary" id="tab-teacher">教师认证</button>
+                  <button class="px-4 py-2 text-secondary hover:text-primary" id="tab-preferences">偏好设置</button>
+                </div>
+              </div>
+              
+              <!-- 安全设置内容 -->
+              <div id="content-security">
+                <div class="space-y-6">
+                  <div class="flex justify-between items-center py-3 border-b border-gray-100">
+                    <div>
+                      <div class="font-medium text-dark mb-1">登录密码</div>
+                      <div class="text-sm text-secondary">已设置。密码至少6位字符，支持数字、字母和除空格外的特殊字符，且必须同时包含数字和大小写字母。</div>
+                    </div>
+                    <button class="btn-text px-4 py-2 rounded-md">修改</button>
+                  </div>
+                  
+                  <div class="flex justify-between items-center py-3 border-b border-gray-100">
+                    <div>
+                      <div class="font-medium text-dark mb-1">密保问题</div>
+                      <div class="text-sm text-secondary">您暂未设置密保问题。密保问题可以有效的保护账号的安全。</div>
+                    </div>
+                    <button class="btn-text px-4 py-2 rounded-md">设置</button>
+                  </div>
+                  
+                  <div class="flex justify-between items-center py-3 border-b border-gray-100">
+                    <div>
+                      <div class="font-medium text-dark mb-1">安全手机</div>
+                      <div class="text-sm text-secondary">已绑定: 150****50</div>
+                    </div>
+                    <button class="btn-text px-4 py-2 rounded-md">修改</button>
+                  </div>
+                  
+                  <div class="flex justify-between items-center py-3">
+                    <div>
+                      <div class="font-medium text-dark mb-1">安全邮箱</div>
+                      <div class="text-sm text-secondary">您暂未设置邮箱，绑定邮箱可以用来找回密码、接收通知等。</div>
+                    </div>
+                    <button class="btn-text px-4 py-2 rounded-md">设置</button>
+                  </div>
+                </div>
+              </div>
+              
+              <!-- 教师认证内容 -->
+              <div id="content-teacher" class="hidden">
+                <div class="mb-8">
+                  <h3 class="text-lg font-semibold text-dark mb-4">教师实名认证</h3>
+                  
+                  <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div class="p-4 bg-gray-50 rounded-lg">
+                      <div class="text-sm text-secondary mb-1">账号类型</div>
+                      <div class="font-medium text-dark">企业账号</div>
+                    </div>
+                    
+                    <div class="p-4 bg-gray-50 rounded-lg">
+                      <div class="text-sm text-secondary mb-1">认证状态</div>
+                      <div class="text-success font-medium">已认证</div>
+                    </div>
+                    
+                    <div class="p-4 bg-gray-50 rounded-lg">
+                      <div class="text-sm text-secondary mb-1">认证时间</div>
+                      <div class="font-medium text-dark">2018-10-06</div>
+                    </div>
+                    
+                    <div class="p-4 bg-gray-50 rounded-lg">
+                      <div class="text-sm text-secondary mb-1">教师姓名</div>
+                      <div class="font-medium text-dark">李机皮</div>
+                    </div>
+                    
+                    <div class="p-4 bg-gray-50 rounded-lg">
+                      <div class="text-sm text-secondary mb-1">教师学位</div>
+                      <div class="font-medium text-dark">教授</div>
+                    </div>
+                    
+                    <div class="p-4 bg-gray-50 rounded-lg">
+                      <div class="text-sm text-secondary mb-1">法人认证号码</div>
+                      <div class="font-medium text-dark">131****3246</div>
+                    </div>
+                    
+                    <div class="p-4 bg-gray-50 rounded-lg">
+                      <div class="text-sm text-secondary mb-1">学校名称</div>
+                      <div class="font-medium text-dark">浙江工商大学</div>
+                    </div>
+                    
+                    <div class="p-4 bg-gray-50 rounded-lg">
+                      <div class="text-sm text-secondary mb-1">企业证件类型</div>
+                      <div class="font-medium text-dark">企业营业执照</div>
+                    </div>
+                    
+                    <div class="p-4 bg-gray-50 rounded-lg">
+                      <div class="text-sm text-secondary mb-1">组织机构代码</div>
+                      <div class="font-medium text-dark">5***9</div>
+                    </div>
+                  </div>
+                </div>
+                
+                <div>
+                  <h3 class="text-lg font-semibold text-dark mb-4">记录</h3>
+                  
+                  <div class="overflow-x-auto">
+                    <table class="w-full">
+                      <thead>
+                        <tr class="bg-gray-50 text-left text-sm text-secondary">
+                          <th class="px-4 py-3 rounded-l-lg">课程UID</th>
+                          <th class="px-4 py-3">审核课程</th>
+                          <th class="px-4 py-3">当前状态</th>
+                          <th class="px-4 py-3">创建时间</th>
+                          <th class="px-4 py-3 rounded-r-lg">操作</th>
+                        </tr>
+                      </thead>
+                      <tbody class="text-sm">
+                        <tr class="border-b border-gray-100 bg-white">
+                          <td class="px-4 py-3 text-dark">232</td>
+                          <td class="px-4 py-3 text-dark">操作系统</td>
+                          <td class="px-4 py-3">
+                            <span class="flex items-center gap-1">
+                              <span class="w-2 h-2 rounded-full bg-primary"></span>
+                              <span>审核中</span>
+                            </span>
+                          </td>
+                          <td class="px-4 py-3 text-secondary">2021-02-28 10:30</td>
+                          <td class="px-4 py-3">
+                            <div class="flex gap-3">
+                              <a href="#" class="text-link hover:underline">查看</a>
+                              <a href="#" class="text-link hover:underline">撤回</a>
+                            </div>
+                          </td>
+                        </tr>
+                        <tr class="bg-white">
+                          <td class="px-4 py-3 text-dark">254</td>
+                          <td class="px-4 py-3 text-dark">计算机网络</td>
+                          <td class="px-4 py-3">
+                            <span class="flex items-center gap-1">
+                              <span class="w-2 h-2 rounded-full bg-success"></span>
+                              <span>已通过</span>
+                            </span>
+                          </td>
+                          <td class="px-4 py-3 text-secondary">2021-02-28 10:30</td>
+                          <td class="px-4 py-3">
+                            <a href="#" class="text-link hover:underline">查看</a>
+                          </td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+                  
+                  <div class="flex justify-between items-center mt-4 text-sm">
+                    <div class="text-secondary">共2条</div>
+                    <div class="flex items-center gap-2">
+                      <button class="w-8 h-8 flex items-center justify-center rounded border border-gray-200 text-secondary hover:border-primary hover:text-primary transition-colors">
+                        <i class="fa fa-angle-left"></i>
+                      </button>
+                      <button class="w-8 h-8 flex items-center justify-center rounded bg-primary text-white">51</button>
+                      <button class="w-8 h-8 flex items-center justify-center rounded border border-gray-200 text-secondary hover:border-primary hover:text-primary transition-colors">
+                        <i class="fa fa-angle-right"></i>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              
+              <!-- 偏好设置内容 -->
+              <div id="content-preferences" class="hidden">
+                <div class="mb-6">
+                  <div class="flex justify-between items-center mb-4">
+                    <h3 class="text-lg font-semibold text-dark">学习偏好设置</h3>
+                    <div class="text-sm text-secondary">
+                      已选择 <span id="selectedCount" class="font-medium text-primary">0</span> 个偏好
+                    </div>
+                  </div>
+                  <p class="text-sm text-secondary mb-6">根据您的偏好，我们将为您推荐更相关的内容</p>
+                </div>
+                
+                <div class="space-y-8">
+                  <!-- 学习领域偏好 -->
+                  <div class="space-y-4">
+                    <div class="flex items-start justify-between">
+                      <div>
+                        <h3 class="font-semibold text-dark mb-1">您感兴趣的领域是？</h3>
+                        <p class="text-sm text-gray-600">选择您最感兴趣的学习领域（可多选）</p>
+                      </div>
+                      <span class="text-xs bg-primary/10 text-primary px-2 py-1 rounded">必选</span>
+                    </div>
+                    <div class="flex flex-wrap gap-3">
+                      <div class="preference-chip" data-category="field" data-value="programming">
+                        <i class="fa fa-code mr-2"></i>编程开发
+                      </div>
+                      <div class="preference-chip" data-category="field" data-value="design">
+                        <i class="fa fa-paint-brush mr-2"></i>设计艺术
+                      </div>
+                      <div class="preference-chip" data-category="field" data-value="business">
+                        <i class="fa fa-line-chart mr-2"></i>商业管理
+                      </div>
+                      <div class="preference-chip" data-category="field" data-value="data-science">
+                        <i class="fa fa-database mr-2"></i>数据科学
+                      </div>
+                      <div class="preference-chip" data-category="field" data-value="language">
+                        <i class="fa fa-language mr-2"></i>语言学习
+                      </div>
+                      <div class="preference-chip" data-category="field" data-value="marketing">
+                        <i class="fa fa-bullhorn mr-2"></i>市场营销
+                      </div>
+                      <div class="preference-chip" data-category="field" data-value="personal-growth">
+                        <i class="fa fa-user-plus mr-2"></i>个人成长
+                      </div>
+                      <div class="preference-chip" data-category="field" data-value="academic">
+                        <i class="fa fa-book mr-2"></i>学术教育
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <!-- 学习目标偏好 -->
+                  <div class="space-y-4">
+                    <div class="flex items-start justify-between">
+                      <div>
+                        <h3 class="font-semibold text-dark mb-1">您的学习目标是？</h3>
+                        <p class="text-sm text-gray-600">明确目标有助于推荐合适的课程</p>
+                      </div>
+                      <span class="text-xs bg-primary/10 text-primary px-2 py-1 rounded">必选</span>
+                    </div>
+                    <div class="flex flex-wrap gap-3">
+                      <div class="preference-chip" data-category="goal" data-value="career">
+                        <i class="fa fa-briefcase mr-2"></i>职业发展
+                      </div>
+                      <div class="preference-chip" data-category="goal" data-value="skill-upgrade">
+                        <i class="fa fa-wrench mr-2"></i>技能提升
+                      </div>
+                      <div class="preference-chip" data-category="goal" data-value="exam">
+                        <i class="fa fa-certificate mr-2"></i>考试认证
+                      </div>
+                      <div class="preference-chip" data-category="goal" data-value="hobby">
+                        <i class="fa fa-heart mr-2"></i>兴趣爱好
+                      </div>
+                      <div class="preference-chip" data-category="goal" data-value="school">
+                        <i class="fa fa-graduation-cap mr-2"></i>学业辅助
+                      </div>
+                      <div class="preference-chip" data-category="goal" data-value="entrepreneurship">
+                        <i class="fa fa-rocket mr-2"></i>创业指导
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <!-- 学习方式偏好 -->
+                  <div class="space-y-4">
+                    <h3 class="font-semibold text-dark mb-1">您偏好的学习方式是？</h3>
+                    <div class="flex flex-wrap gap-3">
+                      <div class="preference-chip" data-category="method" data-value="video">
+                        <i class="fa fa-video-camera mr-2"></i>视频课程
+                      </div>
+                      <div class="preference-chip" data-category="method" data-value="text">
+                        <i class="fa fa-file-text mr-2"></i>图文教程
+                      </div>
+                      <div class="preference-chip" data-category="method" data-value="interactive">
+                        <i class="fa fa-mouse-pointer mr-2"></i>互动练习
+                      </div>
+                      <div class="preference-chip" data-category="method" data-value="live">
+                        <i class="fa fa-desktop mr-2"></i>直播授课
+                      </div>
+                      <div class="preference-chip" data-category="method" data-value="project">
+                        <i class="fa fa-code-fork mr-2"></i>项目实战
+                      </div>
+                      <div class="preference-chip" data-category="method" data-value="one-on-one">
+                        <i class="fa fa-users mr-2"></i>一对一辅导
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <!-- 学习时长偏好 -->
+                  <div class="space-y-4">
+                    <h3 class="font-semibold text-dark mb-1">您每周的学习时间是？</h3>
+                    <div class="flex flex-wrap gap-3">
+                      <div class="preference-chip" data-category="duration" data-value="1-3">1-3小时</div>
+                      <div class="preference-chip" data-category="duration" data-value="3-5">3-5小时</div>
+                      <div class="preference-chip" data-category="duration" data-value="5-10">5-10小时</div>
+                      <div class="preference-chip" data-category="duration" data-value="10-15">10-15小时</div>
+                      <div class="preference-chip" data-category="duration" data-value="15+">15小时以上</div>
+                    </div>
+                  </div>
+                  
+                  <!-- 难度级别偏好 -->
+                  <div class="space-y-4">
+                    <h3 class="font-semibold text-dark mb-1">您偏好的课程难度是？</h3>
+                    <div class="flex flex-wrap gap-3">
+                      <div class="preference-chip" data-category="difficulty" data-value="beginner">初级入门</div>
+                      <div class="preference-chip" data-category="difficulty" data-value="intermediate">中级进阶</div>
+                      <div class="preference-chip" data-category="difficulty" data-value="advanced">高级精通</div>
+                      <div class="preference-chip" data-category="difficulty" data-value="mixed">混合难度</div>
+                    </div>
+                  </div>
+                </div>
+                
+                <div class="mt-8 pt-6 border-t border-gray-200 flex justify-between items-center">
+                  <div class="text-sm text-gray-600">
+                    您可以随时修改这些偏好设置
+                  </div>
+                  <div class="flex gap-3">
+                    <button id="resetPreferencesBtn" class="px-5 py-2.5 text-gray-700 font-medium rounded-md border border-gray-300 hover:bg-gray-50 transition-all duration-200">
+                      重置选择
+                    </button>
+                    <button id="savePreferencesBtn" class="px-5 py-2.5 bg-primary text-white font-medium rounded-md hover:bg-primary/90 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed" disabled>
+                      保存偏好设置
+                    </button>
+                  </div>
+                </div>
+                
+                <!-- 当前偏好展示 -->
+                <div id="currentPreferences" class="mt-6 p-4 bg-gray-50 rounded-lg hidden">
+                  <h4 class="font-medium text-dark mb-2">当前设置的学习偏好：</h4>
+                  <div id="preferencesList" class="text-sm text-secondary"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <!-- 页脚 -->
+  <footer class="bg-white py-6 px-6 border-t border-gray-200">
+    <div class="container mx-auto">
+      <div class="text-center text-sm text-gray-500 mb-4">
+        &copy; 2023 BGarea在线学习平台. 保留所有权利.
+      </div>
+      <div class="flex flex-wrap justify-center gap-x-6 gap-y-2 text-xs text-gray-500">
+        <a href="#" class="hover:text-primary transition-colors duration-200">关于我们</a>
+        <a href="#" class="hover:text-primary transition-colors duration-200">隐私政策</a>
+        <a href="#" class="hover:text-primary transition-colors duration-200">服务条款</a>
+        <a href="#" class="hover:text-primary transition-colors duration-200">联系我们</a>
+      </div>
+      <div class="flex justify-center gap-4 mt-4 text-gray-500">
+        <a href="#" class="hover:text-primary transition-colors duration-200"><i class="fa fa-weixin"></i></a>
+        <a href="#" class="hover:text-primary transition-colors duration-200"><i class="fa fa-weibo"></i></a>
+        <a href="#" class="hover:text-primary transition-colors duration-200"><i class="fa fa-twitter"></i></a>
+        <a href="#" class="hover:text-primary transition-colors duration-200"><i class="fa fa-facebook"></i></a>
+      </div>
+    </div>
+  </footer>
+
+  <!-- JavaScript 交互逻辑 -->
+  <script>
+    // 所有父菜单的展开/折叠功能
+    document.querySelectorAll('.sidebar-parent').forEach(parent => {
+      parent.addEventListener('click', function() {
+        const targetId = this.getAttribute('data-target');
+        const submenu = document.getElementById(targetId);
+        const icon = this.querySelector('.fa-angle-right');
+        
+        submenu.classList.toggle('hidden');
+        icon.classList.toggle('rotate-icon');
+        this.classList.toggle('active');
+      });
+    });
+    
+    // 子菜单点击事件
+    document.querySelectorAll('.sidebar-child').forEach(child => {
+      child.addEventListener('click', function(e) {
+        e.stopPropagation();
+        
+        const parentSubmenu = this.parentElement;
+        parentSubmenu.querySelectorAll('.sidebar-child').forEach(sib => {
+          sib.classList.remove('active');
+        });
+        
+        this.classList.add('active');
+      });
+    });
+    
+    // 页面导航切换（用户信息 ↔ 用户设置）
+    document.getElementById('nav-user-info').addEventListener('click', function(e) {
+      e.stopPropagation();
+      
+      document.getElementById('breadcrumb-current').textContent = '用户信息';
+      document.getElementById('page-user-info').classList.remove('hidden');
+      document.getElementById('page-user-settings').classList.add('hidden');
+    });
+    
+    document.getElementById('nav-user-settings').addEventListener('click', function(e) {
+      e.stopPropagation();
+      
+      document.getElementById('breadcrumb-current').textContent = '用户设置';
+      document.getElementById('page-user-settings').classList.remove('hidden');
+      document.getElementById('page-user-info').classList.add('hidden');
+      
+      // 切换到用户设置页面时，加载偏好设置
+      if (document.getElementById('tab-preferences').classList.contains('active')) {
+        loadPreferences();
+      }
+    });
+    
+    // 标签页切换（安全设置 ↔ 教师认证 ↔ 偏好设置）
+    const tabs = {
+      'tab-security': 'content-security',
+      'tab-teacher': 'content-teacher',
+      'tab-preferences': 'content-preferences'
+    };
+    
+    Object.keys(tabs).forEach(tabId => {
+      document.getElementById(tabId).addEventListener('click', function() {
+        // 更新所有标签状态
+        Object.keys(tabs).forEach(id => {
+          const tab = document.getElementById(id);
+          const isActive = id === tabId;
+          
+          if (isActive) {
+            tab.classList.add('text-primary', 'border-b-2', 'border-primary', 'font-medium');
+            tab.classList.remove('text-secondary', 'hover:text-primary');
+          } else {
+            tab.classList.remove('text-primary', 'border-b-2', 'border-primary', 'font-medium');
+            tab.classList.add('text-secondary', 'hover:text-primary');
+          }
+        });
+        
+        // 显示对应的内容
+        Object.values(tabs).forEach(contentId => {
+          const content = document.getElementById(contentId);
+          content.classList.add('hidden');
+        });
+        
+        const activeContent = document.getElementById(tabs[tabId]);
+        activeContent.classList.remove('hidden');
+        
+        // 如果是偏好设置标签，加载偏好数据
+        if (tabId === 'tab-preferences') {
+          loadPreferences();
+        }
+      });
+    });
+    
+    // ============ 偏好设置相关逻辑 ============
+    
+    // 存储用户选择的偏好
+    let userPreferences = {
+      field: [],
+      goal: [],
+      method: [],
+      duration: [],
+      difficulty: []
+    };
+    
+    // DOM元素
+    const preferenceChips = document.querySelectorAll('#content-preferences .preference-chip');
+    const selectedCountElement = document.getElementById('selectedCount');
+    const savePreferencesBtn = document.getElementById('savePreferencesBtn');
+    const resetPreferencesBtn = document.getElementById('resetPreferencesBtn');
+    const currentPreferencesDiv = document.getElementById('currentPreferences');
+    const preferencesListElement = document.getElementById('preferencesList');
+    
+    // 检查必选字段是否已选择
+    function checkRequiredFields() {
+      const hasField = userPreferences.field.length > 0;
+      const hasGoal = userPreferences.goal.length > 0;
+      return hasField && hasGoal;
+    }
+    
+    // 更新已选择偏好数量
+    function updateSelectedCount() {
+      let total = 0;
+      Object.values(userPreferences).forEach(arr => {
+        total += arr.length;
+      });
+      selectedCountElement.textContent = total;
+      
+      // 更新保存按钮状态
+      const isRequiredFieldsSelected = checkRequiredFields();
+      savePreferencesBtn.disabled = !isRequiredFieldsSelected;
+      
+      if (!isRequiredFieldsSelected) {
+        savePreferencesBtn.setAttribute('title', '请至少选择一个学习领域和学习目标');
+      } else {
+        savePreferencesBtn.removeAttribute('title');
+      }
+    }
+    
+    // 更新当前偏好展示
+    function updateCurrentPreferencesDisplay() {
+      const savedPreferences = localStorage.getItem('userPreferences');
+      if (savedPreferences) {
+        try {
+          const parsed = JSON.parse(savedPreferences);
+          if (Object.keys(parsed).length > 0) {
+            let html = '<div class="space-y-2">';
+            
+            // 领域偏好
+            if (parsed.field && parsed.field.length > 0) {
+              const fieldLabels = {
+                'programming': '编程开发',
+                'design': '设计艺术',
+                'business': '商业管理',
+                'data-science': '数据科学',
+                'language': '语言学习',
+                'marketing': '市场营销',
+                'personal-growth': '个人成长',
+                'academic': '学术教育'
+              };
+              const fieldDisplay = parsed.field.map(f => fieldLabels[f] || f).join('、');
+              html += `<div><span class="font-medium">学习领域:</span> ${fieldDisplay}</div>`;
+            }
+            
+            // 目标偏好
+            if (parsed.goal && parsed.goal.length > 0) {
+              const goalLabels = {
+                'career': '职业发展',
+                'skill-upgrade': '技能提升',
+                'exam': '考试认证',
+                'hobby': '兴趣爱好',
+                'school': '学业辅助',
+                'entrepreneurship': '创业指导'
+              };
+              const goalDisplay = parsed.goal.map(g => goalLabels[g] || g).join('、');
+              html += `<div><span class="font-medium">学习目标:</span> ${goalDisplay}</div>`;
+            }
+            
+            // 学习方式
+            if (parsed.method && parsed.method.length > 0) {
+              const methodLabels = {
+                'video': '视频课程',
+                'text': '图文教程',
+                'interactive': '互动练习',
+                'live': '直播授课',
+                'project': '项目实战',
+                'one-on-one': '一对一辅导'
+              };
+              const methodDisplay = parsed.method.map(m => methodLabels[m] || m).join('、');
+              html += `<div><span class="font-medium">学习方式:</span> ${methodDisplay}</div>`;
+            }
+            
+            // 学习时长
+            if (parsed.duration && parsed.duration.length > 0) {
+              const durationDisplay = parsed.duration.join('、');
+              html += `<div><span class="font-medium">学习时长:</span> ${durationDisplay}</div>`;
+            }
+            
+            // 难度级别
+            if (parsed.difficulty && parsed.difficulty.length > 0) {
+              const difficultyLabels = {
+                'beginner': '初级入门',
+                'intermediate': '中级进阶',
+                'advanced': '高级精通',
+                'mixed': '混合难度'
+              };
+              const difficultyDisplay = parsed.difficulty.map(d => difficultyLabels[d] || d).join('、');
+              html += `<div><span class="font-medium">课程难度:</span> ${difficultyDisplay}</div>`;
+            }
+            
+            html += '</div>';
+            preferencesListElement.innerHTML = html;
+            currentPreferencesDiv.classList.remove('hidden');
+          } else {
+            currentPreferencesDiv.classList.add('hidden');
+          }
+        } catch (e) {
+          console.error('解析偏好设置失败:', e);
+          currentPreferencesDiv.classList.add('hidden');
+        }
+      } else {
+        currentPreferencesDiv.classList.add('hidden');
+      }
+    }
+    
+    // 加载偏好设置
+    function loadPreferences() {
+      const savedPreferences = localStorage.getItem('userPreferences');
+      
+      // 重置UI选择状态
+      preferenceChips.forEach(chip => {
+        chip.classList.remove('selected');
+      });
+      
+      // 重置内存中的偏好对象
+      userPreferences = {
+        field: [],
+        goal: [],
+        method: [],
+        duration: [],
+        difficulty: []
+      };
+      
+      if (savedPreferences) {
+        try {
+          const parsed = JSON.parse(savedPreferences);
+          
+          // 根据保存的数据设置UI状态
+          Object.keys(parsed).forEach(category => {
+            if (parsed[category] && Array.isArray(parsed[category])) {
+              // 更新内存中的偏好
+              userPreferences[category] = [...parsed[category]];
+              
+              // 更新UI选择状态
+              parsed[category].forEach(value => {
+                const chip = document.querySelector(`.preference-chip[data-category="${category}"][data-value="${value}"]`);
+                if (chip) {
+                  chip.classList.add('selected');
+                }
+              });
+            }
+          });
+        } catch (e) {
+          console.error('加载偏好设置失败:', e);
+        }
+      }
+      
+      updateSelectedCount();
+      updateCurrentPreferencesDisplay();
+    }
+    
+    // 偏好选项点击处理
+    preferenceChips.forEach(chip => {
+      chip.addEventListener('click', function() {
+        const category = this.dataset.category;
+        const value = this.dataset.value;
+        
+        const index = userPreferences[category].indexOf(value);
+        
+        if (index > -1) {
+          userPreferences[category].splice(index, 1);
+          this.classList.remove('selected');
+        } else {
+          userPreferences[category].push(value);
+          this.classList.add('selected');
+        }
+        
+        updateSelectedCount();
+      });
+    });
+    
+    // 重置偏好选择
+    resetPreferencesBtn.addEventListener('click', function() {
+      if (confirm('确定要重置所有偏好选择吗？')) {
+        // 重置内存中的偏好对象
+        Object.keys(userPreferences).forEach(key => {
+          userPreferences[key] = [];
+        });
+        
+        // 重置UI选择状态
+        preferenceChips.forEach(chip => {
+          chip.classList.remove('selected');
+        });
+        
+        updateSelectedCount();
+      }
+    });
+    
+    // 保存偏好设置
+    savePreferencesBtn.addEventListener('click', function() {
+      // 收集所有选中的偏好
+      const selectedPreferences = {};
+      Object.keys(userPreferences).forEach(category => {
+        if (userPreferences[category].length > 0) {
+          selectedPreferences[category] = userPreferences[category];
+        }
+      });
+      
+      // 保存到localStorage
+      localStorage.setItem('userPreferences', JSON.stringify(selectedPreferences));
+      localStorage.setItem('preferencesCompleted', 'true');
+      
+      // 显示加载状态
+      savePreferencesBtn.innerHTML = '<i class="fa fa-spinner fa-spin"></i> 保存中...';
+      savePreferencesBtn.disabled = true;
+      
+      // 模拟API调用延迟
+      setTimeout(() => {
+        // 重置按钮状态
+        savePreferencesBtn.innerHTML = '保存偏好设置';
+        savePreferencesBtn.disabled = false;
+        
+        // 显示成功消息
+        alert('偏好设置已保存！');
+        
+        // 更新当前偏好展示
+        updateCurrentPreferencesDisplay();
+      }, 1000);
+    });
+    
+    // 页面加载时初始化
+    document.addEventListener('DOMContentLoaded', function() {
+      // 如果当前在用户设置页面，加载偏好设置
+      if (window.location.hash === '#settings') {
+        document.getElementById('nav-user-settings').click();
+      }
+    });
+  </script>
+</body>
+</html>

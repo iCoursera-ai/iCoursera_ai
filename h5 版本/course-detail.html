@@ -1,0 +1,1117 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BGarea - 课程详情</title>
+    <!-- 引入Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- 引入Font Awesome -->
+    <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
+    
+    <!-- 配置Tailwind自定义颜色和字体 -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#165DFF',
+                        secondary: '#6B7280',
+                        light: '#F9FAFB',
+                        dark: '#1F2937',
+                        success: '#10B981',
+                        gray: {
+                            100: '#F7F8FA',
+                            200: '#E5E6EB',
+                            300: '#C9CDD4',
+                            400: '#86909C',
+                            500: '#4E5969',
+                            600: '#272E3B',
+                        },
+                        red: {
+                            500: '#F53F3F',
+                        },
+                        orange: {
+                            500: '#FF9F43',
+                        }
+                    },
+                    fontFamily: {
+                        inter: ['Inter', 'system-ui', 'sans-serif'],
+                    },
+                },
+            }
+        }
+    </script>
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', 'Microsoft YaHei', sans-serif;
+        }
+        
+        :root {
+            --primary-blue: #165DFF;
+            --secondary-blue: #6B7280;
+            --accent-green: #10B981;
+            --accent-yellow: #FF9F43;
+            --accent-red: #F53F3F;
+            --accent-purple: #1722b8;
+            --light-gray: #F7F8FA;
+            --medium-gray: #E5E6EB;
+            --dark-gray: #1F2937;
+            --text-gray: #4E5969;
+            --white: #ffffff;
+            --shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+            --radius: 8px;
+        }
+        
+        body {
+            background-color: var(--light-gray);
+            color: var(--dark-gray);
+            line-height: 1.6;
+        }
+        
+        /* 页面标题和导航 */
+        .page-header {
+            max-width: 1200px;
+            margin: 2rem auto 1rem;
+            padding: 0 1.5rem;
+        }
+        
+        .page-title {
+            font-size: 2rem;
+            color: var(--dark-gray);
+            margin-bottom: 0.5rem;
+        }
+        
+        .breadcrumb {
+            display: flex;
+            gap: 0.5rem;
+            color: var(--text-gray);
+            font-size: 0.9rem;
+            margin-bottom: 2rem;
+        }
+        
+        .breadcrumb a {
+            color: var(--primary-blue);
+            text-decoration: none;
+        }
+        
+        .breadcrumb a:hover {
+            text-decoration: underline;
+        }
+        
+        /* 主要内容区域 */
+        .main-content {
+            max-width: 1200px;
+            margin: 0 auto 3rem;
+            padding: 0 1.5rem;
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 2rem;
+        }
+        
+        /* 左侧课程详情区域 */
+        .course-detail {
+            background-color: var(--white);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            padding: 2rem;
+        }
+        
+        .course-header {
+            margin-bottom: 2rem;
+            border-bottom: 1px solid var(--medium-gray);
+            padding-bottom: 1.5rem;
+        }
+        
+        .course-title {
+            font-size: 2rem;
+            color: var(--dark-gray);
+            margin-bottom: 0.5rem;
+        }
+        
+        .course-subtitle {
+            font-size: 1.1rem;
+            color: var(--text-gray);
+            margin-bottom: 1.5rem;
+        }
+        
+        .course-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+        
+        .meta-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: var(--text-gray);
+        }
+        
+        .meta-item i {
+            color: var(--primary-blue);
+        }
+        
+        .difficulty-badge {
+            background-color: var(--accent-yellow);
+            color: var(--dark-gray);
+            padding: 0.3rem 0.8rem;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            font-weight: 600;
+        }
+        
+        .course-instructor {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+        
+        .instructor-avatar {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            overflow: hidden;
+            background-color: var(--light-gray);
+        }
+        
+        .instructor-avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        
+        .instructor-info h3 {
+            font-size: 1.2rem;
+            margin-bottom: 0.3rem;
+        }
+        
+        .instructor-bio {
+            color: var(--text-gray);
+            font-size: 0.95rem;
+        }
+        
+        .instructor-verified {
+            color: var(--accent-green);
+            font-size: 0.9rem;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            margin-top: 0.3rem;
+        }
+        
+        .course-actions {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+        
+        .btn {
+            padding: 0.7rem 1.5rem;
+            border-radius: var(--radius);
+            border: none;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+        
+        .btn-primary {
+            background-color: var(--primary-blue);
+            color: var(--white);
+        }
+        
+        .btn-primary:hover {
+            background-color: rgba(22, 93, 255, 0.9);
+        }
+        
+        .btn-secondary {
+            background-color: var(--white);
+            color: var(--primary-blue);
+            border: 2px solid var(--primary-blue);
+        }
+        
+        .btn-secondary:hover {
+            background-color: rgba(22, 93, 255, 0.05);
+        }
+        
+        .btn-outline {
+            background-color: transparent;
+            color: var(--text-gray);
+            border: 1px solid var(--medium-gray);
+        }
+        
+        .btn-outline:hover {
+            background-color: var(--light-gray);
+        }
+        
+        /* 课程大纲 */
+        .course-syllabus {
+            margin-bottom: 2rem;
+        }
+        
+        .section-title {
+            font-size: 1.4rem;
+            margin-bottom: 1.2rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--medium-gray);
+            color: var(--dark-gray);
+        }
+        
+        .syllabus-list {
+            list-style: none;
+        }
+        
+        .syllabus-item {
+            padding: 1rem;
+            border: 1px solid var(--medium-gray);
+            border-radius: var(--radius);
+            margin-bottom: 0.8rem;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-decoration: none;
+            color: inherit;
+            display: block;
+        }
+        
+        .syllabus-item:hover {
+            border-color: var(--primary-blue);
+            background-color: rgba(22, 93, 255, 0.03);
+        }
+        
+        .syllabus-item.active {
+            border-color: var(--primary-blue);
+            background-color: rgba(22, 93, 255, 0.08);
+        }
+        
+        .syllabus-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.5rem;
+        }
+        
+        .syllabus-title {
+            font-weight: 600;
+            font-size: 1.1rem;
+        }
+        
+        .syllabus-duration {
+            color: var(--text-gray);
+            font-size: 0.9rem;
+        }
+        
+        .syllabus-description {
+            color: var(--text-gray);
+            font-size: 0.95rem;
+            margin-bottom: 0.5rem;
+        }
+        
+        .syllabus-meta {
+            display: flex;
+            gap: 1rem;
+            font-size: 0.9rem;
+            color: var(--secondary-blue);
+        }
+        
+        /* 课程评价 */
+        .course-reviews {
+            margin-bottom: 2rem;
+        }
+        
+        .review-summary {
+            display: flex;
+            align-items: center;
+            gap: 2rem;
+            margin-bottom: 1.5rem;
+        }
+        
+        .rating-score {
+            font-size: 3rem;
+            font-weight: 700;
+            color: var(--primary-blue);
+        }
+        
+        .rating-stars {
+            color: var(--accent-yellow);
+            font-size: 1.2rem;
+            margin-bottom: 0.5rem;
+        }
+        
+        .review-count {
+            color: var(--text-gray);
+        }
+        
+        .review-item {
+            padding: 1.2rem;
+            border: 1px solid var(--medium-gray);
+            border-radius: var(--radius);
+            margin-bottom: 1rem;
+        }
+        
+        .review-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 0.8rem;
+        }
+        
+        .reviewer {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .reviewer-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            overflow: hidden;
+            background-color: var(--light-gray);
+        }
+        
+        .reviewer-avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        
+        .reviewer-info h4 {
+            font-size: 1rem;
+            margin-bottom: 0.2rem;
+        }
+        
+        .review-date {
+            color: var(--secondary-blue);
+            font-size: 0.9rem;
+        }
+        
+        .review-content {
+            color: var(--dark-gray);
+            line-height: 1.7;
+        }
+        
+        /* 右侧相关课程区域 */
+        .course-sidebar {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+        
+        /* 相关课程 */
+        .related-courses {
+            background-color: var(--white);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            padding: 1.5rem;
+        }
+        
+        .course-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+        
+        .course-card {
+            border: 1px solid var(--medium-gray);
+            border-radius: var(--radius);
+            overflow: hidden;
+            transition: all 0.3s;
+            text-decoration: none;
+            color: inherit;
+            display: block;
+        }
+        
+        .course-card:hover {
+            transform: translateY(-5px);
+            box-shadow: var(--shadow);
+            border-color: var(--primary-blue);
+        }
+        
+        .course-thumbnail {
+            height: 140px;
+            background-color: var(--secondary-blue);
+            overflow: hidden;
+        }
+        
+        .course-thumbnail img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.3s;
+        }
+        
+        .course-card:hover .course-thumbnail img {
+            transform: scale(1.05);
+        }
+        
+        .course-card-content {
+            padding: 1rem;
+        }
+        
+        .course-card-title {
+            font-size: 1.1rem;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+        }
+        
+        .course-card-instructor {
+            color: var(--text-gray);
+            font-size: 0.9rem;
+            margin-bottom: 0.8rem;
+        }
+        
+        .course-card-meta {
+            display: flex;
+            justify-content: space-between;
+            color: var(--secondary-blue);
+            font-size: 0.85rem;
+        }
+        
+        /* 课程特色 */
+        .course-features {
+            background-color: var(--white);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            padding: 1.5rem;
+        }
+        
+        .features-list {
+            list-style: none;
+        }
+        
+        .feature-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 1rem;
+            margin-bottom: 1.2rem;
+            padding-bottom: 1.2rem;
+            border-bottom: 1px solid var(--medium-gray);
+        }
+        
+        .feature-item:last-child {
+            margin-bottom: 0;
+            padding-bottom: 0;
+            border-bottom: none;
+        }
+        
+        .feature-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background-color: rgba(22, 93, 255, 0.1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--primary-blue);
+            font-size: 1.2rem;
+        }
+        
+        .feature-content h4 {
+            font-size: 1rem;
+            margin-bottom: 0.3rem;
+            color: var(--dark-gray);
+        }
+        
+        .feature-content p {
+            color: var(--text-gray);
+            font-size: 0.9rem;
+        }
+        
+        /* 课程信息卡片 */
+        .course-info-card {
+            background-color: var(--white);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            padding: 1.5rem;
+        }
+        
+        .info-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 0.8rem 0;
+            border-bottom: 1px solid var(--medium-gray);
+        }
+        
+        .info-item:last-child {
+            border-bottom: none;
+        }
+        
+        .info-label {
+            color: var(--text-gray);
+        }
+        
+        .info-value {
+            font-weight: 500;
+            color: var(--dark-gray);
+        }
+        
+        /* 学习须知 */
+        .learning-notice {
+            background-color: var(--white);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            padding: 1.5rem;
+        }
+        
+        .notice-list {
+            list-style: none;
+        }
+        
+        .notice-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 0.8rem;
+            margin-bottom: 0.8rem;
+            color: var(--text-gray);
+            font-size: 0.9rem;
+        }
+        
+        .notice-item i {
+            color: var(--accent-red);
+            margin-top: 0.2rem;
+        }
+        
+        /* 响应式设计 */
+        @media (max-width: 992px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+            
+            .course-sidebar {
+                order: -1;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .course-actions {
+                flex-wrap: wrap;
+            }
+            
+            .btn {
+                flex-grow: 1;
+            }
+        }
+        
+        @media (max-width: 576px) {
+            .main-content {
+                padding: 0 1rem;
+            }
+            
+            .course-detail, .related-courses, .course-features, .course-info-card, .learning-notice {
+                padding: 1.5rem;
+            }
+            
+            .course-title {
+                font-size: 1.6rem;
+            }
+            
+            .course-meta {
+                gap: 1rem;
+            }
+            
+            .review-summary {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 1rem;
+            }
+        }
+    </style>
+</head>
+
+<body class="font-inter min-h-screen flex-col">
+    <!-- 顶部导航栏（与index.html一致） -->
+    <header class="bg-white py-4 px-6 md:px-8 shadow-sm sticky top-0 z-30 border-b border-gray-200">
+        <div class="container mx-auto flex justify-between items-center">
+            <!-- 左侧Logo区域 -->
+            <div class="flex items-center gap-2">
+                <div class="bg-primary text-white p-1.5 rounded-md">
+                    <i class="fa fa-graduation-cap"></i>
+                </div>
+                <span class="text-lg font-semibold text-dark">BGarea</span>
+            </div>
+
+            <!-- 中间文字按钮区域 -->
+            <div class="hidden md:flex items-center gap-6">
+                <button class="text-black hover:text-primary text-sm font-medium transition-colors duration-200 flex items-center gap-1" onclick="window.location.href='index.html'">
+                    首页
+                </button>
+                <button class="text-black hover:text-primary text-sm font-medium transition-colors duration-200 flex items-center gap-1" onclick="window.location.href='Personal Information.html'">
+                    用户中心
+                </button>
+                <button class="text-black hover:text-primary text-sm font-medium transition-colors duration-200 flex items-center gap-1" onclick="window.location.href='Login.html'">
+                    登录界面
+                </button>
+                <button class="text-black hover:text-primary text-sm font-medium transition-colors duration-200 flex items-center gap-1" onclick="window.location.href='稿件管理界面.html'">
+                    稿件管理界面
+                </button>
+            </div>
+
+            <!-- 右侧用户操作区域 -->
+            <div class="flex items-center gap-4">
+                <button class="text-secondary hover:text-primary text-sm font-medium transition-colors duration-200 flex items-center gap-1">
+                    <i class="fa fa-search"></i>
+                </button>
+                <div class="w-8 h-8 rounded-full bg-primary/10 text-primary flex items-center justify-center cursor-pointer border border-primary/20">
+                    <span>A</span>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- 页面标题和导航 -->
+    <div class="page-header">
+        <h1 class="page-title">课程详情</h1>
+        <div class="breadcrumb">
+            <a href="index.html">首页</a> > 
+            <a href="#">编程开发</a> > 
+            <a href="#">Python</a> > 
+            <span>Python数据分析与可视化实战</span>
+        </div>
+    </div>
+
+    <!-- 主要内容区域 -->
+    <div class="main-content">
+        <!-- 左侧课程详情区域 -->
+        <div class="course-detail">
+            <!-- 课程头部信息 -->
+            <div class="course-header">
+                <h1 class="course-title">Python数据分析与可视化实战</h1>
+                <p class="course-subtitle">从零开始掌握数据分析核心技能，使用Pandas、Matplotlib、Seaborn完成真实商业数据分析项目</p>
+                
+                <div class="course-meta">
+                    <div class="meta-item">
+                        <i class="fas fa-clock"></i>
+                        <span>24小时 · 48小节</span>
+                    </div>
+                    <div class="meta-item">
+                        <i class="fas fa-user-graduate"></i>
+                        <span>12,850人学习</span>
+                    </div>
+                    <div class="meta-item">
+                        <i class="fas fa-star"></i>
+                        <span>4.8分 (2,345评价)</span>
+                    </div>
+                    <div class="difficulty-badge">中级</div>
+                </div>
+                
+                <!-- 讲师信息 -->
+                <div class="course-instructor">
+                    <div class="instructor-avatar">
+                        <img src="https://randomuser.me/api/portraits/men/44.jpg" alt="讲师头像">
+                    </div>
+                    <div class="instructor-info">
+                        <h3>李明教授</h3>
+                        <p class="instructor-bio">数据科学家，前阿里巴巴高级分析师，10年数据分析经验</p>
+                        <div class="instructor-verified">
+                            <i class="fas fa-check-circle"></i>
+                            <span>平台认证讲师</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 课程操作按钮 -->
+                <div class="course-actions">
+                    <button class="btn btn-primary" id="startLearningBtn">
+                        <i class="fas fa-play"></i> 开始学习
+                    </button>
+                    <button class="btn btn-secondary" id="addToLearningBtn">
+                        <i class="fas fa-plus"></i> 加入学习
+                    </button>
+                    <button class="btn btn-outline">
+                        <i class="fas fa-share-alt"></i> 分享课程
+                    </button>
+                    <button class="btn btn-outline">
+                        <i class="fas fa-flag"></i> 举报
+                    </button>
+                </div>
+            </div>
+            
+            <!-- 课程大纲 -->
+            <div class="course-syllabus">
+                <h2 class="section-title">课程大纲</h2>
+                <ul class="syllabus-list">
+                    <li class="syllabus-item active">
+                        <div class="syllabus-header">
+                            <div class="syllabus-title">第一章：Python数据分析基础</div>
+                            <div class="syllabus-duration">4小时20分钟</div>
+                        </div>
+                        <p class="syllabus-description">学习Python数据处理基础，掌握NumPy和Pandas核心操作</p>
+                        <div class="syllabus-meta">
+                            <span><i class="fas fa-video"></i> 8个视频</span>
+                            <span><i class="fas fa-file-alt"></i> 3篇阅读</span>
+                            <span><i class="fas fa-question-circle"></i> 2个测验</span>
+                        </div>
+                    </li>
+                    <li class="syllabus-item">
+                        <div class="syllabus-header">
+                            <div class="syllabus-title">第二章：数据清洗与预处理</div>
+                            <div class="syllabus-duration">5小时10分钟</div>
+                        </div>
+                        <p class="syllabus-description">处理缺失值、异常值，数据规范化与转换技巧</p>
+                        <div class="syllabus-meta">
+                            <span><i class="fas fa-video"></i> 10个视频</span>
+                            <span><i class="fas fa-file-alt"></i> 4篇阅读</span>
+                            <span><i class="fas fa-question-circle"></i> 3个测验</span>
+                        </div>
+                    </li>
+                    <li class="syllabus-item">
+                        <div class="syllabus-header">
+                            <div class="syllabus-title">第三章：数据可视化实战</div>
+                            <div class="syllabus-duration">6小时30分钟</div>
+                        </div>
+                        <p class="syllabus-description">使用Matplotlib和Seaborn创建专业级图表</p>
+                        <div class="syllabus-meta">
+                            <span><i class="fas fa-video"></i> 12个视频</span>
+                            <span><i class="fas fa-file-alt"></i> 5篇阅读</span>
+                            <span><i class="fas fa-question-circle"></i> 4个测验</span>
+                        </div>
+                    </li>
+                    <li class="syllabus-item">
+                        <div class="syllabus-header">
+                            <div class="syllabus-title">第四章：项目实战 - 电商数据分析</div>
+                            <div class="syllabus-duration">8小时15分钟</div>
+                        </div>
+                        <p class="syllabus-description">完整电商数据分析项目，从数据获取到可视化报告</p>
+                        <div class="syllabus-meta">
+                            <span><i class="fas fa-video"></i> 15个视频</span>
+                            <span><i class="fas fa-file-alt"></i> 6篇阅读</span>
+                            <span><i class="fas fa-question-circle"></i> 5个测验</span>
+                        </div>
+                    </li>
+                </ul>
+            </div>
+            
+            <!-- 课程描述 -->
+            <div class="course-description">
+                <h2 class="section-title">课程描述</h2>
+                <div class="description-content">
+                    <p>本课程专为希望掌握Python数据分析与可视化技能的学习者设计。通过理论与实践相结合的方式，您将学习到从基础数据处理到高级可视化技术的完整知识体系。</p>
+                    
+                    <h3>课程亮点：</h3>
+                    <ul>
+                        <li><strong>实战驱动</strong>：基于真实商业场景的数据分析项目</li>
+                        <li><strong>AI辅助学习</strong>：智能推荐学习路径，个性化习题生成</li>
+                        <li><strong>全方位支持</strong>：视频讲解、图文资料、在线答疑、项目实战</li>
+                        <li><strong>持续更新</strong>：课程内容定期更新，紧跟行业发展趋势</li>
+                    </ul>
+                    
+                    <h3>学习目标：</h3>
+                    <ul>
+                        <li>掌握Python数据分析核心库（NumPy, Pandas）的使用</li>
+                        <li>能够熟练进行数据清洗、转换和预处理</li>
+                        <li>使用Matplotlib和Seaborn创建专业的可视化图表</li>
+                        <li>完成完整的商业数据分析项目并生成分析报告</li>
+                        <li>具备解决实际业务问题的数据分析能力</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <!-- 课程评价 -->
+            <div class="course-reviews">
+                <h2 class="section-title">学员评价</h2>
+                <div class="review-summary">
+                    <div class="rating-score">4.8</div>
+                    <div>
+                        <div class="rating-stars">
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star-half-alt"></i>
+                        </div>
+                        <div class="review-count">基于2,345条评价</div>
+                    </div>
+                </div>
+                
+                <div class="review-item">
+                    <div class="review-header">
+                        <div class="reviewer">
+                            <div class="reviewer-avatar">
+                                <img src="https://randomuser.me/api/portraits/women/44.jpg" alt="评价者头像">
+                            </div>
+                            <div class="reviewer-info">
+                                <h4>王同学</h4>
+                                <div class="review-date">2023-10-15</div>
+                            </div>
+                        </div>
+                        <div class="rating-stars">
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                        </div>
+                    </div>
+                    <div class="review-content">
+                        课程内容非常实用，老师讲解清晰，特别是项目实战部分，让我真正掌握了数据分析的工作流程。AI生成的习题也很有针对性，能够及时巩固知识点。
+                    </div>
+                </div>
+                
+                <div class="review-item">
+                    <div class="review-header">
+                        <div class="reviewer">
+                            <div class="reviewer-avatar">
+                                <img src="https://randomuser.me/api/portraits/men/22.jpg" alt="评价者头像">
+                            </div>
+                            <div class="reviewer-info">
+                                <h4>李同学</h4>
+                                <div class="review-date">2023-09-28</div>
+                            </div>
+                        </div>
+                        <div class="rating-stars">
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                        </div>
+                    </div>
+                    <div class="review-content">
+                        作为一名转行者，这门课程对我帮助极大。自适应学习机制根据我的进度调整难度，AI助手随时解答疑问。现在我已经成功找到数据分析师的工作！
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 右侧侧边栏区域 -->
+        <div class="course-sidebar">
+            <!-- 课程信息卡片 -->
+            <div class="course-info-card">
+                <h3 class="section-title" style="border-bottom: none; margin-bottom: 1rem;">课程信息</h3>
+                <div class="info-item">
+                    <span class="info-label">课程时长</span>
+                    <span class="info-value">24小时</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">课程节数</span>
+                    <span class="info-value">48小节</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">课程难度</span>
+                    <span class="info-value">中级</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">学习人数</span>
+                    <span class="info-value">12,850人</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">课程评分</span>
+                    <span class="info-value">4.8分</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">课程语言</span>
+                    <span class="info-value">中文</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">课程分类</span>
+                    <span class="info-value">编程开发 / 数据分析</span>
+                </div>
+            </div>
+            
+            <!-- 课程特色 -->
+            <div class="course-features">
+                <h3 class="section-title" style="border-bottom: none; margin-bottom: 1rem;">课程特色</h3>
+                <ul class="features-list">
+                    <li class="feature-item">
+                        <div class="feature-icon">
+                            <i class="fas fa-robot"></i>
+                        </div>
+                        <div class="feature-content">
+                            <h4>AI自适应学习</h4>
+                            <p>根据你的学习进度和掌握程度，智能调整学习路径和难度</p>
+                        </div>
+                    </li>
+                    <li class="feature-item">
+                        <div class="feature-icon">
+                            <i class="fas fa-chart-line"></i>
+                        </div>
+                        <div class="feature-content">
+                            <h4>实时学习分析</h4>
+                            <p>跟踪学习行为，提供个性化学习报告和优化建议</p>
+                        </div>
+                    </li>
+                    <li class="feature-item">
+                        <div class="feature-icon">
+                            <i class="fas fa-question-circle"></i>
+                        </div>
+                        <div class="feature-content">
+                            <h4>AI习题生成</h4>
+                            <p>基于学习内容自动生成针对性习题，巩固知识点</p>
+                        </div>
+                    </li>
+                    <li class="feature-item">
+                        <div class="feature-icon">
+                            <i class="fas fa-certificate"></i>
+                        </div>
+                        <div class="feature-content">
+                            <h4>结业证书</h4>
+                            <p>完成课程并通过考核后，可获得平台认证的结业证书</p>
+                        </div>
+                    </li>
+                </ul>
+            </div>
+            
+            <!-- 相关课程 -->
+            <div class="related-courses">
+                <h3 class="section-title" style="border-bottom: none; margin-bottom: 1rem;">相关课程</h3>
+                <div class="course-grid">
+                    <a href="#" class="course-card">
+                        <div class="course-thumbnail">
+                            <img src="https://images.unsplash.com/photo-1551288049-bebda4e38f71?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=500&q=80" alt="机器学习课程">
+                        </div>
+                        <div class="course-card-content">
+                            <h3 class="course-card-title">机器学习入门与实践</h3>
+                            <div class="course-card-instructor">张教授 · 人工智能专家</div>
+                            <div class="course-card-meta">
+                                <span>18小时 · 中级</span>
+                                <span>4.9分</span>
+                            </div>
+                        </div>
+                    </a>
+                    
+                    <a href="#" class="course-card">
+                        <div class="course-thumbnail">
+                            <img src="https://images.unsplash.com/photo-1620712943543-bcc4688e7485?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=500&q=80" alt="SQL课程">
+                        </div>
+                        <div class="course-card-content">
+                            <h3 class="course-card-title">SQL数据库高级查询</h3>
+                            <div class="course-card-instructor">李老师 · 数据库架构师</div>
+                            <div class="course-card-meta">
+                                <span>12小时 · 初级</span>
+                                <span>4.7分</span>
+                            </div>
+                        </div>
+                    </a>
+                </div>
+            </div>
+            
+            <!-- 学习须知 -->
+            <div class="learning-notice">
+                <h3 class="section-title" style="border-bottom: none; margin-bottom: 1rem;">学习须知</h3>
+                <ul class="notice-list">
+                    <li class="notice-item">
+                        <i class="fas fa-exclamation-circle"></i>
+                        <span>学习本课程需要具备Python基础编程知识</span>
+                    </li>
+                    <li class="notice-item">
+                        <i class="fas fa-exclamation-circle"></i>
+                        <span>建议每周学习3-5小时，持续2个月完成课程</span>
+                    </li>
+                    <li class="notice-item">
+                        <i class="fas fa-exclamation-circle"></i>
+                        <span>课程中包含实践项目，需要完成并提交</span>
+                    </li>
+                    <li class="notice-item">
+                        <i class="fas fa-exclamation-circle"></i>
+                        <span>通过所有测验和项目可获得结业证书</span>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // 课程大纲项点击切换
+            const syllabusItems = document.querySelectorAll('.syllabus-item');
+            syllabusItems.forEach(item => {
+                item.addEventListener('click', function() {
+                    syllabusItems.forEach(i => i.classList.remove('active'));
+                    this.classList.add('active');
+                });
+            });
+            
+            // 开始学习按钮
+            const startLearningBtn = document.getElementById('startLearningBtn');
+            startLearningBtn.addEventListener('click', function() {
+                window.location.href = 'video-player.html';
+            });
+            
+            // 加入学习按钮
+            const addToLearningBtn = document.getElementById('addToLearningBtn');
+            addToLearningBtn.addEventListener('click', function() {
+                this.innerHTML = '<i class="fas fa-check"></i> 已加入学习';
+                this.classList.remove('btn-secondary');
+                this.classList.add('btn-primary');
+                this.disabled = true;
+                
+                // 显示成功提示
+                showNotification('课程已成功添加到我的学习列表');
+            });
+            
+            // 显示通知函数
+            function showNotification(message) {
+                // 创建通知元素
+                const notification = document.createElement('div');
+                notification.style.cssText = `
+                    position: fixed;
+                    top: 100px;
+                    right: 20px;
+                    background-color: var(--accent-green);
+                    color: white;
+                    padding: 1rem 1.5rem;
+                    border-radius: var(--radius);
+                    box-shadow: var(--shadow);
+                    z-index: 1000;
+                    animation: slideIn 0.3s ease;
+                `;
+                
+                notification.innerHTML = `
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                        <i class="fas fa-check-circle"></i>
+                        <span>${message}</span>
+                    </div>
+                `;
+                
+                document.body.appendChild(notification);
+                
+                // 3秒后移除通知
+                setTimeout(() => {
+                    notification.style.animation = 'slideOut 0.3s ease';
+                    setTimeout(() => {
+                        document.body.removeChild(notification);
+                    }, 300);
+                }, 3000);
+                
+                // 添加CSS动画
+                if (!document.querySelector('#notification-styles')) {
+                    const style = document.createElement('style');
+                    style.id = 'notification-styles';
+                    style.textContent = `
+                        @keyframes slideIn {
+                            from { transform: translateX(100%); opacity: 0; }
+                            to { transform: translateX(0); opacity: 1; }
+                        }
+                        @keyframes slideOut {
+                            from { transform: translateX(0); opacity: 1; }
+                            to { transform: translateX(100%); opacity: 0; }
+                        }
+                    `;
+                    document.head.appendChild(style);
+                }
+            }
+            
+            // 课程卡片悬停效果
+            const courseCards = document.querySelectorAll('.course-card');
+            courseCards.forEach(card => {
+                card.addEventListener('mouseenter', function() {
+                    this.style.transform = 'translateY(-5px)';
+                });
+                
+                card.addEventListener('mouseleave', function() {
+                    this.style.transform = 'translateY(0)';
+                });
+            });
+        });
+    </script>
+</body>
+</html>

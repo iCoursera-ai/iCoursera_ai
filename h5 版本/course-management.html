@@ -1,0 +1,538 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>BGArea - 课程管理</title>
+  <!-- 引入外部资源 -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
+  
+  <!-- Tailwind配置 -->
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            primary: '#165DFF',
+            secondary: '#6B7280',
+            light: '#F9FAFB',
+            dark: '#1F2937',
+            success: '#10B981',
+            gray: {
+              100: '#F7F8FA',
+              200: '#E5E6EB',
+              300: '#C9CDD4',
+              400: '#86909C',
+              500: '#4E5969',
+              600: '#272E3B',
+            }
+          },
+          fontFamily: {
+            inter: ['Inter', 'system-ui', 'sans-serif'],
+          },
+        },
+      }
+    }
+  </script>
+  
+  <!-- 自定义工具类 -->
+  <style type="text/tailwindcss">
+    @layer utilities {
+      .content-auto {
+        content-visibility: auto;
+      }
+      .sidebar-parent {
+        @apply flex items-center justify-between px-4 py-3 text-gray-500 hover:bg-primary/5 hover:text-primary transition-all duration-200 cursor-pointer;
+      }
+      .sidebar-parent.active {
+        @apply bg-primary/10 text-primary font-medium;
+      }
+      .sidebar-parent-content {
+        @apply flex items-center gap-2;
+      }
+      .sidebar-child {
+        @apply flex items-center px-6 py-2 text-gray-500 hover:bg-primary/5 hover:text-primary transition-all duration-200 cursor-pointer text-sm;
+      }
+      .sidebar-child.active {
+        @apply bg-primary/10 text-primary font-medium;
+      }
+      .sidebar-child-text {
+        @apply ml-3;
+      }
+      .btn {
+        @apply px-3 py-1 text-sm rounded transition-all duration-200;
+      }
+      .btn-primary {
+        @apply w-full bg-primary hover:bg-primary/90 text-white font-medium py-2.5 rounded-md transition-all duration-200 transform hover:scale-[1.01] active:scale-[0.99] focus:outline-none focus:ring-2 focus:ring-primary/50;
+      }
+      .btn-text {
+        @apply text-primary hover:bg-primary/10 transition-all duration-200;
+      }
+      .card {
+        @apply bg-white rounded-lg border border-gray-200 shadow-sm;
+      }
+      .rotate-icon {
+        @apply transform transition-transform duration-200 rotate-90;
+      }
+      .sidebar-icon {
+        @apply w-4 text-center;
+      }
+      .card-shadow {
+        box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.02);
+      }
+      .text-link {
+        @apply text-primary hover:text-primary/80 transition-colors duration-200 cursor-pointer;
+      }
+      .input-field {
+        @apply w-full px-4 py-2.5 rounded-md border border-gray-300 focus:border-primary focus:ring-1 focus:ring-primary focus:outline-none transition-all duration-200;
+      }
+      .social-btn {
+        @apply flex items-center justify-center gap-2 px-4 py-2.5 rounded-md border border-gray-300 hover:bg-gray-50 transition-all duration-200;
+      }
+      .sidebar-group {
+        @apply mb-2;
+      }
+    }
+  </style>
+</head>
+
+<body class="font-inter bg-gray-50 min-h-screen flex flex-col">
+  <!-- 顶部导航栏 -->
+  <header class="bg-white py-4 px-6 md:px-12 shadow-sm sticky top-0 z-40">
+    <div class="container mx-auto flex justify-between items-center">
+      <div class="flex items-center gap-2">
+        <div class="bg-primary text-white p-1.5 rounded-md">
+          <i class="fa fa-graduation-cap"></i>
+        </div>
+        <span class="text-lg font-semibold text-dark">BGarea</span>
+      </div>
+      
+      <!-- 中间文字按钮区域 -->
+      <div class="hidden md:flex items-center gap-6">
+        <button class="text-black hover:text-primary text-sm font-medium transition-colors duration-200 flex items-center gap-1" onclick="window.location.href='index.html'">
+            首页
+        </button>
+        <button class="text-black hover:text-primary text-sm font-medium transition-colors duration-200 flex items-center gap-1" onclick="window.location.href='Personal Information.html'">
+            用户中心
+        </button>
+        <button class="text-black hover:text-primary text-sm font-medium transition-colors duration-200 flex items-center gap-1" onclick="window.location.href='Login.html'">
+            登录界面
+        </button>
+        <button class="text-black hover:text-primary text-sm font-medium transition-colors duration-200 flex items-center gap-1" onclick="window.location.href='稿件管理界面.html'">
+            稿件管理界面
+        </button>
+      </div>
+      
+      <div class="flex items-center gap-4">
+        <button class="text-secondary hover:text-primary text-sm font-medium transition-colors duration-200 flex items-center gap-1">
+          <i class="fa fa-search"></i>
+        </button>
+        <div class="w-8 h-8 rounded-full bg-primary/10 text-primary flex items-center justify-center cursor-pointer border border-primary/20">
+          <span>A</span>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <div class="flex flex-1">
+    <!-- 侧边栏导航（新增管理员管理） -->
+    <aside class="w-64 bg-white border-r border-gray-200 flex-shrink-0 h-[calc(100vh-5rem)] sticky top-[5rem] overflow-y-auto z-30">
+      <nav class="py-4 space-y-1">
+        <!-- 教师管理 -->
+        <div class="sidebar-group">
+          <div class="sidebar-parent" data-target="submenu-teacher">
+            <div class="sidebar-parent-content">
+              <i class="fa fa-tachometer sidebar-icon"></i>
+              <span>教师管理</span>
+            </div>
+            <i class="fa fa-angle-right text-xs transition-transform duration-200"></i>
+          </div>
+          <div id="submenu-teacher" class="hidden bg-gray-50">
+            <div class="sidebar-child" onclick="window.location.href='Work Engine.html'">
+              <i class="fa fa-circle-o text-xs sidebar-icon"></i>
+              <span class="sidebar-child-text">工作台</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- 管理员管理（新增） -->
+        <div class="sidebar-group">
+          <div class="sidebar-parent active" data-target="submenu-admin">
+            <div class="sidebar-parent-content">
+              <i class="fa fa-user-secret sidebar-icon"></i>
+              <span>管理员管理</span>
+            </div>
+            <i class="fa fa-angle-right text-xs transition-transform duration-200 rotate-icon"></i>
+          </div>
+          <div id="submenu-admin" class="bg-gray-50">
+            <div class="sidebar-child active" id="nav-course" onclick="window.location.href='course-management.html'">
+              <i class="fa fa-circle-o text-xs sidebar-icon"></i>
+              <span class="sidebar-child-text">课程管理</span>
+            </div>
+            <div class="sidebar-child" id="nav-user" onclick="window.location.href='user-management.html'">
+              <i class="fa fa-circle-o text-xs sidebar-icon"></i>
+              <span class="sidebar-child-text">用户管理</span>
+            </div>
+          </div>
+        </div>
+       
+<!-- 收藏管理（跳转到独立页面的不同锚点） -->
+<div class="sidebar-group">
+  <div class="sidebar-parent" data-target="submenu-favorites">
+    <div class="sidebar-parent-content">
+      <i class="fa fa-heart sidebar-icon"></i>
+      <span>收藏管理</span>
+    </div>
+    <i class="fa fa-angle-right text-xs transition-transform duration-200"></i>
+  </div>
+  <div id="submenu-favorites" class="hidden bg-gray-50">
+    <div class="sidebar-child" onclick="window.location.href='favorites-management.html#courses'">
+      <i class="fa fa-book text-xs sidebar-icon"></i>
+      <span class="sidebar-child-text">收藏的课程</span>
+    </div>
+    <div class="sidebar-child" onclick="window.location.href='favorites-management.html#videos'">
+      <i class="fa fa-video-camera text-xs sidebar-icon"></i>
+      <span class="sidebar-child-text">收藏的视频</span>
+    </div>
+    <div class="sidebar-child" onclick="window.location.href='favorites-management.html#teachers'">
+      <i class="fa fa-user text-xs sidebar-icon"></i>
+      <span class="sidebar-child-text">收藏的教师</span>
+    </div>
+  </div>
+</div>
+        
+        <!-- 个人中心 -->
+        <div class="sidebar-group">
+          <div class="sidebar-parent" data-target="submenu-user-center">
+            <div class="sidebar-parent-content">
+              <i class="fa fa-user-circle-o sidebar-icon"></i>
+              <span>个人中心</span>
+            </div>
+            <i class="fa fa-angle-right text-xs transition-transform duration-200"></i>
+          </div>
+          <div id="submenu-user-center" class="hidden bg-gray-50">
+            <div class="sidebar-child" id="nav-user-info" onclick="window.location.href='Personal Information.html'">
+              <i class="fa fa-id-card-o text-xs sidebar-icon"></i>
+              <span class="sidebar-child-text">用户信息</span>
+            </div>
+            <div class="sidebar-child" id="nav-user-settings" onclick="window.location.href='Personal Information.html'">
+              <i class="fa fa-cog text-xs sidebar-icon"></i>
+              <span class="sidebar-child-text">用户设置</span>
+            </div>
+          </div>
+        </div>
+      </nav>
+    </aside>
+
+    <!-- 主内容区域（课程管理UI） -->
+    <main class="flex-1 overflow-y-auto p-6">
+      <div class="p-6">
+        <!-- 面包屑导航 -->
+        <div class="text-sm text-secondary mb-6">
+          <span>用户中心</span>
+          <i class="fa fa-angle-right mx-1 text-gray-400"></i>
+          <span>管理员管理</span>
+          <i class="fa fa-angle-right mx-1 text-gray-400"></i>
+          <span class="text-dark font-medium">课程管理</span>
+        </div>
+
+        <!-- 课程管理页面 -->
+        <div class="card p-6 card-shadow">
+          <h3 class="text-lg font-semibold text-dark mb-6">课程管理</h3>
+          
+          <!-- 搜索筛选区域 -->
+          <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+            <div>
+              <label class="block text-sm text-gray-500 mb-1">作者</label>
+              <input type="text" placeholder="请输入作者" class="input-field">
+            </div>
+            <div>
+              <label class="block text-sm text-gray-500 mb-1">视频名称</label>
+              <input type="text" placeholder="请输入视频名称" class="input-field">
+            </div>
+            <div>
+              <label class="block text-sm text-gray-500 mb-1">标签</label>
+              <select class="input-field">
+                <option>全部</option>
+                <option>操作系统</option>
+                <option>物联网</option>
+              </select>
+            </div>
+            <div class="flex items-end">
+              <button class="btn-primary">
+                <i class="fa fa-search mr-1"></i>查询
+              </button>
+            </div>
+          </div>
+          
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+            <div>
+              <label class="block text-sm text-gray-500 mb-1">状态</label>
+              <select class="input-field">
+                <option>全部</option>
+                <option>审核请求</option>
+                <option>举报中</option>
+                <option>已上线</option>
+              </select>
+            </div>
+            <div class="grid grid-cols-2 gap-4">
+              <div>
+                <label class="block text-sm text-gray-500 mb-1">开始日期</label>
+                <input type="date" class="input-field">
+              </div>
+              <div>
+                <label class="block text-sm text-gray-500 mb-1">结束日期</label>
+                <input type="date" class="input-field">
+              </div>
+            </div>
+            <div>
+              <label class="block text-sm text-gray-500 mb-1">编号</label>
+              <input type="text" placeholder="请输入编号" class="input-field">
+            </div>
+          </div>
+          
+          <div class="flex justify-end gap-4 mb-6">
+            <button class="btn border border-gray-300 hover:bg-gray-50 transition-all duration-200 flex items-center gap-1">
+              <i class="fa fa-refresh"></i>重置
+            </button>
+            <button class="btn border border-gray-300 hover:bg-gray-50 transition-all duration-200 flex items-center gap-1">
+              <i class="fa fa-download"></i>下载
+            </button>
+          </div>
+          
+          <!-- 课程列表 -->
+          <div class="overflow-x-auto">
+            <table class="w-full border-collapse">
+              <thead>
+                <tr class="bg-gray-50 text-left text-sm text-secondary">
+                  <th class="px-4 py-3">视频编号</th>
+                  <th class="px-4 py-3">课程名称</th>
+                  <th class="px-4 py-3">标签</th>
+                  <th class="px-4 py-3">作者</th>
+                  <th class="px-4 py-3">播放量</th>
+                  <th class="px-4 py-3">创建时间</th>
+                  <th class="px-4 py-3">状态</th>
+                  <th class="px-4 py-3">操作</th>
+                </tr>
+              </thead>
+              <tbody class="text-sm">
+                <tr class="border-b border-gray-100 bg-white">
+                  <td class="px-4 py-3 text-dark">232</td>
+                  <td class="px-4 py-3 text-dark">操作系统</td>
+                  <td class="px-4 py-3 text-dark">操作系统</td>
+                  <td class="px-4 py-3 text-dark">1</td>
+                  <td class="px-4 py-3 text-dark">315</td>
+                  <td class="px-4 py-3 text-secondary">2021-02-28 10:30</td>
+                  <td class="px-4 py-3">
+                    <span class="px-2 py-1 bg-yellow-100 text-yellow-800 rounded text-xs">审核请求</span>
+                  </td>
+                  <td class="px-4 py-3">
+                    <a href="#" class="text-link hover:underline">查看</a>
+                  </td>
+                </tr>
+                <tr class="border-b border-gray-100 bg-white">
+                  <td class="px-4 py-3 text-dark">254</td>
+                  <td class="px-4 py-3 text-dark">物联网</td>
+                  <td class="px-4 py-3 text-dark">操作系统</td>
+                  <td class="px-4 py-3 text-dark">1</td>
+                  <td class="px-4 py-3 text-dark">295</td>
+                  <td class="px-4 py-3 text-secondary">2021-02-28 10:30</td>
+                  <td class="px-4 py-3">
+                    <span class="px-2 py-1 bg-red-100 text-red-800 rounded text-xs">举报中</span>
+                  </td>
+                  <td class="px-4 py-3">
+                    <a href="#" class="text-link hover:underline">查看</a>
+                  </td>
+                </tr>
+                <tr class="border-b border-gray-100 bg-white">
+                  <td class="px-4 py-3 text-dark">46</td>
+                  <td class="px-4 py-3 text-dark">计算机网络</td>
+                  <td class="px-4 py-3 text-dark">操作系统</td>
+                  <td class="px-4 py-3 text-dark">1</td>
+                  <td class="px-4 py-3 text-dark">315</td>
+                  <td class="px-4 py-3 text-secondary">2021-02-28 10:30</td>
+                  <td class="px-4 py-3">
+                    <span class="px-2 py-1 bg-green-100 text-green-800 rounded text-xs">已上线</span>
+                  </td>
+                  <td class="px-4 py-3">
+                    <a href="#" class="text-link hover:underline">查看</a>
+                  </td>
+                </tr>
+                <tr class="border-b border-gray-100 bg-white">
+                  <td class="px-4 py-3 text-dark">577</td>
+                  <td class="px-4 py-3 text-dark">网络信息安全</td>
+                  <td class="px-4 py-3 text-dark">操作系统</td>
+                  <td class="px-4 py-3 text-dark">1</td>
+                  <td class="px-4 py-3 text-dark">295</td>
+                  <td class="px-4 py-3 text-secondary">2021-02-28 10:30</td>
+                  <td class="px-4 py-3">
+                    <span class="px-2 py-1 bg-green-100 text-green-800 rounded text-xs">已上线</span>
+                  </td>
+                  <td class="px-4 py-3">
+                    <a href="#" class="text-link hover:underline">查看</a>
+                  </td>
+                </tr>
+                <tr class="border-b border-gray-100 bg-white">
+                  <td class="px-4 py-3 text-dark">232</td>
+                  <td class="px-4 py-3 text-dark">每日推荐视频集</td>
+                  <td class="px-4 py-3 text-dark">操作系统</td>
+                  <td class="px-4 py-3 text-dark">1</td>
+                  <td class="px-4 py-3 text-dark">315</td>
+                  <td class="px-4 py-3 text-secondary">2021-02-28 10:30</td>
+                  <td class="px-4 py-3">
+                    <span class="px-2 py-1 bg-green-100 text-green-800 rounded text-xs">已上线</span>
+                  </td>
+                  <td class="px-4 py-3">
+                    <a href="#" class="text-link hover:underline">查看</a>
+                  </td>
+                </tr>
+                <tr class="border-b border-gray-100 bg-white">
+                  <td class="px-4 py-3 text-dark">254</td>
+                  <td class="px-4 py-3 text-dark">每日推荐视频集</td>
+                  <td class="px-4 py-3 text-dark">操作系统</td>
+                  <td class="px-4 py-3 text-dark">1</td>
+                  <td class="px-4 py-3 text-dark">295</td>
+                  <td class="px-4 py-3 text-secondary">2021-02-28 10:30</td>
+                  <td class="px-4 py-3">
+                    <span class="px-2 py-1 bg-green-100 text-green-800 rounded text-xs">已上线</span>
+                  </td>
+                  <td class="px-4 py-3">
+                    <a href="#" class="texttext-link hover:underline">查看</a>
+                  </td>
+                </tr>
+                <tr class="border-b border-gray-100 bg-white">
+                  <td class="px-4 py-3 text-dark">46</td>
+                  <td class="px-4 py-3 text-dark">每日推荐视频集</td>
+                  <td class="px-4 py-3 text-dark">操作系统</td>
+                  <td class="px-4 py-3 text-dark">1</td>
+                  <td class="px-4 py-3 text-dark">315</td>
+                  <td class="px-4 py-3 text-secondary">2021-02-28 10:30</td>
+                  <td class="px-4 py-3">
+                    <span class="px-2 py-1 bg-green-100 text-green-800 rounded text-xs">已上线</span>
+                  </td>
+                  <td class="px-4 py-3">
+                    <a href="#" class="text-link hover:underline">查看</a>
+                  </td>
+                </tr>
+                <tr class="border-b border-gray-100 bg-white">
+                  <td class="px-4 py-3 text-dark">577</td>
+                  <td class="px-4 py-3 text-dark">每日推荐视频集</td>
+                  <td class="px-4 py-3 text-dark">操作系统</td>
+                  <td class="px-4 py-3 text-dark">1</td>
+                  <td class="px-4 py-3 text-dark">295</td>
+                  <td class="px-4 py-3 text-secondary">2021-02-28 10:30</td>
+                  <td class="px-4 py-3">
+                    <span class="px-2 py-1 bg-green-100 text-green-800 rounded text-xs">已上线</span>
+                  </td>
+                  <td class="px-4 py-3">
+                    <a href="#" class="text-link hover:underline">查看</a>
+                  </td>
+                </tr>
+                <tr class="border-b border-gray-100 bg-white">
+                  <td class="px-4 py-3 text-dark">232</td>
+                  <td class="px-4 py-3 text-dark">每日推荐视频集</td>
+                  <td class="px-4 py-3 text-dark">操作系统</td>
+                  <td class="px-4 py-3 text-dark">1</td>
+                  <td class="px-4 py-3 text-dark">315</td>
+                  <td class="px-4 py-3 text-secondary">2021-02-28 10:30</td>
+                  <td class="px-4 py-3">
+                    <span class="px-2 py-1 bg-green-100 text-green-800 rounded text-xs">已上线</span>
+                  </td>
+                  <td class="px-4 py-3">
+                    <a href="#" class="text-link hover:underline">查看</a>
+                  </td>
+                </tr>
+                <tr class="bg-white">
+                  <td class="px-4 py-3 text-dark">254</td>
+                  <td class="px-4 py-3 text-dark">每日推荐视频集</td>
+                  <td class="px-4 py-3 text-dark">操作系统</td>
+                  <td class="px-4 py-3 text-dark">1</td>
+                  <td class="px-4 py-3 text-dark">295</td>
+                  <td class="px-4 py-3 text-secondary">2021-02-28 10:30</td>
+                  <td class="px-4 py-3">
+                    <span class="px-2 py-1 bg-green-100 text-green-800 rounded text-xs">已上线</span>
+                  </td>
+                  <td class="px-4 py-3">
+                    <a href="#" class="text-link hover:underline">查看</a>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          
+          <!-- 分页区域 -->
+          <div class="flex justify-between items-center mt-6">
+            <div class="text-sm text-secondary">共658条</div>
+            <div class="flex items-center gap-2">
+              <button class="w-8 h-8 flex items-center justify-center rounded border border-gray-200 text-secondary hover:border-primary hover:text-primary transition-colors">
+                <i class="fa fa-angle-left"></i>
+              </button>
+              <button class="w-8 h-8 flex items-center justify-center rounded border border-gray-200 text-secondary hover:border-primary hover:text-primary transition-colors">50</button>
+              <button class="w-8 h-8 flex items-center justify-center rounded bg-primary text-white">51</button>
+              <button class="w-8 h-8 flex items-center justify-center rounded border border-gray-200 text-secondary hover:border-primary hover:text-primary transition-colors">52</button>
+              <button class="w-8 h-8 flex items-center justify-center rounded border border-gray-200 text-secondary hover:border-primary hover:text-primary transition-colors">53</button>
+              <button class="w-8 h-8 flex items-center justify-center rounded border border-gray-200 text-secondary hover:border-primary hover:text-primary transition-colors">54</button>
+              <span class="text-sm text-gray-400">...</span>
+              <button class="w-8 h-8 flex items-center justify-center rounded border border-gray-200 text-secondary hover:border-primary hover:text-primary transition-colors">90</button>
+              <button class="w-8 h-8 flex items-center justify-center rounded border border-gray-200 text-secondary hover:border-primary hover:text-primary transition-colors">
+                <i class="fa fa-angle-right"></i>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <!-- 页脚 -->
+  <footer class="bg-white py-6 px-6 border-t border-gray-200">
+    <div class="container mx-auto">
+      <div class="text-center text-sm text-gray-500 mb-4">
+        &copy; 2023 BGarea在线学习平台. 保留所有权利.
+      </div>
+      <div class="flex flex-wrap justify-center gap-x-6 gap-y-2 text-xs text-gray-500">
+        <a href="#" class="hover:text-primary transition-colors duration-200">关于我们</a>
+        <a href="#" class="hover:text-primary transition-colors duration-200">隐私政策</a>
+        <a href="#" class="hover:text-primary transition-colors duration-200">服务条款</a>
+        <a href="#" class="hover:text-primary transition-colors duration-200">联系我们</a>
+      </div>
+      <div class="flex justify-center gap-4 mt-4 text-gray-500">
+        <a href="#" class="hover:text-primary transition-colors duration-200"><i class="fa fa-weixin"></i></a>
+        <a href="#" class="hover:text-primary transition-colors duration-200"><i class="fa fa-weibo"></i></a>
+        <a href="#" class="hover:text-primary transition-colors duration-200"><i class="fa fa-twitter"></i></a>
+        <a href="#" class="hover:text-primary transition-colors duration-200"><i class="fa fa-facebook"></i></a>
+      </div>
+    </div>
+  </footer>
+
+  <!-- JavaScript 交互逻辑 -->
+  <script>
+    // 侧边栏菜单交互
+    document.querySelectorAll('.sidebar-parent').forEach(parent => {
+      parent.addEventListener('click', function() {
+        const targetId = this.getAttribute('data-target');
+        const submenu = document.getElementById(targetId);
+        const icon = this.querySelector('.fa-angle-right');
+        
+        submenu.classList.toggle('hidden');
+        icon.classList.toggle('rotate-icon');
+        this.classList.toggle('active');
+      });
+    });
+    
+    // 子菜单点击事件
+    document.querySelectorAll('.sidebar-child').forEach(child => {
+      child.addEventListener('click', function(e) {
+        e.stopPropagation();
+        
+        const parentSubmenu = this.parentElement;
+        parentSubmenu.querySelectorAll('.sidebar-child').forEach(sib => {
+          sib.classList.remove('active');
+        });
+        this.classList.add('active');
+      });
+    });
+  </script>
+</body>
+</html>
