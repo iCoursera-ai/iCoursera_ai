@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>BGarea - 偏好设置</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
+  
+  <!-- 自定义Tailwind配置 -->
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            primary: '#165DFF',
+            secondary: '#6B7280',
+            dark: '#1F2937',
+          },
+          fontFamily: {
+            inter: ['Inter', 'system-ui', 'sans-serif'],
+          },
+        },
+      }
+    }
+  </script>
+  
+  <style type="text/tailwindcss">
+    @layer utilities {
+      .preference-chip {
+        @apply px-4 py-2 rounded-full border border-gray-300 text-gray-700 bg-white hover:bg-gray-50 transition-all duration-200 cursor-pointer;
+      }
+      .preference-chip.selected {
+        @apply bg-primary text-white border-primary;
+      }
+      .card-shadow {
+        box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.02);
+      }
+      .input-field {
+        @apply w-full px-4 py-2.5 rounded-md border border-gray-300 focus:border-primary focus:ring-1 focus:ring-primary focus:outline-none transition-all duration-200;
+      }
+      .btn-primary {
+        @apply bg-primary hover:bg-primary/90 text-white font-medium py-2.5 rounded-md transition-all duration-200 transform hover:scale-[1.01] active:scale-[0.99] focus:outline-none focus:ring-2 focus:ring-primary/50;
+      }
+    }
+  </style>
+</head>
+
+<body class="font-inter bg-gray-50 min-h-screen flex items-center justify-center p-4">
+  <div class="max-w-4xl w-full">
+        
+    <!-- 主内容卡片 -->
+    <div class="bg-white rounded-2xl card-shadow overflow-hidden">
+      <!-- 头部 -->
+      <div class="bg-gradient-to-r from-primary/10 to-blue-50 p-8 border-b">
+        <div class="flex items-center gap-3 mb-4">
+          <div class="bg-primary text-white p-2 rounded-md">
+            <i class="fa fa-graduation-cap"></i>
+          </div>
+          <h1 class="text-2xl font-bold text-dark">BGarea</h1>
+        </div>
+        <h2 class="text-xl font-bold text-dark mb-2">定制您的学习体验</h2>
+        <p class="text-gray-600">告诉我们您的偏好，我们将为您推荐更相关的内容</p>
+      </div>
+      
+      <!-- 偏好选择区域 -->
+      <div class="p-8 space-y-10">
+        <!-- 学习领域偏好 -->
+        <div class="space-y-4">
+          <div class="flex items-start justify-between">
+            <div>
+              <h3 class="font-semibold text-lg text-dark">您感兴趣的领域是？</h3>
+              <p class="text-sm text-gray-600 mt-1">选择您最感兴趣的学习领域（可多选）</p>
+            </div>
+            <span class="text-xs bg-primary/10 text-primary px-2 py-1 rounded">必选</span>
+          </div>
+          <div class="flex flex-wrap gap-3">
+            <div class="preference-chip" data-category="field" data-value="programming">
+              <i class="fa fa-code mr-2"></i>编程开发
+            </div>
+            <div class="preference-chip" data-category="field" data-value="design">
+              <i class="fa fa-paint-brush mr-2"></i>设计艺术
+            </div>
+            <div class="preference-chip" data-category="field" data-value="business">
+              <i class="fa fa-line-chart mr-2"></i>商业管理
+            </div>
+            <div class="preference-chip" data-category="field" data-value="data-science">
+              <i class="fa fa-database mr-2"></i>数据科学
+            </div>
+            <div class="preference-chip" data-category="field" data-value="language">
+              <i class="fa fa-language mr-2"></i>语言学习
+            </div>
+            <div class="preference-chip" data-category="field" data-value="marketing">
+              <i class="fa fa-bullhorn mr-2"></i>市场营销
+            </div>
+            <div class="preference-chip" data-category="field" data-value="personal-growth">
+              <i class="fa fa-user-plus mr-2"></i>个人成长
+            </div>
+            <div class="preference-chip" data-category="field" data-value="academic">
+              <i class="fa fa-book mr-2"></i>学术教育
+            </div>
+          </div>
+        </div>
+        
+        <!-- 学习目标偏好 -->
+        <div class="space-y-4">
+          <div class="flex items-start justify-between">
+            <div>
+              <h3 class="font-semibold text-lg text-dark">您的学习目标是？</h3>
+              <p class="text-sm text-gray-600 mt-1">明确目标有助于推荐合适的课程</p>
+            </div>
+            <span class="text-xs bg-primary/10 text-primary px-2 py-1 rounded">必选</span>
+          </div>
+          <div class="flex flex-wrap gap-3">
+            <div class="preference-chip" data-category="goal" data-value="career">
+              <i class="fa fa-briefcase mr-2"></i>职业发展
+            </div>
+            <div class="preference-chip" data-category="goal" data-value="skill-upgrade">
+              <i class="fa fa-wrench mr-2"></i>技能提升
+            </div>
+            <div class="preference-chip" data-category="goal" data-value="exam">
+              <i class="fa fa-certificate mr-2"></i>考试认证
+            </div>
+            <div class="preference-chip" data-category="goal" data-value="hobby">
+              <i class="fa fa-heart mr-2"></i>兴趣爱好
+            </div>
+            <div class="preference-chip" data-category="goal" data-value="school">
+              <i class="fa fa-graduation-cap mr-2"></i>学业辅助
+            </div>
+            <div class="preference-chip" data-category="goal" data-value="entrepreneurship">
+              <i class="fa fa-rocket mr-2"></i>创业指导
+            </div>
+          </div>
+        </div>
+        
+        <!-- 学习方式偏好 -->
+        <div class="space-y-4">
+          <h3 class="font-semibold text-lg text-dark">您偏好的学习方式是？</h3>
+          <div class="flex flex-wrap gap-3">
+            <div class="preference-chip" data-category="method" data-value="video">
+              <i class="fa fa-video-camera mr-2"></i>视频课程
+            </div>
+            <div class="preference-chip" data-category="method" data-value="text">
+              <i class="fa fa-file-text mr-2"></i>图文教程
+            </div>
+            <div class="preference-chip" data-category="method" data-value="interactive">
+              <i class="fa fa-mouse-pointer mr-2"></i>互动练习
+            </div>
+            <div class="preference-chip" data-category="method" data-value="live">
+              <i class="fa fa-desktop mr-2"></i>直播授课
+            </div>
+            <div class="preference-chip" data-category="method" data-value="project">
+              <i class="fa fa-code-fork mr-2"></i>项目实战
+            </div>
+            <div class="preference-chip" data-category="method" data-value="one-on-one">
+              <i class="fa fa-users mr-2"></i>一对一辅导
+            </div>
+          </div>
+        </div>
+        
+        <!-- 学习时长偏好 -->
+        <div class="space-y-4">
+          <h3 class="font-semibold text-lg text-dark">您每周的学习时间是？</h3>
+          <div class="flex flex-wrap gap-3">
+            <div class="preference-chip" data-category="duration" data-value="1-3">1-3小时</div>
+            <div class="preference-chip" data-category="duration" data-value="3-5">3-5小时</div>
+            <div class="preference-chip" data-category="duration" data-value="5-10">5-10小时</div>
+            <div class="preference-chip" data-category="duration" data-value="10-15">10-15小时</div>
+            <div class="preference-chip" data-category="duration" data-value="15+">15小时以上</div>
+          </div>
+        </div>
+        
+        <!-- 难度级别偏好 -->
+        <div class="space-y-4">
+          <h3 class="font-semibold text-lg text-dark">您偏好的课程难度是？</h3>
+          <div class="flex flex-wrap gap-3">
+            <div class="preference-chip" data-category="difficulty" data-value="beginner">初级入门</div>
+            <div class="preference-chip" data-category="difficulty" data-value="intermediate">中级进阶</div>
+            <div class="preference-chip" data-category="difficulty" data-value="advanced">高级精通</div>
+            <div class="preference-chip" data-category="difficulty" data-value="mixed">混合难度</div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- 底部操作栏 -->
+      <div class="border-t bg-gray-50 p-8">
+        <div class="flex flex-col sm:flex-row justify-between items-center gap-4">
+          <div class="text-sm text-gray-600">
+            <i class="fa fa-info-circle mr-1"></i>
+            已选择 <span id="selectedCount" class="font-medium text-primary">0</span> 个偏好
+          </div>
+          <div class="flex gap-3 w-full sm:w-auto">
+            <button id="skipBtn" class="flex-1 sm:flex-none px-6 py-3 text-gray-700 font-medium rounded-md border border-gray-300 hover:bg-gray-50 transition-all duration-200">
+              跳过，稍后设置
+            </button>
+            <button id="submitBtn" class="flex-1 sm:flex-none px-6 py-3 bg-primary text-white font-medium rounded-md hover:bg-primary/90 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed" disabled>
+              完成设置，开始学习
+            </button>
+          </div>
+        </div>
+        <p class="text-xs text-gray-500 text-center mt-4">
+          您可以随时在"账户设置"中修改这些偏好
+        </p>
+      </div>
+    </div>
+    
+    <!-- 返回登录链接 -->
+    <div class="text-center mt-6">
+      <a href="login.html" class="text-primary hover:text-primary/80 text-sm font-medium inline-flex items-center gap-1">
+        <i class="fa fa-arrow-left"></i> 返回登录页面
+      </a>
+    </div>
+  </div>
+
+  <script>
+    // 存储用户选择的偏好
+    const userPreferences = {
+      field: [],
+      goal: [],
+      method: [],
+      duration: [],
+      difficulty: []
+    };
+    
+    // DOM元素
+    const preferenceChips = document.querySelectorAll('.preference-chip');
+    const selectedCountElement = document.getElementById('selectedCount');
+    const submitBtn = document.getElementById('submitBtn');
+    const skipBtn = document.getElementById('skipBtn');
+    
+    // 检查必选字段是否已选择
+    function checkRequiredFields() {
+      const hasField = userPreferences.field.length > 0;
+      const hasGoal = userPreferences.goal.length > 0;
+      return hasField && hasGoal;
+    }
+    
+    // 更新已选择偏好数量
+    function updateSelectedCount() {
+      let total = 0;
+      Object.values(userPreferences).forEach(arr => {
+        total += arr.length;
+      });
+      selectedCountElement.textContent = total;
+      
+      // 更新提交按钮状态
+      const isRequiredFieldsSelected = checkRequiredFields();
+      submitBtn.disabled = !isRequiredFieldsSelected;
+      
+      if (!isRequiredFieldsSelected) {
+        submitBtn.setAttribute('title', '请至少选择一个学习领域和学习目标');
+      } else {
+        submitBtn.removeAttribute('title');
+      }
+    }
+    
+    // 偏好选项点击处理
+    preferenceChips.forEach(chip => {
+      chip.addEventListener('click', function() {
+        const category = this.dataset.category;
+        const value = this.dataset.value;
+        
+        // 检查是否已选中
+        const index = userPreferences[category].indexOf(value);
+        
+        if (index > -1) {
+          // 如果已选中，则取消选择
+          userPreferences[category].splice(index, 1);
+          this.classList.remove('selected');
+        } else {
+          // 如果未选中，则添加选择
+          userPreferences[category].push(value);
+          this.classList.add('selected');
+        }
+        
+        // 更新选择计数
+        updateSelectedCount();
+      });
+    });
+    
+    // 跳过按钮点击处理
+    skipBtn.addEventListener('click', function() {
+      if (confirm('跳过偏好设置？您可以在稍后的账户设置中重新设置。')) {
+        // 存储空的偏好设置
+        localStorage.setItem('userPreferences', JSON.stringify({}));
+        localStorage.setItem('preferencesSkipped', 'true');
+        
+        // 跳转到主页
+        window.location.href = 'index.html';
+      }
+    });
+    
+    // 提交偏好设置
+    submitBtn.addEventListener('click', function() {
+      // 收集所有选中的偏好
+      const selectedPreferences = {};
+      Object.keys(userPreferences).forEach(category => {
+        if (userPreferences[category].length > 0) {
+          selectedPreferences[category] = userPreferences[category];
+        }
+      });
+      
+      // 存储到localStorage
+      localStorage.setItem('userPreferences', JSON.stringify(selectedPreferences));
+      localStorage.setItem('preferencesCompleted', 'true');
+      
+      // 显示加载状态
+      submitBtn.innerHTML = '<i class="fa fa-spinner fa-spin"></i> 正在保存...';
+      submitBtn.disabled = true;
+      
+      // 模拟API调用延迟
+      setTimeout(() => {
+        // 跳转到主页或仪表板
+        alert('偏好设置已保存！即将为您推荐个性化内容。');
+        window.location.href = 'index.html';
+      }, 1000);
+    });
+    
+    // 初始化
+    updateSelectedCount();
+  </script>
+</body>
+</html>

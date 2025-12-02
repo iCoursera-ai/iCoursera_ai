@@ -1,0 +1,685 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>BGArea - 习题详情分析</title>
+  <!-- 引入依赖 -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.8/dist/chart.umd.min.js"></script>
+  
+  <!-- Tailwind配置 -->
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            primary: '#165DFF',
+            secondary: '#6B7280',
+            light: '#F9FAFB',
+            dark: '#1F2937',
+            success: '#10B981',
+            warning: '#FF9F43',
+            danger: '#F53F3F',
+            gray: {
+              100: '#F7F8FA',
+              200: '#E5E6EB',
+              300: '#C9CDD4',
+              400: '#86909C',
+              500: '#4E5969',
+              600: '#272E3B',
+            }
+          },
+          fontFamily: {
+            inter: ['Inter', 'system-ui', 'sans-serif'],
+          },
+        },
+      }
+    }
+  </script>
+  
+  <!-- 自定义工具类 -->
+  <style type="text/tailwindcss">
+    @layer utilities {
+      .content-auto { content-visibility: auto; }
+      .course-section-title { @apply font-medium text-gray-600 py-2 px-4 border-b border-gray-200; }
+      .course-item { @apply flex items-center gap-3 px-4 py-2.5 hover:bg-primary/5 cursor-pointer transition-colors text-sm; }
+      .course-item.active { @apply bg-primary/10 text-primary; }
+      .course-item-icon { @apply w-5 h-5 flex items-center justify-center rounded; }
+      .course-item-video { @apply bg-primary/10 text-primary; }
+      .course-item-exercise { @apply bg-success/10 text-success; }
+      .question-item { @apply border border-gray-200 rounded-lg p-4 mb-6 bg-white; }
+      .question-header { @apply font-medium text-dark mb-3 flex items-center gap-2; }
+      .option-item { @apply pl-6 py-2 hover:bg-gray-50 transition-colors cursor-pointer; }
+      .option-item.correct { @apply bg-success/5 border-l-4 border-success pl-4; }
+    }
+  </style>
+</head>
+
+<body class="font-inter bg-gray-50 min-h-screen flex flex-col">
+  <!-- 顶部导航栏 -->
+  <header class="bg-white py-4 px-6 md:px-12 shadow-sm sticky top-0 z-40">
+    <div class="container mx-auto flex justify-between items-center">
+      <div class="flex items-center gap-2">
+        <div class="bg-primary text-white p-1.5 rounded-md">
+          <i class="fa fa-graduation-cap"></i>
+        </div>
+        <span class="text-lg font-semibold text-dark">BGarea</span>
+      </div>
+
+      <!-- 中间文字按钮区域 -->
+      <div class="hidden md:flex items-center gap-6">
+        <button class="text-black hover:text-primary text-sm font-medium transition-colors duration-200 flex items-center gap-1" onclick="window.location.href='index.html'">
+            首页
+        </button>
+        <button class="text-black hover:text-primary text-sm font-medium transition-colors duration-200 flex items-center gap-1" onclick="window.location.href='Personal Information.html'">
+            用户中心
+        </button>
+        <button class="text-black hover:text-primary text-sm font-medium transition-colors duration-200 flex items-center gap-1" onclick="window.location.href='Login.html'">
+            登录界面
+        </button>
+        <button class="text-black hover:text-primary text-sm font-medium transition-colors duration-200 flex items-center gap-1" onclick="window.location.href='稿件管理界面.html'">
+            稿件管理界面
+        </button>
+      </div>
+
+      <div class="flex items-center gap-4">
+        <button class="text-secondary hover:text-primary transition-colors duration-200">
+          <i class="fa fa-search"></i>
+        </button>
+        <div class="w-8 h-8 rounded-full bg-primary/10 text-primary flex items-center justify-center cursor-pointer border border-primary/20">
+          <span>A</span>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <div class="flex flex-1">
+    <!-- 左侧课程列表导航 -->
+    <aside class="w-64 bg-white border-r border-gray-200 flex-shrink-0 h-[calc(100vh-5rem)] sticky top-[5rem] overflow-y-auto z-30">
+      <!-- 课程章节标题 -->
+      <div class="course-section-title">
+        操作系统课程
+      </div>
+      
+      <!-- 第一章 -->
+      <div class="border-b border-gray-200">
+        <div class="course-section-title flex justify-between items-center">
+          <span>第一章</span>
+          <i class="fa fa-angle-down text-xs text-gray-400"></i>
+        </div>
+        <div class="pl-2">
+          <div class="course-item" onclick="window.location.href='video.html'">
+            <div class="course-item-icon course-item-video">
+              <i class="fa fa-play text-xs"></i>
+            </div>
+            <span>视频1.1</span>
+          </div>
+          <div class="course-item" onclick="window.location.href='video.html'">
+            <div class="course-item-icon course-item-video">
+              <i class="fa fa-play text-xs"></i>
+            </div>
+            <span>视频1.2</span>
+          </div>
+          <div class="course-item active" onclick="window.location.href='exercise.html'">
+            <div class="course-item-icon course-item-exercise">
+              <i class="fa fa-pencil text-xs"></i>
+            </div>
+            <span>习题1.1</span>
+          </div>
+        </div>
+      </div>
+      
+      <!-- 第二章 -->
+      <div class="border-b border-gray-200">
+        <div class="course-section-title flex justify-between items-center">
+          <span>第二章</span>
+          <i class="fa fa-angle-down text-xs text-gray-400"></i>
+        </div>
+        <div class="pl-2">
+          <div class="course-item" onclick="window.location.href='video.html'">
+            <div class="course-item-icon course-item-video">
+              <i class="fa fa-play text-xs"></i>
+            </div>
+            <span>视频2.1</span>
+          </div>
+          <div class="course-item" onclick="window.location.href='video.html'">
+            <div class="course-item-icon course-item-video">
+              <i class="fa fa-play text-xs"></i>
+            </div>
+            <span>视频2.2</span>
+          </div>
+          <div class="course-item" onclick="window.location.href='exercise.html'">
+            <div class="course-item-icon course-item-exercise">
+              <i class="fa fa-pencil text-xs"></i>
+            </div>
+            <span>习题2.1</span>
+          </div>
+          <div class="course-item" onclick="window.location.href='exercise.html'">
+            <div class="course-item-icon course-item-exercise">
+              <i class="fa fa-pencil text-xs"></i>
+            </div>
+            <span>习题2.2</span>
+          </div>
+        </div>
+      </div>
+      
+      <!-- 第三章到第八章 -->
+      <div class="border-b border-gray-200">
+        <div class="course-section-title flex justify-between items-center">
+          <span>第三章</span>
+          <i class="fa fa-angle-right text-xs text-gray-400"></i>
+        </div>
+      </div>
+      
+      <div class="border-b border-gray-200">
+        <div class="course-section-title flex justify-between items-center">
+          <span>第四章</span>
+          <i class="fa fa-angle-right text-xs text-gray-400"></i>
+        </div>
+      </div>
+      
+      <div class="border-b border-gray-200">
+        <div class="course-section-title flex justify-between items-center">
+          <span>第五章</span>
+          <i class="fa fa-angle-right text-xs text-gray-400"></i>
+        </div>
+      </div>
+      
+      <div class="border-b border-gray-200">
+        <div class="course-section-title flex justify-between items-center">
+          <span>第六章</span>
+          <i class="fa fa-angle-right text-xs text-gray-400"></i>
+        </div>
+      </div>
+      
+      <div class="border-b border-gray-200">
+        <div class="course-section-title flex justify-between items-center">
+          <span>第七章</span>
+          <i class="fa fa-angle-right text-xs text-gray-400"></i>
+        </div>
+      </div>
+      
+      <div>
+        <div class="course-section-title flex justify-between items-center">
+          <span>第八章</span>
+          <i class="fa fa-angle-right text-xs text-gray-400"></i>
+        </div>
+      </div>
+    </aside>
+
+    <!-- 主内容区域：习题详情分析 -->
+    <main class="flex-1 overflow-y-auto p-6">
+      <!-- 面包屑导航 -->
+      <div class="text-sm text-secondary mb-6">
+        <span>用户中心</span>
+        <i class="fa fa-angle-right mx-1 text-gray-400"></i>
+        <span>教师管理</span>
+        <i class="fa fa-angle-right mx-1 text-gray-400"></i>
+	<span>工作台</span>
+        <i class="fa fa-angle-right mx-1 text-gray-400"></i>
+        <span>操作系统课程</span>
+        <i class="fa fa-angle-right mx-1 text-gray-400"></i>
+        <span class="text-dark font-medium">习题1.1 - 数据分析</span>
+      </div>
+
+      <!-- 页面内容容器 -->
+      <div class="space-y-6">
+        <!-- 数据分析概览 -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div class="bg-white rounded-lg border border-gray-200 p-4 shadow-sm">
+            <div class="text-xs text-secondary mb-1">参与人数</div>
+            <div class="flex items-center justify-between">
+              <div class="text-xl font-bold text-dark">12,568</div>
+              <div class="text-success text-xs flex items-center">
+                <i class="fa fa-caret-up mr-1"></i> 156
+              </div>
+            </div>
+            <div class="mt-2 h-10">
+              <canvas id="participantsChart"></canvas>
+            </div>
+          </div>
+          
+          <div class="bg-white rounded-lg border border-gray-200 p-4 shadow-sm">
+            <div class="text-xs text-secondary mb-1">平均正确率</div>
+            <div class="flex items-center justify-between">
+              <div class="text-xl font-bold text-dark">68%</div>
+              <div class="text-danger text-xs flex items-center">
+                <i class="fa fa-caret-down mr-1"></i> 4%
+              </div>
+            </div>
+            <div class="mt-2 h-10">
+              <canvas id="accuracyChart"></canvas>
+            </div>
+          </div>
+          
+          <div class="bg-white rounded-lg border border-gray-200 p-4 shadow-sm">
+            <div class="text-xs text-secondary mb-1">平均用时</div>
+            <div class="flex items-center justify-between">
+              <div class="text-xl font-bold text-dark">8分25秒</div>
+              <div class="text-success text-xs flex items-center">
+                <i class="fa fa-caret-up mr-1"></i> 12秒
+              </div>
+            </div>
+            <div class="mt-2 h-10">
+              <canvas id="timeSpentChart"></canvas>
+            </div>
+          </div>
+          
+          <div class="bg-white rounded-lg border border-gray-200 p-4 shadow-sm">
+            <div class="text-xs text-secondary mb-1">错题提交率</div>
+            <div class="flex items-center justify-between">
+              <div class="text-xl font-bold text-dark">32%</div>
+              <div class="text-success text-xs flex items-center">
+                <i class="fa fa-caret-up mr-1"></i> 2%
+              </div>
+            </div>
+            <div class="mt-2 h-10">
+              <canvas id="errorRateChart"></canvas>
+            </div>
+          </div>
+        </div>
+
+        <!-- 习题分析 + 题目列表 -->
+        <div class="flex flex-col lg:flex-row gap-6">
+          <!-- 左侧：习题分析 -->
+          <div class="flex-1 space-y-6">
+            <!-- 答题情况分析 -->
+            <div class="bg-white rounded-lg border border-gray-200 p-4 shadow-sm">
+              <div class="flex justify-between items-center mb-4">
+                <h3 class="font-medium text-dark">习题数据分析</h3>
+                <button class="text-primary text-sm hover:bg-primary/10 px-3 py-1 rounded transition-colors">查看历史数据</button>
+              </div>
+              
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <!-- 内容分析饼图 -->
+                <div>
+                  <h4 class="text-sm font-medium text-gray-600 mb-3">内容分析</h4>
+                  <div class="h-48 flex items-center justify-center">
+                    <canvas id="contentAnalysisChart"></canvas>
+                  </div>
+                  <div class="flex justify-center gap-4 mt-2 text-xs text-gray-500">
+                    <div class="flex items-center gap-1">
+                      <span class="w-3 h-3 rounded-full bg-primary"></span>
+                      <span>正确 74%</span>
+                    </div>
+                    <div class="flex items-center gap-1">
+                      <span class="w-3 h-3 rounded-full bg-gray-300"></span>
+                      <span>错误 24%</span>
+                    </div>
+                    <div class="flex items-center gap-1">
+                      <span class="w-3 h-3 rounded-full bg-warning"></span>
+                      <span>未答 2%</span>
+                    </div>
+                  </div>
+                </div>
+                
+                <!-- 用时分析柱状图 -->
+                <div>
+                  <h4 class="text-sm font-medium text-gray-600 mb-3">习题用时分析</h4>
+                  <div class="h-48">
+                    <canvas id="timeAnalysisChart"></canvas>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- 习题内容 -->
+            <div class="bg-white rounded-lg border border-gray-200 p-4 shadow-sm">
+              <div class="flex justify-between items-center mb-6">
+                <h3 class="font-medium text-dark">习题内容</h3>
+                <button class="bg-primary/10 text-primary text-sm px-3 py-1 rounded hover:bg-primary/20 transition-colors">
+                  修改题目
+                </button>
+              </div>
+              
+              <div class="mb-4">
+                <h4 class="text-base font-medium text-dark mb-4">01. 单元测验 <span class="text-xs text-primary bg-primary/10 px-2 py-0.5 rounded ml-2">查看帮助</span></h4>
+                
+                <!-- 题目1 -->
+                <div class="question-item">
+                  <div class="question-header">
+                    <span class="w-5 h-5 rounded-full bg-primary/10 text-primary flex items-center justify-center text-xs">1</span>
+                    <span>(2分) 计算机之父是指：</span>
+                  </div>
+                  <div class="space-y-1">
+                    <div class="option-item correct">
+                      <div class="flex items-start gap-2">
+                        <span class="w-5 h-5 rounded-full bg-success/10 text-success flex items-center justify-center text-xs mt-0.5">A</span>
+                        <div>
+                          <span>艾伦·图灵</span>
+                          <span class="ml-2 text-xs text-success bg-success/10 px-1.5 py-0.25 rounded">正确答案</span>
+                        </div>
+                      </div>
+                    </div>
+                    <div class="option-item">
+                      <div class="flex items-start gap-2">
+                        <span class="w-5 h-5 rounded-full bg-gray-100 text-gray-500 flex items-center justify-center text-xs mt-0.5">B</span>
+                        <span>赫尔曼·豪瑟</span>
+                      </div>
+                    </div>
+                    <div class="option-item">
+                      <div class="flex items-start gap-2">
+                        <span class="w-5 h-5 rounded-full bg-gray-100 text-gray-500 flex items-center justify-center text-xs mt-0.5">C</span>
+                        <span>蒂姆·伯纳斯-李</span>
+                      </div>
+                    </div>
+                    <div class="option-item">
+                      <div class="flex items-start gap-2">
+                        <span class="w-5 h-5 rounded-full bg-gray-100 text-gray-500 flex items-center justify-center text-xs mt-0.5">D</span>
+                        <span>马克·安德森</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                
+                <!-- 题目2 -->
+                <div class="question-item">
+                  <div class="question-header">
+                    <span class="w-5 h-5 rounded-full bg-primary/10 text-primary flex items-center justify-center text-xs">2</span>
+                    <span>(2分) 下列属于比较新的人工智能的研究方向：</span>
+                  </div>
+                  <div class="space-y-1">
+                    <div class="option-item">
+                      <div class="flex items-start gap-2">
+                        <span class="w-5 h-5 rounded-full bg-gray-100 text-gray-500 flex items-center justify-center text-xs mt-0.5">A</span>
+                        <span>人工神经元网络</span>
+                      </div>
+                    </div>
+                    <div class="option-item correct">
+                      <div class="flex items-start gap-2">
+                        <span class="w-5 h-5 rounded-full bg-success/10 text-success flex items-center justify-center text-xs mt-0.5">B</span>
+                        <div>
+                          <span>类脑人工智能</span>
+                          <span class="ml-2 text-xs text-success bg-success/10 px-1.5 py-0.25 rounded">正确答案</span>
+                        </div>
+                      </div>
+                    </div>
+                    <div class="option-item">
+                      <div class="flex items-start gap-2">
+                        <span class="w-5 h-5 rounded-full bg-gray-100 text-gray-500 flex items-center justify-center text-xs mt-0.5">C</span>
+                        <span>深度学习</span>
+                      </div>
+                    </div>
+                    <div class="option-item">
+                      <div class="flex items-start gap-2">
+                        <span class="w-5 h-5 rounded-full bg-gray-100 text-gray-500 flex items-center justify-center text-xs mt-0.5">D</span>
+                        <span>贝叶斯网络</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- 习题建议 -->
+            <div class="bg-white rounded-lg border border-gray-200 p-4 shadow-sm">
+              <h3 class="font-medium text-dark mb-4">习题建议</h3>
+              <div class="text-sm text-gray-600 space-y-2">
+                <p>1. 所有习题正确率偏低，题目内容难度较高且题目数量不足</p>
+                <p>2. 题目2的正确率偏低，可能题目本身存在问题</p>
+                <p>3. 建议增加同类题型练习，提高学生对知识点的掌握程度</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- 右侧：习题数据统计 -->
+          <div class="w-full lg:w-80 space-y-6">
+            <!-- 习题1.1 数据统计 -->
+            <div class="bg-white rounded-lg border border-gray-200 p-4 shadow-sm">
+              <div class="flex justify-between items-center mb-4">
+                <h3 class="font-medium text-dark">习题1.1</h3>
+                <span class="text-xs text-primary">综合难度分析</span>
+              </div>
+              <div class="overflow-x-auto">
+                <table class="w-full text-sm">
+                  <thead>
+                    <tr class="border-b border-gray-200">
+                      <th class="text-left py-2 text-secondary text-xs">排名</th>
+                      <th class="text-left py-2 text-secondary text-xs">题号</th>
+                      <th class="text-left py-2 text-secondary text-xs">正确率</th>
+                      <th class="text-left py-2 text-secondary text-xs">测试量</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr class="border-b border-gray-100">
+                      <td class="py-2 text-xs">1</td>
+                      <td class="py-2 text-xs">1</td>
+                      <td class="py-2 text-xs text-success">100%</td>
+                      <td class="py-2 text-xs">22,214</td>
+                    </tr>
+                    <tr class="border-b border-gray-100">
+                      <td class="py-2 text-xs">2</td>
+                      <td class="py-2 text-xs">2</td>
+                      <td class="py-2 text-xs text-warning">90%</td>
+                      <td class="py-2 text-xs">21,445</td>
+                    </tr>
+                    <tr class="border-b border-gray-100">
+                      <td class="py-2 text-xs">3</td>
+                      <td class="py-2 text-xs">3</td>
+                      <td class="py-2 text-xs text-danger">10%</td>
+                      <td class="py-2 text-xs">21,567</td>
+                    </tr>
+                    <tr class="border-b border-gray-100">
+                      <td class="py-2 text-xs">4</td>
+                      <td class="py-2 text-xs">4</td>
+                      <td class="py-2 text-xs text-danger">17%</td>
+                      <td class="py-2 text-xs">12,266</td>
+                    </tr>
+                    <tr>
+                      <td class="py-2 text-xs">5</td>
+                      <td class="py-2 text-xs">5</td>
+                      <td class="py-2 text-xs text-danger">21%</td>
+                      <td class="py-2 text-xs">11,566</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <!-- 错误选项分析 -->
+            <div class="bg-white rounded-lg border border-gray-200 p-4 shadow-sm">
+              <h3 class="font-medium text-dark mb-4">错误选项分析</h3>
+              <div class="space-y-4">
+                <div>
+                  <div class="flex justify-between items-center mb-1">
+                    <span class="text-xs font-medium">题目3选项C</span>
+                    <span class="text-xs text-danger bg-danger/10 px-1.5 py-0.5 rounded">89%错误率</span>
+                  </div>
+                  <div class="w-full bg-gray-200 rounded-full h-2 mb-1">
+                    <div class="bg-danger h-2 rounded-full" style="width: 89%"></div>
+                  </div>
+                  <p class="text-xs text-secondary">学生对该概念理解存在严重不足</p>
+                </div>
+                
+                <div>
+                  <div class="flex justify-between items-center mb-1">
+                    <span class="text-xs font-medium">题目4选项B</span>
+                    <span class="text-xs text-danger bg-danger/10 px-1.5 py-0.5 rounded">83%错误率</span>
+                  </div>
+                  <div class="w-full bg-gray-200 rounded-full h-2 mb-1">
+                    <div class="bg-danger h-2 rounded-full" style="width: 83%"></div>
+                  </div>
+                  <p class="text-xs text-secondary">可能选项表述存在歧义</p>
+                </div>
+                
+                <div>
+                  <div class="flex justify-between items-center mb-1">
+                    <span class="text-xs font-medium">题目5选项D</span>
+                    <span class="text-xs text-warning bg-warning/10 px-1.5 py-0.5 rounded">52%错误率</span>
+                  </div>
+                  <div class="w-full bg-gray-200 rounded-full h-2 mb-1">
+                    <div class="bg-warning h-2 rounded-full" style="width: 52%"></div>
+                  </div>
+                  <p class="text-xs text-secondary">知识点较难，建议加强讲解</p>
+                </div>
+              </div>
+            </div>
+
+            <!-- 相关视频推荐 -->
+            <div class="bg-white rounded-lg border border-gray-200 p-4 shadow-sm">
+              <h3 class="font-medium text-dark mb-4">相关视频推荐</h3>
+              <div class="space-y-3">
+                <div class="flex gap-3 p-2 hover:bg-gray-50 rounded-lg cursor-pointer transition-colors" onclick="window.location.href='video.html'">
+                  <div class="w-20 h-14 bg-gray-100 rounded flex items-center justify-center flex-shrink-0">
+                    <i class="fa fa-play-circle text-primary"></i>
+                  </div>
+                  <div>
+                    <h4 class="text-xs font-medium text-dark">视频1.1 - 计算机发展历史</h4>
+                    <p class="text-xs text-gray-500 mt-1">15:30 时长</p>
+                  </div>
+                </div>
+                
+                <div class="flex gap-3 p-2 hover:bg-gray-50 rounded-lg cursor-pointer transition-colors" onclick="window.location.href='video.html'">
+                  <div class="w-20 h-14 bg-gray-100 rounded flex items-center justify-center flex-shrink-0">
+                    <i class="fa fa-play-circle text-primary"></i>
+                  </div>
+                  <div>
+                    <h4 class="text-xs font-medium text-dark">视频1.2 - 人工智能基础</h4>
+                    <p class="text-xs text-gray-500 mt-1">21:15 时长</p>
+                  </div>
+                </div>
+                
+                <div class="flex gap-3 p-2 hover:bg-gray-50 rounded-lg cursor-pointer transition-colors" onclick="window.location.href='video.html'">
+                  <div class="w-20 h-14 bg-gray-100 rounded flex items-center justify-center flex-shrink-0">
+                    <i class="fa fa-play-circle text-primary"></i>
+                  </div>
+                  <div>
+                    <h4 class="text-xs font-medium text-dark">视频2.1 - 神经网络入门</h4>
+                    <p class="text-xs text-gray-500 mt-1">18:45 时长</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <!-- 页脚 -->
+  <footer class="bg-white py-6 px-6 border-t border-gray-200">
+    <div class="container mx-auto">
+      <div class="text-center text-sm text-gray-500 mb-4">
+        &copy; 2023 BGarea在线学习平台. 保留所有权利.
+      </div>
+      <div class="flex flex-wrap justify-center gap-x-6 gap-y-2 text-xs text-gray-500">
+        <a href="#" class="hover:text-primary transition-colors duration-200">关于我们</a>
+        <a href="#" class="hover:text-primary transition-colors duration-200">隐私政策</a>
+        <a href="#" class="hover:text-primary transition-colors duration-200">服务条款</a>
+        <a href="#" class="hover:text-primary transition-colors duration-200">联系我们</a>
+      </div>
+    </div>
+  </footer>
+
+  <!-- 图表初始化脚本 -->
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      // 小图表通用配置
+      const smallChartConfig = {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: { legend: { display: false } },
+        scales: { x: { display: false }, y: { display: false } },
+        elements: { point: { radius: 0 } }
+      };
+      
+      // 参与人数小图表
+      new Chart(document.getElementById('participantsChart'), {
+        type: 'line',
+        data: { labels: [1,2,3,4,5,6,7], datasets: [{ data: [5,3,4,6,5,7,9], borderColor: '#165DFF', tension: 0.4 }] },
+        options: smallChartConfig
+      });
+      
+      // 正确率小图表
+      new Chart(document.getElementById('accuracyChart'), {
+        type: 'line',
+        data: { labels: [1,2,3,4,5,6,7], datasets: [{ data: [72,75,73,70,69,68,68], borderColor: '#F53F3F', tension: 0.4 }] },
+        options: smallChartConfig
+      });
+      
+      // 用时小图表
+      new Chart(document.getElementById('timeSpentChart'), {
+        type: 'bar',
+        data: { labels: [1,2,3,4,5], datasets: [{ data: [6,7,8,8,8.5], backgroundColor: '#10B981' }] },
+        options: smallChartConfig
+      });
+      
+      // 错题率小图表
+      new Chart(document.getElementById('errorRateChart'), {
+        type: 'doughnut',
+        data: { labels: ['错题', '正确'], datasets: [{ data: [32,68], backgroundColor: ['#F53F3F', '#E5E6EB'] }] },
+        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
+      });
+      
+      // 内容分析饼图
+      new Chart(document.getElementById('contentAnalysisChart'), {
+        type: 'doughnut',
+        data: { 
+          labels: ['正确', '错误', '未答'], 
+          datasets: [{ 
+            data: [74,24,2], 
+            backgroundColor: ['#165DFF', '#E5E6EB', '#FF9F43'],
+            borderWidth: 0
+          }] 
+        },
+        options: { 
+          responsive: true, 
+          maintainAspectRatio: false, 
+          plugins: { legend: { display: false } },
+          cutout: '70%'
+        }
+      });
+      
+      // 用时分析柱状图
+      new Chart(document.getElementById('timeAnalysisChart'), {
+        type: 'bar',
+        data: {
+          labels: ['10分钟', '20分钟', '30分钟', '40分钟', '50分钟'],
+          datasets: [{ 
+            label: '人数分布', 
+            data: [120, 350, 420, 280, 150], 
+            backgroundColor: '#165DFF' 
+          }]
+        },
+        options: { 
+          responsive: true, 
+          maintainAspectRatio: false, 
+          plugins: { legend: { display: false } },
+          scales: {
+            y: { beginAtZero: true, ticks: { display: false } },
+            x: { grid: { display: false } }
+          }
+        }
+      });
+
+      // 章节展开/折叠功能
+      document.querySelectorAll('.course-section-title').forEach(title => {
+        if (title.querySelector('.fa-angle-down, .fa-angle-right')) {
+          title.addEventListener('click', function() {
+            const icon = this.querySelector('.fa');
+            const content = this.nextElementSibling;
+            
+            if (content && content.classList.contains('pl-2')) {
+              content.classList.toggle('hidden');
+              icon.classList.toggle('fa-angle-down');
+              icon.classList.toggle('fa-angle-right');
+            }
+          });
+        }
+      });
+
+      // 课程项点击事件
+      document.querySelectorAll('.course-item').forEach(item => {
+        if (!item.hasAttribute('onclick')) {
+          item.addEventListener('click', function() {
+            document.querySelectorAll('.course-item').forEach(i => i.classList.remove('active'));
+            this.classList.add('active');
+          });
+        }
+      });
+    });
+  </script>
+</body>
+</html>
