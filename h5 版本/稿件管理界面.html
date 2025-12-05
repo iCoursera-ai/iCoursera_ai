@@ -1,0 +1,1059 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>BGarea - 稿件管理</title>
+  <!-- 引入Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- 引入Font Awesome -->
+  <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
+  
+  <!-- 配置Tailwind自定义颜色和字体 -->
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            primary: '#165DFF',
+            success: '#10B981',
+            gray: {
+              100: '#F7F8FA',
+              200: '#E5E6EB',
+              300: '#C9CDD4',
+              400: '#86909C',
+              500: '#4E5969',
+              600: '#272E3B',
+            },
+            red: {
+              500: '#F53F3F',
+            },
+            orange: {
+              500: '#FF7D00',
+            }
+          },
+          fontFamily: {
+            inter: ['Inter', 'system-ui', 'sans-serif'],
+          },
+        },
+      }
+    }
+  </script>
+  
+  <!-- 自定义工具类 -->
+  <style type="text/tailwindcss">
+    @layer utilities {
+      .btn-primary {
+        @apply bg-primary hover:bg-primary/90 text-white font-medium py-2.5 rounded-md transition-all duration-200;
+      }
+      .btn-secondary {
+        @apply bg-gray-200 hover:bg-gray-300 text-gray-700 font-medium py-2.5 rounded-md transition-all duration-200;
+      }
+      .input-field {
+        @apply w-full px-4 py-2.5 rounded-md border border-gray-300 focus:border-primary focus:ring-1 focus:ring-primary focus:outline-none transition-all duration-200;
+      }
+      .upload-area {
+        @apply border-2 border-dashed border-gray-300 rounded-lg p-8 text-center hover:border-primary/50 transition-all duration-200 cursor-pointer;
+      }
+      .upload-area.active {
+        @apply border-primary bg-primary/5;
+      }
+      .badge-published {
+        @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800;
+      }
+      .badge-draft {
+        @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800;
+      }
+      .badge-pending {
+        @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-orange-100 text-orange-800;
+      }
+      .badge-unpublished {
+        @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800;
+      }
+      .toast {
+        @apply fixed top-4 right-4 px-4 py-3 rounded-md shadow-lg flex items-center gap-2 z-50 transition-all duration-300 transform translate-y-[-100px] opacity-0;
+      }
+      .toast.show {
+        @apply translate-y-0 opacity-100;
+      }
+      .toast-success {
+        @apply bg-green-50 text-green-800 border border-green-200;
+      }
+      .toast-warning {
+        @apply bg-orange-50 text-orange-800 border border-orange-200;
+      }
+      .toast-error {
+        @apply bg-red-50 text-red-800 border border-red-200;
+      }
+    }
+  </style>
+</head>
+
+<body class="font-inter bg-gray-50 min-h-screen flex flex-col">
+  <!-- 顶部导航栏 -->
+  <header class="bg-white py-4 px-6 md:px-12 shadow-sm">
+    <div class="container mx-auto flex justify-between items-center">
+      <!-- 左侧Logo区域 -->
+      <div class="flex items-center gap-2">
+        <div class="bg-primary text-white p-1.5 rounded-md">
+          <i class="fa fa-graduation-cap"></i>
+        </div>
+        <span class="text-lg font-semibold text-dark">BGarea</span>
+      </div>
+	
+      <!-- 中间文字按钮区域 -->
+      <div class="hidden md:flex items-center gap-6">
+        <button class="text-black hover:text-primary text-sm font-medium transition-colors duration-200 flex items-center gap-1" onclick="window.location.href='index.html'">
+            首页
+        </button>
+        <button class="text-black hover:text-primary text-sm font-medium transition-colors duration-200 flex items-center gap-1" onclick="window.location.href='Personal Information.html'">
+            用户中心
+        </button>
+        <button class="text-black hover:text-primary text-sm font-medium transition-colors duration-200 flex items-center gap-1" onclick="window.location.href='Login.html'">
+            登录界面
+        </button>
+        <button class="text-black hover:text-primary text-sm font-medium transition-colors duration-200 flex items-center gap-1" onclick="window.location.href='稿件管理界面.html'">
+            稿件管理界面
+        </button>
+      </div>
+      
+      <!-- 右侧用户操作区域 -->
+      <div class="flex items-center gap-4">
+        <button class="text-secondary hover:text-primary text-sm font-medium transition-colors duration-200 flex items-center gap-1">
+          <i class="fa fa-search"></i>
+        </button>
+        <!-- 用户头像 -->
+        <!-- 替换后的用户菜单区域 -->
+        <div class="flex items-center gap-4" id="userMenu">
+          <!-- 用户信息会通过JS动态渲染 -->
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- 主内容容器 -->
+  <div class="p-4 md:p-6">
+    <div class="max-w-7xl mx-auto">
+      <!-- 页面标题区域 -->
+      <div class="mb-6">
+        <h1 class="text-xl font-bold text-gray-800 mb-1">稿件管理</h1>
+        <p class="text-gray-500 text-sm">管理课程相关视频文件的上传、发布与下载操作</p>
+      </div>
+
+      <!-- 新增稿件区域 -->
+      <div class="bg-white rounded-lg p-4 mb-6">
+        <h2 class="text-base font-semibold text-gray-800 mb-4">新增稿件</h2>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <!-- 选择课程 -->
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">选择课程</label>
+            <div id="upload-area" class="upload-area">
+              <div id="preview-container" class="hidden mb-4">
+                <img id="preview-image" src="" alt="预览图" class="w-32 h-32 object-cover rounded mx-auto">
+              </div>
+              <p id="upload-text" class="text-gray-500 mb-2">点击或拖拽图片文件到此处上传</p>
+              <p class="text-xs text-gray-400 mb-4">支持png格式，单个文件不超过25MB</p>
+              <input type="file" id="file-input" accept="image/png" class="hidden">
+              <button id="select-file-btn" class="px-3 py-1 bg-primary text-white rounded text-sm">选择文件</button>
+            </div>
+          </div>
+          
+          <!-- 课程简介 -->
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">课程简介</label>
+            <textarea id="course-desc" class="input-field h-32" placeholder="输入课程简介（将显示给学员）"></textarea>
+          </div>
+          
+          <!-- 课程节数 -->
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">课程节数</label>
+            <input id="chapter-count" type="text" class="input-field mb-4" placeholder="文件标题">
+            <input id="course-title" type="text" class="input-field mb-4" placeholder="输入课程标题（将显示给学员）">
+            <button id="upload-btn" class="btn-primary w-full" disabled>开始上传</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- 稿件管理列区域 -->
+      <div class="bg-white rounded-lg p-4">
+        <div class="flex justify-between items-center mb-4">
+          <h2 class="text-base font-semibold text-gray-800">稿件管理列</h2>
+          <div class="relative">
+            <input id="search-input" type="text" class="input-field w-48 pr-8 text-sm" placeholder="输入时间，课程名等">
+            <button id="search-btn" class="absolute right-2 top-1/2 -translate-y-1/2 text-gray-500">
+              <i class="fa fa-search"></i>
+            </button>
+          </div>
+        </div>
+
+        <!-- 表格区域 -->
+        <div class="overflow-x-auto">
+          <table class="w-full text-sm">
+            <thead>
+              <tr class="border-b border-gray-200">
+                <th class="text-left py-2 px-1 font-medium text-gray-700">预览图</th>
+                <th class="text-left py-2 px-1 font-medium text-gray-700">文件信息</th>
+                <th class="text-left py-2 px-1 font-medium text-gray-700">章节数</th>
+                <th class="text-left py-2 px-1 font-medium text-gray-700">文件大小</th>
+                <th class="text-left py-2 px-1 font-medium text-gray-700">上传时间</th>
+                <th class="text-left py-2 px-1 font-medium text-gray-700">状态</th>
+                <th class="text-left py-2 px-1 font-medium text-gray-700">操作</th>
+              </tr>
+            </thead>
+            <tbody id="file-table-body">
+              <tr class="border-b border-gray-200">
+                <td class="py-3 px-1">
+                  <div class="w-8 h-8 bg-gray-200 rounded"></div>
+                </td>
+                <td class="py-3 px-1">
+                  <p class="font-medium text-gray-800">JavaScript基础语法讲解</p>
+                  <p class="text-xs text-gray-500">时长: 15:30</p>
+                </td>
+                <td class="py-3 px-1">一章</td>
+                <td class="py-3 px-1">256 MB</td>
+                <td class="py-3 px-1">2025-10-15 09:23</td>
+                <td class="py-3 px-1"><span class="badge-published">已发</span></td>
+                <td class="py-3 px-1">
+                  <button class="text-primary hover:underline mr-2 preview-btn" data-id="1">预览</button>
+                  <button class="text-red-500 hover:underline download-btn" data-id="1">下载</button>
+                </td>
+              </tr>
+              <tr class="border-b border-gray-200">
+                <td class="py-3 px-1">
+                  <div class="w-8 h-8 bg-gray-200 rounded"></div>
+                </td>
+                <td class="py-3 px-1">
+                  <p class="font-medium text-gray-800">DOM元素操作实战</p>
+                  <p class="text-xs text-gray-500">时长: 20:58</p>
+                </td>
+                <td class="py-3 px-1">二章</td>
+                <td class="py-3 px-1">384 MB</td>
+                <td class="py-3 px-1">2025-10-18 14:56</td>
+                <td class="py-3 px-1"><span class="badge-draft">未发</span></td>
+                <td class="py-3 px-1">
+                  <button class="text-primary hover:underline mr-2 preview-btn" data-id="2">预览</button>
+                  <button class="text-green-500 hover:underline publish-btn" data-id="2">发布</button>
+                </td>
+              </tr>
+              <tr class="border-b border-gray-200">
+                <td class="py-3 px-1">
+                  <div class="w-8 h-8 bg-gray-200 rounded"></div>
+                </td>
+                <td class="py-3 px-1">
+                  <p class="font-medium text-gray-800">Promise异步编程详解</p>
+                  <p class="text-xs text-gray-500">时长: 18:45</p>
+                </td>
+                <td class="py-3 px-1">三章</td>
+                <td class="py-3 px-1">312 MB</td>
+                <td class="py-3 px-1">2025-10-20 11:32</td>
+                <td class="py-3 px-1"><span class="badge-pending">审核</span></td>
+                <td class="py-3 px-1">
+                  <button class="text-primary hover:underline mr-2 preview-btn" data-id="3">预览</button>
+                  <button class="text-gray-500 hover:underline cancel-btn" data-id="3">取消</button>
+                </td>
+              </tr>
+              <tr>
+                <td class="py-3 px-1">
+                  <div class="w-8 h-8 bg-gray-200 rounded"></div>
+                </td>
+                <td class="py-3 px-1">
+                  <p class="font-medium text-gray-800">vue3基础入门</p>
+                  <p class="text-xs text-gray-500">时长: 25:10</p>
+                </td>
+                <td class="py-3 px-1">四章</td>
+                <td class="py-3 px-1">420 MB</td>
+                <td class="py-3 px-1">2025-10-12 08:45</td>
+                <td class="py-3 px-1"><span class="badge-unpublished">已下架</span></td>
+                <td class="py-3 px-1">
+                  <button class="text-primary hover:underline mr-2 preview-btn" data-id="4">预览</button>
+                  <button class="text-blue-500 hover:underline republish-btn" data-id="4">重新发布</button>
+                  <button class="text-red-500 hover:underline delete-btn" data-id="4">删除</button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- 分页区域 -->
+        <div class="flex justify-between items-center mt-4 text-sm">
+          <p class="text-gray-500">显示1至4条，共12条</p>
+          <div class="flex gap-1">
+            <button class="page-btn w-6 h-6 flex items-center justify-center rounded bg-primary text-white" data-page="1">1</button>
+            <button class="page-btn w-6 h-6 flex items-center justify-center rounded hover:bg-gray-200" data-page="2">2</button>
+            <button class="page-btn w-6 h-6 flex items-center justify-center rounded hover:bg-gray-200" data-page="3">3</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 文件详情预览区域 (替换模态框) -->
+  <div id="file-preview-panel" class="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-40 hidden">
+    <div class="bg-white rounded-lg w-full max-w-2xl max-h-[90vh] overflow-y-auto p-6">
+      <div class="flex justify-between items-center mb-6">
+        <h3 class="text-lg font-semibold text-gray-800">文件详情</h3>
+        <button id="close-preview-panel" class="text-gray-400 hover:text-gray-600">
+          <i class="fa fa-times"></i>
+        </button>
+      </div>
+      
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div class="text-center">
+          <img id="panel-preview-image" src="https://picsum.photos/400/300" alt="预览图" class="w-full max-w-xs h-48 object-cover rounded mx-auto mb-4">
+          <div class="flex gap-2 justify-center">
+            <button id="panel-download-btn" class="px-4 py-2 bg-primary text-white rounded text-sm hover:bg-primary/90">
+              <i class="fa fa-download mr-1"></i> 下载文件
+            </button>
+          </div>
+        </div>
+        
+        <div class="space-y-4">
+          <div>
+            <h4 id="panel-file-title" class="text-xl font-medium text-gray-800 mb-1">JavaScript基础语法讲解</h4>
+            <div class="flex flex-wrap gap-2 mt-2">
+              <span class="inline-flex items-center px-2 py-1 rounded text-xs bg-gray-100 text-gray-700">
+                <i class="fa fa-clock-o mr-1"></i> 15:30
+              </span>
+              <span class="inline-flex items-center px-2 py-1 rounded text-xs bg-gray-100 text-gray-700">
+                <i class="fa fa-file mr-1"></i> 256 MB
+              </span>
+              <span id="panel-file-status" class="inline-flex items-center px-2 py-1 rounded text-xs bg-green-100 text-green-700">
+                <i class="fa fa-check mr-1"></i> 已发布
+              </span>
+            </div>
+          </div>
+          
+          <div class="space-y-2">
+            <h5 class="text-sm font-medium text-gray-700">基本信息</h5>
+            <div class="grid grid-cols-2 gap-3">
+              <div class="bg-gray-50 p-3 rounded">
+                <p class="text-xs text-gray-500">章节数</p>
+                <p id="panel-chapter-count" class="text-sm font-medium">一章</p>
+              </div>
+              <div class="bg-gray-50 p-3 rounded">
+                <p class="text-xs text-gray-500">上传时间</p>
+                <p id="panel-upload-time" class="text-sm font-medium">2025-10-15 09:23</p>
+              </div>
+              <div class="bg-gray-50 p-3 rounded">
+                <p class="text-xs text-gray-500">文件格式</p>
+                <p class="text-sm font-medium">MP4</p>
+              </div>
+              <div class="bg-gray-50 p-3 rounded">
+                <p class="text-xs text-gray-500">更新时间</p>
+                <p id="panel-update-time" class="text-sm font-medium">2025-10-15 10:10</p>
+              </div>
+            </div>
+          </div>
+          
+          <div>
+            <h5 class="text-sm font-medium text-gray-700 mb-2">课程简介</h5>
+            <div class="bg-gray-50 p-3 rounded text-sm text-gray-600">
+              <p id="panel-course-desc">本课程详细讲解JavaScript基础语法，包括变量、数据类型、运算符、流程控制等核心知识点，适合零基础入门的学员学习。通过实例演示和练习，帮助学员快速掌握JavaScript编程基础。</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 提示框组件 -->
+  <div id="success-toast" class="toast toast-success">
+    <i class="fa fa-check-circle text-green-500"></i>
+    <span id="success-message">操作成功</span>
+  </div>
+  
+  <div id="warning-toast" class="toast toast-warning">
+    <i class="fa fa-exclamation-circle text-orange-500"></i>
+    <span id="warning-message">提示信息</span>
+  </div>
+  
+  <div id="error-toast" class="toast toast-error">
+    <i class="fa fa-times-circle text-red-500"></i>
+    <span id="error-message">操作失败</span>
+  </div>
+
+  <!-- 自定义脚本 -->
+  <script>
+  // 检查用户是否已登录
+function checkLoginStatus() {
+  const userMenu = document.getElementById('userMenu');
+  const currentUser = localStorage.getItem('bgareaCurrentUser') || sessionStorage.getItem('bgareaCurrentUser');
+  
+  if (currentUser) {
+    // 用户已登录
+    const user = JSON.parse(currentUser);
+    // 重构HTML结构：增加外层容器，用于统一控制hover
+    userMenu.innerHTML = `
+      <div class="relative" id="userDropdownContainer">
+        <button class="flex items-center gap-2 hover:text-primary transition-colors" id="userDropdownBtn">
+          <i class="fa fa-user-circle-o text-lg"></i>
+          <span class="hidden md:inline">${user.username}</span>
+        </button>
+        <!-- 下拉菜单：默认隐藏，通过JS控制显示/隐藏 -->
+        <div class="absolute right-0 mt-2 w-40 bg-white rounded-md shadow-lg py-2 hidden z-50" id="userDropdownMenu">
+          <a href="Personal Information.html" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors">个人中心</a>
+          <a href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors" id="logoutBtn">退出登录</a>
+        </div>
+      </div>
+    `;
+
+    // ---------- 新增：下拉菜单显示/隐藏逻辑 ----------
+    const dropdownContainer = document.getElementById('userDropdownContainer');
+    const dropdownBtn = document.getElementById('userDropdownBtn');
+    const dropdownMenu = document.getElementById('userDropdownMenu');
+    let hideTimer = null; // 延迟隐藏的定时器
+
+    // 显示菜单
+    function showMenu() {
+      clearTimeout(hideTimer); // 清除延迟隐藏的定时器
+      dropdownMenu.classList.remove('hidden');
+    }
+
+    // 隐藏菜单（加延迟，给用户时间移到菜单上）
+    function hideMenu() {
+      hideTimer = setTimeout(() => {
+        dropdownMenu.classList.add('hidden');
+      }, 200); // 200ms延迟，足够鼠标从按钮移到菜单
+    }
+
+    // 绑定事件：鼠标移到容器（按钮+菜单区域）显示，移开隐藏
+    dropdownContainer.addEventListener('mouseenter', showMenu);
+    dropdownContainer.addEventListener('mouseleave', hideMenu);
+    // 兼容点击触发（移动端/点击场景）
+    dropdownBtn.addEventListener('click', (e) => {
+      e.stopPropagation(); // 阻止事件冒泡
+      dropdownMenu.classList.toggle('hidden');
+    });
+    // 点击页面其他地方隐藏菜单
+    document.addEventListener('click', () => {
+      hideMenu();
+    });
+
+    // 退出登录逻辑（不变）
+    document.getElementById('logoutBtn').addEventListener('click', function(e) {
+      e.preventDefault();
+      localStorage.removeItem('bgareaCurrentUser');
+      sessionStorage.removeItem('bgareaCurrentUser');
+      location.reload();
+    });
+  } else {
+    // 未登录状态（不变）
+    userMenu.innerHTML = `
+      <a href="Login.html" class="text-primary hover:text-primary/80 font-medium transition-colors">登录</a>
+      <a href="register.html" class="bg-primary hover:bg-primary/90 text-white px-4 py-1.5 rounded-md font-medium transition-colors">注册</a>
+    `;
+  }
+}
+
+// 页面加载时执行（不变）
+document.addEventListener('DOMContentLoaded', function() {
+  checkLoginStatus();
+});
+
+
+    // 全局变量
+    let currentFileId = null;
+    
+    // DOM元素
+    const uploadArea = document.getElementById('upload-area');
+    const fileInput = document.getElementById('file-input');
+    const selectFileBtn = document.getElementById('select-file-btn');
+    const previewContainer = document.getElementById('preview-container');
+    const previewImage = document.getElementById('preview-image');
+    const uploadText = document.getElementById('upload-text');
+    const courseDesc = document.getElementById('course-desc');
+    const chapterCount = document.getElementById('chapter-count');
+    const courseTitle = document.getElementById('course-title');
+    const uploadBtn = document.getElementById('upload-btn');
+    const searchInput = document.getElementById('search-input');
+    const searchBtn = document.getElementById('search-btn');
+    const fileTableBody = document.getElementById('file-table-body');
+    const pageBtns = document.querySelectorAll('.page-btn');
+    
+    // 预览面板元素
+    const filePreviewPanel = document.getElementById('file-preview-panel');
+    const closePreviewPanel = document.getElementById('close-preview-panel');
+    const panelFileTitle = document.getElementById('panel-file-title');
+    const panelChapterCount = document.getElementById('panel-chapter-count');
+    const panelUploadTime = document.getElementById('panel-upload-time');
+    const panelUpdateTime = document.getElementById('panel-update-time');
+    const panelFileStatus = document.getElementById('panel-file-status');
+    const panelCourseDesc = document.getElementById('panel-course-desc');
+    const panelDownloadBtn = document.getElementById('panel-download-btn');
+    
+    // 提示框元素
+    const successToast = document.getElementById('success-toast');
+    const warningToast = document.getElementById('warning-toast');
+    const errorToast = document.getElementById('error-toast');
+    const successMessage = document.getElementById('success-message');
+    const warningMessage = document.getElementById('warning-message');
+    const errorMessage = document.getElementById('error-message');
+    
+    // 模拟文件数据和简介
+    const fileData = [
+      { 
+        id: 1, 
+        title: 'JavaScript基础语法讲解', 
+        duration: '15:30', 
+        chapter: '一章', 
+        size: '256 MB', 
+        time: '2025-10-15 09:23', 
+        updateTime: '2025-10-15 10:10',
+        status: 'published', 
+        statusText: '已发',
+        desc: '本课程详细讲解JavaScript基础语法，包括变量、数据类型、运算符、流程控制等核心知识点，适合零基础入门的学员学习。通过实例演示和练习，帮助学员快速掌握JavaScript编程基础。'
+      },
+      { 
+        id: 2, 
+        title: 'DOM元素操作实战', 
+        duration: '20:58', 
+        chapter: '二章', 
+        size: '384 MB', 
+        time: '2025-10-18 14:56',
+        updateTime: '2025-10-18 15:30',
+        status: 'draft', 
+        statusText: '未发',
+        desc: '深入讲解DOM元素的各种操作方法，包括元素的查找、创建、修改、删除等，结合实际项目案例，让学员掌握如何通过JavaScript操作网页元素，实现动态交互效果。'
+      },
+      { 
+        id: 3, 
+        title: 'Promise异步编程详解', 
+        duration: '18:45', 
+        chapter: '三章', 
+        size: '312 MB', 
+        time: '2025-10-20 11:32',
+        updateTime: '2025-10-20 12:15',
+        status: 'pending', 
+        statusText: '审核',
+        desc: '详细介绍Promise异步编程模式，包括Promise的基本用法、链式调用、错误处理等，帮助学员理解异步编程的核心思想，解决回调地狱问题，提升代码质量和可维护性。'
+      },
+      { 
+        id: 4, 
+        title: 'vue3基础入门', 
+        duration: '25:10', 
+        chapter: '四章', 
+        size: '420 MB', 
+        time: '2025-10-12 08:45',
+        updateTime: '2025-10-12 09:30',
+        status: 'unpublished', 
+        statusText: '已下架',
+        desc: '从零开始学习Vue3框架，包括Composition API、响应式原理、组件开发等核心内容，通过实战案例帮助学员快速掌握Vue3的使用方法，为后续开发大型前端项目打下基础。'
+      },
+      { 
+        id: 5, 
+        title: 'React Hooks实战', 
+        duration: '22:30', 
+        chapter: '五章', 
+        size: '378 MB', 
+        time: '2025-10-22 15:40',
+        updateTime: '2025-10-22 16:20',
+        status: 'draft', 
+        statusText: '未发',
+        desc: '详细讲解React Hooks的使用方法，包括useState、useEffect、useContext等常用Hook，帮助学员简化组件逻辑，提高开发效率，掌握现代React开发模式。'
+      },
+      { 
+        id: 6, 
+        title: 'TypeScript类型系统', 
+        duration: '19:15', 
+        chapter: '六章', 
+        size: '296 MB', 
+        time: '2025-10-25 10:18',
+        updateTime: '2025-10-25 11:05',
+        status: 'published', 
+        statusText: '已发',
+        desc: '深入讲解TypeScript的类型系统，包括基本类型、接口、泛型、类型守卫等核心概念，帮助学员提升代码的可读性和可维护性，减少运行时错误。'
+      },
+      { 
+        id: 7, 
+        title: 'WebPack打包优化', 
+        duration: '28:40', 
+        chapter: '七章', 
+        size: '412 MB', 
+        time: '2025-10-28 13:25',
+        updateTime: '2025-10-28 14:10',
+        status: 'pending', 
+        statusText: '审核',
+        desc: '介绍WebPack的高级配置和优化技巧，包括代码分割、懒加载、Tree Shaking、缓存优化等，帮助学员提升项目构建速度和运行性能。'
+      },
+      { 
+        id: 8, 
+        title: '性能优化实战', 
+        duration: '24:50', 
+        chapter: '八章', 
+        size: '388 MB', 
+        time: '2025-10-30 09:45',
+        updateTime: '2025-10-30 10:30',
+        status: 'unpublished', 
+        statusText: '已下架',
+        desc: '分享前端性能优化的实用技巧，包括网络优化、渲染优化、代码优化等方面，通过实际案例演示如何提升网页加载速度和用户体验。'
+      },
+      { 
+        id: 9, 
+        title: 'HTTP协议详解', 
+        duration: '17:20', 
+        chapter: '九章', 
+        size: '265 MB', 
+        time: '2025-11-02 14:30',
+        updateTime: '2025-11-02 15:15',
+        status: 'draft', 
+        statusText: '未发',
+        desc: '详细讲解HTTP协议的工作原理、请求方法、状态码、头部字段等核心知识，帮助学员理解前后端通信的底层机制，排查网络相关问题。'
+      },
+      { 
+        id: 10, 
+        title: 'Vuex状态管理', 
+        duration: '21:15', 
+        chapter: '十章', 
+        size: '320 MB', 
+        time: '2025-11-05 11:20',
+        updateTime: '2025-11-05 12:00',
+        status: 'published', 
+        statusText: '已发',
+        desc: '深入讲解Vuex状态管理模式，包括State、Mutation、Action、Getter等核心概念，帮助学员管理复杂应用的状态，提升代码的可维护性。'
+      },
+      { 
+        id: 11, 
+        title: 'React Router使用', 
+        duration: '16:40', 
+        chapter: '十一章', 
+        size: '248 MB', 
+        time: '2025-11-08 15:10',
+        updateTime: '2025-11-08 15:50',
+        status: 'pending', 
+        statusText: '审核',
+        desc: '详细介绍React Router的使用方法，包括路由配置、参数传递、嵌套路由、路由守卫等功能，帮助学员构建单页应用的路由系统。'
+      },
+      { 
+        id: 12, 
+        title: 'Node.js后端开发', 
+        duration: '32:25', 
+        chapter: '十二章', 
+        size: '486 MB', 
+        time: '2025-11-10 10:50',
+        updateTime: '2025-11-10 11:30',
+        status: 'draft', 
+        statusText: '未发',
+        desc: '从零开始学习Node.js后端开发，包括Express框架使用、数据库操作、API设计等核心内容，帮助学员构建完整的前后端分离项目。'
+      }
+    ];
+
+    // 初始化
+    function init() {
+      // 绑定事件
+      bindEvents();
+      // 初始化分页
+      renderPage(1);
+    }
+
+    // 绑定事件
+    function bindEvents() {
+      // 文件上传相关
+      selectFileBtn.addEventListener('click', () => fileInput.click());
+      fileInput.addEventListener('change', handleFileSelect);
+      uploadArea.addEventListener('dragover', handleDragOver);
+      uploadArea.addEventListener('dragleave', handleDragLeave);
+      uploadArea.addEventListener('drop', handleDrop);
+      
+      // 表单输入验证
+      courseDesc.addEventListener('input', validateForm);
+      chapterCount.addEventListener('input', validateForm);
+      courseTitle.addEventListener('input', validateForm);
+      
+      // 上传按钮
+      uploadBtn.addEventListener('click', handleUpload);
+      
+      // 搜索功能
+      searchBtn.addEventListener('click', handleSearch);
+      searchInput.addEventListener('keypress', (e) => e.key === 'Enter' && handleSearch());
+      
+      // 分页功能
+      pageBtns.forEach(btn => btn.addEventListener('click', handlePageChange));
+      
+      // 表格操作按钮
+      fileTableBody.addEventListener('click', handleTableAction);
+      
+      // 预览面板操作
+      closePreviewPanel.addEventListener('click', () => filePreviewPanel.classList.add('hidden'));
+      panelDownloadBtn.addEventListener('click', handlePanelDownload);
+      
+      // 点击空白处关闭预览面板
+      filePreviewPanel.addEventListener('click', (e) => {
+        if (e.target === filePreviewPanel) {
+          filePreviewPanel.classList.add('hidden');
+        }
+      });
+    }
+
+    // 显示提示框
+    function showToast(type, message, duration = 3000) {
+      let toast, messageElement;
+      
+      switch(type) {
+        case 'success':
+          toast = successToast;
+          messageElement = successMessage;
+          break;
+        case 'warning':
+          toast = warningToast;
+          messageElement = warningMessage;
+          break;
+        case 'error':
+          toast = errorToast;
+          messageElement = errorMessage;
+          break;
+        default:
+          return;
+      }
+      
+      messageElement.textContent = message;
+      toast.classList.add('show');
+      
+      setTimeout(() => {
+        toast.classList.remove('show');
+      }, duration);
+    }
+
+    // 处理文件选择
+    function handleFileSelect(e) {
+      const file = e.target.files[0];
+      if (file) {
+        if (file.type !== 'image/png') {
+          showToast('error', '请上传PNG格式的图片文件');
+          return;
+        }
+        
+        if (file.size > 25 * 1024 * 1024) {
+          showToast('error', '文件大小不能超过25MB');
+          return;
+        }
+        
+        previewFile(file);
+      }
+    }
+
+    // 处理拖拽事件
+    function handleDragOver(e) {
+      e.preventDefault();
+      uploadArea.classList.add('active');
+    }
+
+    function handleDragLeave() {
+      uploadArea.classList.remove('active');
+    }
+
+    function handleDrop(e) {
+      e.preventDefault();
+      uploadArea.classList.remove('active');
+      const file = e.dataTransfer.files[0];
+      if (file) {
+        if (file.type !== 'image/png') {
+          showToast('error', '请上传PNG格式的图片文件');
+          return;
+        }
+        
+        if (file.size > 25 * 1024 * 1024) {
+          showToast('error', '文件大小不能超过25MB');
+          return;
+        }
+        
+        previewFile(file);
+      }
+    }
+
+    // 预览文件
+    function previewFile(file) {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        previewImage.src = e.target.result;
+        previewContainer.classList.remove('hidden');
+        uploadText.textContent = file.name;
+        
+        // 验证表单
+        validateForm();
+      };
+      reader.readAsDataURL(file);
+    }
+
+    // 验证表单
+    function validateForm() {
+      const isFileSelected = !previewContainer.classList.contains('hidden');
+      const isDescFilled = courseDesc.value.trim() !== '';
+      const isChapterCountFilled = chapterCount.value.trim() !== '';
+      const isTitleFilled = courseTitle.value.trim() !== '';
+      
+      uploadBtn.disabled = !(isFileSelected && isDescFilled && isChapterCountFilled && isTitleFilled);
+    }
+
+    // 处理上传
+    function handleUpload() {
+      // 模拟上传过程
+      uploadBtn.disabled = true;
+      uploadBtn.textContent = '上传中...';
+      
+      setTimeout(() => {
+        // 重置表单
+        fileInput.value = '';
+        previewContainer.classList.add('hidden');
+        uploadText.textContent = '点击或拖拽图片文件到此处上传';
+        courseDesc.value = '';
+        chapterCount.value = '';
+        courseTitle.value = '';
+        
+        // 显示成功提示
+        showToast('success', '课程稿件已成功上传，等待审核');
+        
+        // 重置按钮
+        uploadBtn.textContent = '开始上传';
+      }, 1500);
+    }
+
+    // 处理搜索
+    function handleSearch() {
+      const searchTerm = searchInput.value.trim().toLowerCase();
+      if (searchTerm === '') {
+        renderPage(1);
+        showToast('success', '已显示全部稿件');
+        return;
+      }
+      
+      // 过滤数据
+      const filteredData = fileData.filter(file => 
+        file.title.toLowerCase().includes(searchTerm) ||
+        file.time.includes(searchTerm) ||
+        file.chapter.includes(searchTerm) ||
+        file.statusText.includes(searchTerm)
+      );
+      
+      if (filteredData.length === 0) {
+        showToast('warning', '未找到匹配的稿件');
+        fileTableBody.innerHTML = `
+          <tr>
+            <td colspan="7" class="py-8 text-center text-gray-500">
+              <i class="fa fa-search-minus text-2xl mb-2"></i>
+              <p>未找到相关稿件</p>
+            </td>
+          </tr>
+        `;
+        return;
+      }
+      
+      // 渲染结果
+      renderTable(filteredData);
+      showToast('success', `找到${filteredData.length}条匹配稿件`);
+    }
+
+    // 处理分页切换
+    function handlePageChange(e) {
+      const page = parseInt(e.target.dataset.page);
+      
+      // 更新分页按钮状态
+      pageBtns.forEach(btn => {
+        if (parseInt(btn.dataset.page) === page) {
+          btn.classList.add('bg-primary', 'text-white');
+          btn.classList.remove('hover:bg-gray-200');
+        } else {
+          btn.classList.remove('bg-primary', 'text-white');
+          btn.classList.add('hover:bg-gray-200');
+        }
+      });
+      
+      // 渲染对应页面
+      renderPage(page);
+      showToast('success', `已切换到第${page}页`);
+    }
+
+    // 渲染分页数据
+    function renderPage(page) {
+      const pageSize = 4;
+      const startIndex = (page - 1) * pageSize;
+      const endIndex = startIndex + pageSize;
+      const pageData = fileData.slice(startIndex, endIndex);
+      
+      renderTable(pageData);
+    }
+
+    // 渲染表格
+    function renderTable(data) {
+      let html = '';
+      
+      data.forEach(file => {
+        let statusBadge = '';
+        let actionBtns = '';
+        
+        // 根据状态设置徽章
+        switch(file.status) {
+          case 'published':
+            statusBadge = '<span class="badge-published">已发</span>';
+            actionBtns = `
+              <button class="text-primary hover:underline mr-2 preview-btn" data-id="${file.id}">预览</button>
+              <button class="text-red-500 hover:underline download-btn" data-id="${file.id}">下载</button>
+            `;
+            break;
+          case 'draft':
+            statusBadge = '<span class="badge-draft">未发</span>';
+            actionBtns = `
+              <button class="text-primary hover:underline mr-2 preview-btn" data-id="${file.id}">预览</button>
+              <button class="text-green-500 hover:underline publish-btn" data-id="${file.id}">发布</button>
+            `;
+            break;
+          case 'pending':
+            statusBadge = '<span class="badge-pending">审核</span>';
+            actionBtns = `
+              <button class="text-primary hover:underline mr-2 preview-btn" data-id="${file.id}">预览</button>
+              <button class="text-gray-500 hover:underline cancel-btn" data-id="${file.id}">取消</button>
+            `;
+            break;
+          case 'unpublished':
+            statusBadge = '<span class="badge-unpublished">已下架</span>';
+            actionBtns = `
+              <button class="text-primary hover:underline mr-2 preview-btn" data-id="${file.id}">预览</button>
+              <button class="text-blue-500 hover:underline republish-btn" data-id="${file.id}">重新发布</button>
+              <button class="text-red-500 hover:underline delete-btn" data-id="${file.id}">删除</button>
+            `;
+            break;
+        }
+        
+        html += `
+          <tr class="border-b border-gray-200">
+            <td class="py-3 px-1">
+              <div class="w-8 h-8 bg-gray-200 rounded"></div>
+            </td>
+            <td class="py-3 px-1">
+              <p class="font-medium text-gray-800">${file.title}</p>
+              <p class="text-xs text-gray-500">时长: ${file.duration}</p>
+            </td>
+            <td class="py-3 px-1">${file.chapter}</td>
+            <td class="py-3 px-1">${file.size}</td>
+            <td class="py-3 px-1">${file.time}</td>
+            <td class="py-3 px-1">${statusBadge}</td>
+            <td class="py-3 px-1">
+              ${actionBtns}
+            </td>
+          </tr>
+        `;
+      });
+      
+      fileTableBody.innerHTML = html;
+    }
+
+    // 处理表格操作
+    function handleTableAction(e) {
+      const target = e.target.closest('button');
+      if (!target) return;
+      
+      currentFileId = parseInt(target.dataset.id);
+      const file = fileData.find(f => f.id === currentFileId);
+      
+      if (!file) {
+        showToast('error', '未找到该文件');
+        return;
+      }
+      
+      if (target.classList.contains('preview-btn')) {
+        // 预览操作 - 显示详情面板
+	window.location.href = `video-upload.html?fileId=${currentFileId}`;
+        panelFileTitle.textContent = file.title;
+        panelChapterCount.textContent = file.chapter;
+        panelUploadTime.textContent = file.time;
+        panelUpdateTime.textContent = file.updateTime;
+        panelCourseDesc.textContent = file.desc;
+        
+        // 设置状态标签
+        switch(file.status) {
+          case 'published':
+            panelFileStatus.className = 'inline-flex items-center px-2 py-1 rounded text-xs bg-green-100 text-green-700';
+            panelFileStatus.innerHTML = '<i class="fa fa-check mr-1"></i> 已发布';
+            break;
+          case 'draft':
+            panelFileStatus.className = 'inline-flex items-center px-2 py-1 rounded text-xs bg-gray-100 text-gray-700';
+            panelFileStatus.innerHTML = '<i class="fa fa-edit mr-1"></i> 草稿';
+            break;
+          case 'pending':
+            panelFileStatus.className = 'inline-flex items-center px-2 py-1 rounded text-xs bg-orange-100 text-orange-700';
+            panelFileStatus.innerHTML = '<i class="fa fa-clock-o mr-1"></i> 审核中';
+            break;
+          case 'unpublished':
+            panelFileStatus.className = 'inline-flex items-center px-2 py-1 rounded text-xs bg-red-100 text-red-700';
+            panelFileStatus.innerHTML = '<i class="fa fa-times mr-1"></i> 已下架';
+            break;
+        }
+        
+        filePreviewPanel.classList.remove('hidden');
+        
+      } else if (target.classList.contains('download-btn')) {
+        // 下载操作
+        showToast('success', '文件已开始下载，请稍后');
+        
+      } else if (target.classList.contains('publish-btn')) {
+        // 发布操作 - 直接执行，用提示框反馈
+        if (confirm('确认发布？发布后文件将对学员可见，是否继续？')) {
+          updateFileStatus('published', '已发');
+          showToast('success', '文件已成功发布');
+        }
+        
+      } else if (target.classList.contains('cancel-btn')) {
+        // 取消审核操作
+        if (confirm('确认取消？取消后文件将回到草稿状态，是否继续？')) {
+          updateFileStatus('draft', '未发');
+          showToast('success', '已取消审核，文件回到草稿状态');
+        }
+        
+      } else if (target.classList.contains('republish-btn')) {
+        // 重新发布操作
+        if (confirm('确认重新发布？重新发布后文件将再次对学员可见，是否继续？')) {
+          updateFileStatus('published', '已发');
+          showToast('success', '文件已成功重新发布');
+        }
+        
+      } else if (target.classList.contains('delete-btn')) {
+        // 删除操作
+        if (confirm('确认删除？删除后文件将无法恢复，是否继续？')) {
+          deleteFile();
+          showToast('success', '文件已成功删除');
+        }
+      }
+    }
+
+    // 处理面板中的下载按钮
+    function handlePanelDownload() {
+      showToast('success', '文件已开始下载，请稍后');
+      // 可选择是否关闭面板
+      // filePreviewPanel.classList.add('hidden');
+    }
+
+    // 更新文件状态
+    function updateFileStatus(newStatus, newStatusText) {
+      const fileIndex = fileData.findIndex(f => f.id === currentFileId);
+      if (fileIndex !== -1) {
+        fileData[fileIndex].status = newStatus;
+        fileData[fileIndex].statusText = newStatusText;
+        // 更新当前页面
+        renderPage(getCurrentPage());
+      }
+    }
+
+    // 删除文件
+    function deleteFile() {
+      const fileIndex = fileData.findIndex(f => f.id === currentFileId);
+      if (fileIndex !== -1) {
+        fileData.splice(fileIndex, 1);
+        // 更新当前页面
+        renderPage(getCurrentPage());
+      }
+    }
+
+    // 获取当前页码
+    function getCurrentPage() {
+      for (let btn of pageBtns) {
+        if (btn.classList.contains('bg-primary')) {
+          return parseInt(btn.dataset.page);
+        }
+      }
+      return 1;
+    }
+
+    // 初始化页面
+    document.addEventListener('DOMContentLoaded', init);
+  </script>
+</body>
+</html>

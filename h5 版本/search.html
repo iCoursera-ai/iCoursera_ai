@@ -1,0 +1,666 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>BGarea - 搜索结果</title>
+  <!-- 引入Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- 引入Font Awesome -->
+  <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
+  
+  <!-- 配置Tailwind自定义颜色和字体 -->
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            primary: '#165DFF',
+            secondary: '#6B7280',
+            light: '#F9FAFB',
+            dark: '#1F2937',
+            success: '#10B981',
+            gray: {
+              100: '#F7F8FA',
+              200: '#E5E6EB',
+              300: '#C9CDD4',
+              400: '#86909C',
+              500: '#4E5969',
+              600: '#272E3B',
+            },
+            red: {
+              500: '#F53F3F',
+            },
+            orange: {
+              500: '#FF7D00',
+            }
+          },
+          fontFamily: {
+            inter: ['Inter', 'system-ui', 'sans-serif'],
+          },
+        },
+      }
+    }
+  </script>
+  
+  <!-- 自定义工具类 -->
+  <style type="text/tailwindcss">
+    @layer utilities {
+      .content-auto {
+        content-visibility: auto;
+      }
+      .sidebar-parent {
+        @apply flex items-center justify-between px-4 py-3 text-gray-500 hover:bg-primary/5 hover:text-primary transition-all duration-200 cursor-pointer;
+      }
+      .sidebar-parent.active {
+        @apply bg-primary/10 text-primary font-medium;
+      }
+      .sidebar-parent-content {
+        @apply flex items-center gap-2;
+      }
+      .sidebar-child {
+        @apply flex items-center px-6 py-2 text-gray-500 hover:bg-primary/5 hover:text-primary transition-all duration-200 cursor-pointer text-sm;
+      }
+      .sidebar-child.active {
+        @apply bg-primary/10 text-primary font-medium;
+      }
+      .sidebar-child-text {
+        @apply ml-3;
+      }
+      .btn {
+        @apply px-3 py-1 text-sm rounded transition-all duration-200;
+      }
+      .btn-primary {
+        @apply w-full bg-primary hover:bg-primary/90 text-white font-medium py-2.5 rounded-md transition-all duration-200 transform hover:scale-[1.01] active:scale-[0.99] focus:outline-none focus:ring-2 focus:ring-primary/50;
+      }
+      .btn-text {
+        @apply text-primary hover:bg-primary/10 transition-all duration-200;
+      }
+      .card {
+        @apply bg-white rounded-lg border border-gray-200 shadow-sm;
+      }
+      .rotate-icon {
+        @apply transform transition-transform duration-200 rotate-90;
+      }
+      .sidebar-icon {
+        @apply w-4 text-center;
+      }
+      .card-shadow {
+        box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.02);
+      }
+      .text-link {
+        @apply text-primary hover:text-primary/80 transition-colors duration-200 cursor-pointer;
+      }
+      .input-field {
+        @apply w-full px-4 py-2.5 rounded-md border border-gray-300 focus:border-primary focus:ring-1 focus:ring-primary focus:outline-none transition-all duration-200;
+      }
+      .social-btn {
+        @apply flex items-center justify-center gap-2 px-4 py-2.5 rounded-md border border-gray-300 hover:bg-gray-50 transition-all duration-200;
+      }
+      /* 视频相关工具类 */
+      .badge-hot {
+        @apply absolute top-2 left-2 bg-red-500 text-white text-xs px-2 py-0.5 rounded z-10;
+      }
+      .badge-blue {
+        @apply absolute top-2 left-2 bg-primary text-white text-xs px-2 py-0.5 rounded z-10;
+      }
+      .badge-green {
+        @apply absolute top-2 left-2 bg-success text-white text-xs px-2 py-0.5 rounded z-10;
+      }
+      .badge-orange {
+        @apply absolute top-2 left-2 bg-orange-500 text-white text-xs px-2 py-0.5 rounded z-10;
+      }
+      .video-time {
+        @apply absolute bottom-2 right-2 bg-black/70 text-white text-xs px-1.5 py-0.5 rounded z-10;
+      }
+      .video-card-hover {
+        @apply hover:shadow-md transition-shadow duration-200 cursor-pointer;
+      }
+      /* 师资卡片样式 */
+      .teacher-card {
+        @apply flex flex-col items-center text-center w-44 bg-white border border-transparent rounded-lg p-4 shadow-sm hover:shadow-md transition-all duration-300;
+      }
+      .teacher-avatar-container {
+        @apply w-36 h-52 bg-gray-200 rounded-lg overflow-hidden mb-5;
+      }
+    }
+  </style>
+</head>
+
+<body class="font-inter min-h-screen flex-col">
+  <!-- 顶部导航栏 -->
+  <header class="bg-white py-4 px-6 md:px-8 shadow-sm sticky top-0 z-30 border-b border-gray-200">
+    <div class="container mx-auto flex justify-between items-center">
+      <!-- 左侧Logo区域 -->
+      <div class="flex items-center gap-2">
+        <div class="bg-primary text-white p-1.5 rounded-md">
+          <i class="fa fa-graduation-cap"></i>
+        </div>
+        <span class="text-lg font-semibold text-dark">BGarea</span>
+      </div>
+
+      <!-- 中间文字按钮区域 -->
+      <div class="hidden md:flex items-center gap-6">
+        <button class="text-black hover:text-primary text-sm font-medium transition-colors duration-200 flex items-center gap-1" onclick="window.location.href='index.html'">
+            首页
+        </button>
+        <button class="text-black hover:text-primary text-sm font-medium transition-colors duration-200 flex items-center gap-1" onclick="window.location.href='Personal Information.html'">
+            用户中心
+        </button>
+        <button class="text-black hover:text-primary text-sm font-medium transition-colors duration-200 flex items-center gap-1" onclick="window.location.href='Login.html'">
+            登录界面
+        </button>
+        <button class="text-black hover:text-primary text-sm font-medium transition-colors duration-200 flex items-center gap-1" onclick="window.location.href='稿件管理界面.html'">
+            稿件管理界面
+        </button>
+      </div>
+
+      <!-- 右侧用户操作区域 -->
+      <div class="flex items-center gap-4">
+        <!-- 搜索框（已移至右侧） -->
+        <div class="relative">
+          <input 
+            type="text" 
+            id="searchInputMobile"
+            placeholder="搜索课程、讲师..." 
+            class="w-48 md:w-64 px-4 py-2 pl-10 rounded-md border border-gray-300 focus:border-primary focus:ring-1 focus:ring-primary focus:outline-none transition-all duration-200 text-sm"
+            onkeypress="handleSearchKeyPress(event)"
+          >
+          <i class="fa fa-search absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
+        </div>
+        <!-- 替换后的用户菜单区域 -->
+        <div class="flex items-center gap-4" id="userMenu">
+          <!-- 用户信息会通过JS动态渲染 -->
+        </div>
+      </div>
+    </div>
+  </header>
+
+
+  <!-- 主内容容器 -->
+  <div class="flex-1 bg-gray-50 min-h-screen">
+    <div class="container mx-auto p-6 md:p-8">
+      <!-- 搜索框区域（固定在顶部） -->
+      <div class="mb-8">
+        <h1 class="text-2xl font-semibold text-dark mb-6">搜索课程</h1>
+        
+        <!-- 大型搜索框 -->
+        <div class="relative max-w-3xl mx-auto">
+          <input 
+            type="text" 
+            id="mainSearchInput"
+            placeholder="输入课程名、讲师名或关键词进行搜索..." 
+            class="w-full px-6 py-4 pl-14 rounded-lg border border-gray-300 focus:border-primary focus:ring-2 focus:ring-primary/30 focus:outline-none transition-all duration-300 text-base shadow-sm"
+            value="深度学习"
+            onkeypress="handleSearchKeyPress(event)"
+          >
+          <i class="fa fa-search absolute left-5 top-1/2 transform -translate-y-1/2 text-gray-400 text-lg"></i>
+          <button onclick="performSearch()" class="absolute right-3 top-1/2 transform -translate-y-1/2 px-6 py-2 bg-primary text-white rounded-md hover:bg-primary/90 transition-colors">
+            搜索
+          </button>
+        </div>
+        
+        <!-- 热门搜索推荐 -->
+        <div class="mt-6">
+          <p class="text-sm text-gray-500 mb-3">热门搜索：</p>
+          <div class="flex flex-wrap gap-2">
+            <button onclick="setSearchQuery('Python')" class="px-4 py-2 bg-white border border-gray-200 rounded-full text-sm hover:bg-primary hover:text-white hover:border-primary transition-all duration-200">Python编程</button>
+            <button onclick="setSearchQuery('人工智能')" class="px-4 py-2 bg-white border border-gray-200 rounded-full text-sm hover:bg-primary hover:text-white hover:border-primary transition-all duration-200">人工智能</button>
+            <button onclick="setSearchQuery('机器学习')" class="px-4 py-2 bg-white border border-gray-200 rounded-full text-sm hover:bg-primary hover:text-white hover:border-primary transition-all duration-200">机器学习</button>
+            <button onclick="setSearchQuery('数据分析')" class="px-4 py-2 bg-white border border-gray-200 rounded-full text-sm hover:bg-primary hover:text-white hover:border-primary transition-all duration-200">数据分析</button>
+            <button onclick="setSearchQuery('金融投资')" class="px-4 py-2 bg-white border border-gray-200 rounded-full text-sm hover:bg-primary hover:text-white hover:border-primary transition-all duration-200">金融投资</button>
+            <button onclick="setSearchQuery('医学基础')" class="px-4 py-2 bg-white border border-gray-200 rounded-full text-sm hover:bg-primary hover:text-white hover:border-primary transition-all duration-200">医学基础</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- 筛选区域 -->
+      <div class="mb-8">
+        <div class="flex flex-wrap items-center justify-between gap-4 mb-4">
+          <h2 class="text-lg font-semibold text-dark">搜索结果：<span id="resultCount">156</span> 个相关课程</h2>
+          <div class="flex items-center gap-4">
+            <select class="px-4 py-2 border border-gray-300 rounded-md focus:border-primary focus:outline-none text-sm">
+              <option>综合排序</option>
+              <option>按热度排序</option>
+              <option>按时间排序</option>
+              <option>按评分排序</option>
+            </select>
+            <select class="px-4 py-2 border border-gray-300 rounded-md focus:border-primary focus:outline-none text-sm">
+              <option>全部分类</option>
+              <option>编程开发</option>
+              <option>人工智能</option>
+              <option>数据科学</option>
+              <option>商业管理</option>
+              <option>医学健康</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <!-- 搜索结果区域 -->
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <!-- 左侧课程列表 -->
+        <div class="lg:col-span-2">
+          <div class="space-y-6">
+            <!-- 搜索结果1 -->
+            <div class="card p-4 hover:shadow-md transition-shadow duration-200 cursor-pointer" onclick="window.location.href='course-detail.html'">
+              <div class="flex flex-col md:flex-row gap-4">
+                <div class="relative w-full md:w-48 h-32 rounded-lg overflow-hidden flex-shrink-0">
+                  <img src="https://picsum.photos/300/200?random=101" alt="深度学习实战" class="w-full h-full object-cover">
+                  <span class="badge-blue absolute top-2 left-2">新品</span>
+                  <span class="video-time">12:54:00</span>
+                </div>
+                <div class="flex-1">
+                  <h3 class="text-lg font-semibold text-dark mb-2 hover:text-primary transition-colors">深度学习实战：从零搭建AI模型</h3>
+                  <p class="text-sm text-gray-600 mb-3 line-clamp-2">
+                    本课程将带你从零开始学习深度学习，掌握TensorFlow和PyTorch框架，构建各种AI模型，包括图像识别、自然语言处理等实际应用案例。
+                  </p>
+                  <div class="flex flex-wrap items-center gap-4 text-sm text-gray-500">
+                    <span class="flex items-center gap-1"><i class="fa fa-user text-gray-400"></i> 李明教授</span>
+                    <span class="flex items-center gap-1"><i class="fa fa-eye text-gray-400"></i> 25.6万播放</span>
+                    <span class="flex items-center gap-1"><i class="fa fa-thumbs-up text-gray-400"></i> 98%好评</span>
+                    <span class="text-xs px-2 py-1 bg-gray-100 rounded">人工智能</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- 搜索结果2 -->
+            <div class="card p-4 hover:shadow-md transition-shadow duration-200 cursor-pointer" onclick="window.location.href='course-detail.html'">
+              <div class="flex flex-col md:flex-row gap-4">
+                <div class="relative w-full md:w-48 h-32 rounded-lg overflow-hidden flex-shrink-0">
+                  <img src="https://picsum.photos/300/200?random=102" alt="机器学习基础" class="w-full h-full object-cover">
+                  <span class="badge-green absolute top-2 left-2">精讲</span>
+                  <span class="video-time">08:20:15</span>
+                </div>
+                <div class="flex-1">
+                  <h3 class="text-lg font-semibold text-dark mb-2 hover:text-primary transition-colors">机器学习基础：理论与Python实践</h3>
+                  <p class="text-sm text-gray-600 mb-3 line-clamp-2">
+                    系统学习机器学习核心算法，包括线性回归、逻辑回归、决策树、支持向量机等，结合Python代码实践，掌握模型训练与评估方法。
+                  </p>
+                  <div class="flex flex-wrap items-center gap-4 text-sm text-gray-500">
+                    <span class="flex items-center gap-1"><i class="fa fa-user text-gray-400"></i> 王静教授</span>
+                    <span class="flex items-center gap-1"><i class="fa fa-eye text-gray-400"></i> 18.3万播放</span>
+                    <span class="flex items-center gap-1"><i class="fa fa-thumbs-up text-gray-400"></i> 96%好评</span>
+                    <span class="text-xs px-2 py-1 bg-gray-100 rounded">人工智能</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- 搜索结果3 -->
+            <div class="card p-4 hover:shadow-md transition-shadow duration-200 cursor-pointer" onclick="window.location.href='course-detail.html'">
+              <div class="flex flex-col md:flex-row gap-4">
+                <div class="relative w-full md:w-48 h-32 rounded-lg overflow-hidden flex-shrink-0">
+                  <img src="https://picsum.photos/300/200?random=103" alt="深度学习进阶" class="w-full h-full object-cover">
+                  <span class="badge-orange absolute top-2 left-2">新课</span>
+                  <span class="video-time">15:30:45</span>
+                </div>
+                <div class="flex-1">
+                  <h3 class="text-lg font-semibold text-dark mb-2 hover:text-primary transition-colors">深度学习进阶：神经网络优化与应用</h3>
+                  <p class="text-sm text-gray-600 mb-3 line-clamp-2">
+                    深入学习卷积神经网络、循环神经网络、注意力机制等高级深度学习模型，探索在计算机视觉、自然语言处理等领域的实际应用。
+                  </p>
+                  <div class="flex flex-wrap items-center gap-4 text-sm text-gray-500">
+                    <span class="flex items-center gap-1"><i class="fa fa-user text-gray-400"></i> 陈明教授</span>
+                    <span class="flex items-center gap-1"><i class="fa fa-eye text-gray-400"></i> 12.7万播放</span>
+                    <span class="flex items-center gap-1"><i class="fa fa-thumbs-up text-gray-400"></i> 95%好评</span>
+                    <span class="text-xs px-2 py-1 bg-gray-100 rounded">人工智能</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- 搜索结果4 -->
+            <div class="card p-4 hover:shadow-md transition-shadow duration-200 cursor-pointer" onclick="window.location.href='course-detail.html'">
+              <div class="flex flex-col md:flex-row gap-4">
+                <div class="relative w-full md:w-48 h-32 rounded-lg overflow-hidden flex-shrink-0">
+                  <img src="https://picsum.photos/300/200?random=104" alt="Python数据分析" class="w-full h-full object-cover">
+                  <span class="badge-blue absolute top-2 left-2">新品</span>
+                  <span class="video-time">10:15:30</span>
+                </div>
+                <div class="flex-1">
+                  <h3 class="text-lg font-semibold text-dark mb-2 hover:text-primary transition-colors">Python数据分析实战：从数据处理到可视化</h3>
+                  <p class="text-sm text-gray-600 mb-3 line-clamp-2">
+                    掌握Pandas、NumPy、Matplotlib等数据分析核心库，学习数据清洗、统计分析、可视化展示等技能，应用于实际业务场景。
+                  </p>
+                  <div class="flex flex-wrap items-center gap-4 text-sm text-gray-500">
+                    <span class="flex items-center gap-1"><i class="fa fa-user text-gray-400"></i> 张伟教授</span>
+                    <span class="flex items-center gap-1"><i class="fa fa-eye text-gray-400"></i> 22.4万播放</span>
+                    <span class="flex items-center gap-1"><i class="fa fa-thumbs-up text-gray-400"></i> 97%好评</span>
+                    <span class="text-xs px-2 py-1 bg-gray-100 rounded">数据科学</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- 搜索结果5 -->
+            <div class="card p-4 hover:shadow-md transition-shadow duration-200 cursor-pointer" onclick="window.location.href='course-detail.html'">
+              <div class="flex flex-col md:flex-row gap-4">
+                <div class="relative w-full md:w-48 h-32 rounded-lg overflow-hidden flex-shrink-0">
+                  <img src="https://picsum.photos/300/200?random=105" alt="AI医疗应用" class="w-full h-full object-cover">
+                  <span class="badge-green absolute top-2 left-2">精讲</span>
+                  <span class="video-time">09:45:20</span>
+                </div>
+                <div class="flex-1">
+                  <h3 class="text-lg font-semibold text-dark mb-2 hover:text-primary transition-colors">人工智能在医疗健康领域的应用</h3>
+                  <p class="text-sm text-gray-600 mb-3 line-clamp-2">
+                    探索人工智能在医学影像分析、疾病诊断、药物研发等医疗健康领域的创新应用，学习相关算法模型和技术实现。
+                  </p>
+                  <div class="flex flex-wrap items-center gap-4 text-sm text-gray-500">
+                    <span class="flex items-center gap-1"><i class="fa fa-user text-gray-400"></i> 刘芳教授</span>
+                    <span class="flex items-center gap-1"><i class="fa fa-eye text-gray-400"></i> 14.8万播放</span>
+                    <span class="flex items-center gap-1"><i class="fa fa-thumbs-up text-gray-400"></i> 94%好评</span>
+                    <span class="text-xs px-2 py-1 bg-gray-100 rounded">医学健康</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 分页 -->
+          <div class="flex justify-center items-center gap-2 mt-8">
+            <button class="w-10 h-10 flex items-center justify-center rounded-md border border-gray-200 hover:bg-gray-50">
+              <i class="fa fa-angle-left text-gray-500"></i>
+            </button>
+            <button class="w-10 h-10 flex items-center justify-center rounded-md bg-primary text-white">1</button>
+            <button class="w-10 h-10 flex items-center justify-center rounded-md border border-gray-200 hover:bg-gray-50">2</button>
+            <button class="w-10 h-10 flex items-center justify-center rounded-md border border-gray-200 hover:bg-gray-50">3</button>
+            <button class="w-10 h-10 flex items-center justify-center rounded-md border border-gray-200 hover:bg-gray-50">4</button>
+            <button class="w-10 h-10 flex items-center justify-center rounded-md border border-gray-200 hover:bg-gray-50">5</button>
+            <span class="text-gray-500">...</span>
+            <button class="w-10 h-10 flex items-center justify-center rounded-md border border-gray-200 hover:bg-gray-50">12</button>
+            <button class="w-10 h-10 flex items-center justify-center rounded-md border border-gray-200 hover:bg-gray-50">
+              <i class="fa fa-angle-right text-gray-500"></i>
+            </button>
+          </div>
+        </div>
+
+        <!-- 右侧筛选和推荐 -->
+        <div class="space-y-6">
+          <!-- 高级筛选 -->
+          <div class="card p-5">
+            <h3 class="text-lg font-semibold text-dark mb-4">高级筛选</h3>
+            <div class="space-y-4">
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">难度等级</label>
+                <div class="space-y-2">
+                  <label class="flex items-center">
+                    <input type="checkbox" class="rounded text-primary focus:ring-primary">
+                    <span class="ml-2 text-sm text-gray-600">入门</span>
+                  </label>
+                  <label class="flex items-center">
+                    <input type="checkbox" class="rounded text-primary focus:ring-primary" checked>
+                    <span class="ml-2 text-sm text-gray-600">中级</span>
+                  </label>
+                  <label class="flex items-center">
+                    <input type="checkbox" class="rounded text-primary focus:ring-primary">
+                    <span class="ml-2 text-sm text-gray-600">高级</span>
+                  </label>
+                </div>
+              </div>
+              
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">课程时长</label>
+                <div class="space-y-2">
+                  <label class="flex items-center">
+                    <input type="checkbox" class="rounded text-primary focus:ring-primary">
+                    <span class="ml-2 text-sm text-gray-600">0-5小时</span>
+                  </label>
+                  <label class="flex items-center">
+                    <input type="checkbox" class="rounded text-primary focus:ring-primary" checked>
+                    <span class="ml-2 text-sm text-gray-600">5-15小时</span>
+                  </label>
+                  <label class="flex items-center">
+                    <input type="checkbox" class="rounded text-primary focus:ring-primary">
+                    <span class="ml-2 text-sm text-gray-600">15小时以上</span>
+                  </label>
+                </div>
+              </div>
+              
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">课程价格</label>
+                <div class="space-y-2">
+                  <label class="flex items-center">
+                    <input type="checkbox" class="rounded text-primary focus:ring-primary" checked>
+                    <span class="ml-2 text-sm text-gray-600">免费</span>
+                  </label>
+                  <label class="flex items-center">
+                    <input type="checkbox" class="rounded text-primary focus:ring-primary">
+                    <span class="ml-2 text-sm text-gray-600">付费</span>
+                  </label>
+                </div>
+              </div>
+              
+              <button class="w-full mt-4 px-4 py-2 bg-primary text-white rounded-md hover:bg-primary/90 transition-colors">
+                应用筛选
+              </button>
+            </div>
+          </div>
+
+          <!-- 相关讲师推荐 -->
+          <div class="card p-5">
+            <h3 class="text-lg font-semibold text-dark mb-4">相关讲师</h3>
+            <div class="space-y-4">
+              <div class="flex items-center gap-3 p-3 hover:bg-gray-50 rounded-md cursor-pointer">
+                <div class="w-12 h-12 rounded-full bg-gray-200 overflow-hidden">
+                  <img src="https://picsum.photos/100/100?random=201" class="w-full h-full object-cover">
+                </div>
+                <div>
+                  <h4 class="text-sm font-medium text-dark">李明教授</h4>
+                  <p class="text-xs text-gray-500">人工智能专家</p>
+                </div>
+              </div>
+              <div class="flex items-center gap-3 p-3 hover:bg-gray-50 rounded-md cursor-pointer">
+                <div class="w-12 h-12 rounded-full bg-gray-200 overflow-hidden">
+                  <img src="https://picsum.photos/100/100?random=202" class="w-full h-full object-cover">
+                </div>
+                <div>
+                  <h4 class="text-sm font-medium text-dark">王静教授</h4>
+                  <p class="text-xs text-gray-500">机器学习专家</p>
+                </div>
+              </div>
+              <div class="flex items-center gap-3 p-3 hover:bg-gray-50 rounded-md cursor-pointer">
+                <div class="w-12 h-12 rounded-full bg-gray-200 overflow-hidden">
+                  <img src="https://picsum.photos/100/100?random=203" class="w-full h-full object-cover">
+                </div>
+                <div>
+                  <h4 class="text-sm font-medium text-dark">陈明教授</h4>
+                  <p class="text-xs text-gray-500">深度学习专家</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 相关分类 -->
+          <div class="card p-5">
+            <h3 class="text-lg font-semibold text-dark mb-4">相关分类</h3>
+            <div class="flex flex-wrap gap-2">
+              <span class="px-3 py-1 bg-blue-50 text-primary rounded-full text-sm">人工智能</span>
+              <span class="px-3 py-1 bg-green-50 text-success rounded-full text-sm">机器学习</span>
+              <span class="px-3 py-1 bg-purple-50 text-purple-600 rounded-full text-sm">深度学习</span>
+              <span class="px-3 py-1 bg-orange-50 text-orange-500 rounded-full text-sm">神经网络</span>
+              <span class="px-3 py-1 bg-blue-100 text-primary rounded-full text-sm">计算机视觉</span>
+              <span class="px-3 py-1 bg-gray-100 text-gray-600 rounded-full text-sm">自然语言处理</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 页脚 -->
+  <div class="p-6 md:p-8 border-t border-gray-200 bg-white">
+    <div class="max-w-6xl mx-auto">
+      <div class="text-center text-sm text-gray-500 mb-4">
+        &copy; 2023 BGarea在线学习平台. 保留所有权利.
+      </div>
+      <div class="flex flex-wrap justify-center gap-x-6 gap-y-2 text-xs text-gray-500">
+        <a href="#" class="hover:text-primary transition-colors duration-200">关于我们</a>
+        <a href="#" class="hover:text-primary transition-colors duration-200">隐私政策</a>
+        <a href="#" class="hover:text-primary transition-colors duration-200">服务条款</a>
+        <a href="#" class="hover:text-primary transition-colors duration-200">联系我们</a>
+      </div>
+      <div class="flex justify-center gap-4 mt-4 text-gray-500">
+        <a href="#" class="hover:text-primary transition-colors duration-200"><i class="fa fa-weixin text-lg"></i></a>
+        <a href="#" class="hover:text-primary transition-colors duration-200"><i class="fa fa-weibo text-lg"></i></a>
+        <a href="#" class="hover:text-primary transition-colors duration-200"><i class="fa fa-twitter text-lg"></i></a>
+        <a href="#" class="hover:text-primary transition-colors duration-200"><i class="fa fa-facebook text-lg"></i></a>
+      </div>
+    </div>
+  </div>
+
+  <!-- 自定义样式 -->
+  <style>
+  // 检查用户是否已登录
+function checkLoginStatus() {
+  const userMenu = document.getElementById('userMenu');
+  const currentUser = localStorage.getItem('bgareaCurrentUser') || sessionStorage.getItem('bgareaCurrentUser');
+  
+  if (currentUser) {
+    // 用户已登录
+    const user = JSON.parse(currentUser);
+    // 重构HTML结构：增加外层容器，用于统一控制hover
+    userMenu.innerHTML = `
+      <div class="relative" id="userDropdownContainer">
+        <button class="flex items-center gap-2 hover:text-primary transition-colors" id="userDropdownBtn">
+          <i class="fa fa-user-circle-o text-lg"></i>
+          <span class="hidden md:inline">${user.username}</span>
+        </button>
+        <!-- 下拉菜单：默认隐藏，通过JS控制显示/隐藏 -->
+        <div class="absolute right-0 mt-2 w-40 bg-white rounded-md shadow-lg py-2 hidden z-50" id="userDropdownMenu">
+          <a href="Personal Information.html" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors">个人中心</a>
+          <a href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors" id="logoutBtn">退出登录</a>
+        </div>
+      </div>
+    `;
+
+    // ---------- 新增：下拉菜单显示/隐藏逻辑 ----------
+    const dropdownContainer = document.getElementById('userDropdownContainer');
+    const dropdownBtn = document.getElementById('userDropdownBtn');
+    const dropdownMenu = document.getElementById('userDropdownMenu');
+    let hideTimer = null; // 延迟隐藏的定时器
+
+    // 显示菜单
+    function showMenu() {
+      clearTimeout(hideTimer); // 清除延迟隐藏的定时器
+      dropdownMenu.classList.remove('hidden');
+    }
+
+    // 隐藏菜单（加延迟，给用户时间移到菜单上）
+    function hideMenu() {
+      hideTimer = setTimeout(() => {
+        dropdownMenu.classList.add('hidden');
+      }, 200); // 200ms延迟，足够鼠标从按钮移到菜单
+    }
+
+    // 绑定事件：鼠标移到容器（按钮+菜单区域）显示，移开隐藏
+    dropdownContainer.addEventListener('mouseenter', showMenu);
+    dropdownContainer.addEventListener('mouseleave', hideMenu);
+    // 兼容点击触发（移动端/点击场景）
+    dropdownBtn.addEventListener('click', (e) => {
+      e.stopPropagation(); // 阻止事件冒泡
+      dropdownMenu.classList.toggle('hidden');
+    });
+    // 点击页面其他地方隐藏菜单
+    document.addEventListener('click', () => {
+      hideMenu();
+    });
+
+    // 退出登录逻辑（不变）
+    document.getElementById('logoutBtn').addEventListener('click', function(e) {
+      e.preventDefault();
+      localStorage.removeItem('bgareaCurrentUser');
+      sessionStorage.removeItem('bgareaCurrentUser');
+      location.reload();
+    });
+  } else {
+    // 未登录状态（不变）
+    userMenu.innerHTML = `
+      <a href="Login.html" class="text-primary hover:text-primary/80 font-medium transition-colors">登录</a>
+      <a href="register.html" class="bg-primary hover:bg-primary/90 text-white px-4 py-1.5 rounded-md font-medium transition-colors">注册</a>
+    `;
+  }
+}
+
+// 页面加载时执行（不变）
+document.addEventListener('DOMContentLoaded', function() {
+  checkLoginStatus();
+});
+
+
+    .hide-scrollbar::-webkit-scrollbar {
+      display: none;
+    }
+    .hide-scrollbar {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+    }
+    
+    /* 搜索结果卡片hover效果 */
+    .card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.05);
+    }
+    
+    .card {
+      transition: all 0.3s ease;
+    }
+    
+    /* 限制行数 */
+    .line-clamp-1 {
+      overflow: hidden;
+      display: -webkit-box;
+      -webkit-box-orient: vertical;
+      -webkit-line-clamp: 1;
+    }
+    
+    .line-clamp-2 {
+      overflow: hidden;
+      display: -webkit-box;
+      -webkit-box-orient: vertical;
+      -webkit-line-clamp: 2;
+    }
+    
+    .line-clamp-3 {
+      overflow: hidden;
+      display: -webkit-box;
+      -webkit-box-orient: vertical;
+      -webkit-line-clamp: 3;
+    }
+  </style>
+
+  <script>
+    // 搜索相关函数
+    function setSearchQuery(query) {
+      document.getElementById('mainSearchInput').value = query;
+      performSearch();
+    }
+    
+    function performSearch() {
+      const query = document.getElementById('mainSearchInput').value.trim();
+      if (query) {
+        // 在实际应用中，这里会发送搜索请求
+        // 现在我们只是模拟搜索
+        alert(`正在搜索: ${query}`);
+        // 可以在这里添加实际的搜索逻辑
+      }
+    }
+    
+    function handleSearchKeyPress(event) {
+      if (event.key === 'Enter') {
+        performSearch();
+      }
+    }
+    
+    // 页面加载时聚焦到搜索框
+    window.onload = function() {
+      const searchInput = document.getElementById('mainSearchInput');
+      if (searchInput) {
+        searchInput.focus();
+      }
+    };
+  </script>
+</body>
+</html>
+[file content end]

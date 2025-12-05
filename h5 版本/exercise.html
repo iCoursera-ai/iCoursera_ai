@@ -88,8 +88,9 @@
         <button class="text-secondary hover:text-primary transition-colors duration-200">
           <i class="fa fa-search"></i>
         </button>
-        <div class="w-8 h-8 rounded-full bg-primary/10 text-primary flex items-center justify-center cursor-pointer border border-primary/20">
-          <span>A</span>
+        <!-- 替换后的用户菜单区域 -->
+        <div class="flex items-center gap-4" id="userMenu">
+          <!-- 用户信息会通过JS动态渲染 -->
         </div>
       </div>
     </div>
@@ -575,6 +576,83 @@
 
   <!-- 图表初始化脚本 -->
   <script>
+  // 检查用户是否已登录
+function checkLoginStatus() {
+  const userMenu = document.getElementById('userMenu');
+  const currentUser = localStorage.getItem('bgareaCurrentUser') || sessionStorage.getItem('bgareaCurrentUser');
+  
+  if (currentUser) {
+    // 用户已登录
+    const user = JSON.parse(currentUser);
+    // 重构HTML结构：增加外层容器，用于统一控制hover
+    userMenu.innerHTML = `
+      <div class="relative" id="userDropdownContainer">
+        <button class="flex items-center gap-2 hover:text-primary transition-colors" id="userDropdownBtn">
+          <i class="fa fa-user-circle-o text-lg"></i>
+          <span class="hidden md:inline">${user.username}</span>
+        </button>
+        <!-- 下拉菜单：默认隐藏，通过JS控制显示/隐藏 -->
+        <div class="absolute right-0 mt-2 w-40 bg-white rounded-md shadow-lg py-2 hidden z-50" id="userDropdownMenu">
+          <a href="Personal Information.html" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors">个人中心</a>
+          <a href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors" id="logoutBtn">退出登录</a>
+        </div>
+      </div>
+    `;
+
+    // ---------- 新增：下拉菜单显示/隐藏逻辑 ----------
+    const dropdownContainer = document.getElementById('userDropdownContainer');
+    const dropdownBtn = document.getElementById('userDropdownBtn');
+    const dropdownMenu = document.getElementById('userDropdownMenu');
+    let hideTimer = null; // 延迟隐藏的定时器
+
+    // 显示菜单
+    function showMenu() {
+      clearTimeout(hideTimer); // 清除延迟隐藏的定时器
+      dropdownMenu.classList.remove('hidden');
+    }
+
+    // 隐藏菜单（加延迟，给用户时间移到菜单上）
+    function hideMenu() {
+      hideTimer = setTimeout(() => {
+        dropdownMenu.classList.add('hidden');
+      }, 200); // 200ms延迟，足够鼠标从按钮移到菜单
+    }
+
+    // 绑定事件：鼠标移到容器（按钮+菜单区域）显示，移开隐藏
+    dropdownContainer.addEventListener('mouseenter', showMenu);
+    dropdownContainer.addEventListener('mouseleave', hideMenu);
+    // 兼容点击触发（移动端/点击场景）
+    dropdownBtn.addEventListener('click', (e) => {
+      e.stopPropagation(); // 阻止事件冒泡
+      dropdownMenu.classList.toggle('hidden');
+    });
+    // 点击页面其他地方隐藏菜单
+    document.addEventListener('click', () => {
+      hideMenu();
+    });
+
+    // 退出登录逻辑（不变）
+    document.getElementById('logoutBtn').addEventListener('click', function(e) {
+      e.preventDefault();
+      localStorage.removeItem('bgareaCurrentUser');
+      sessionStorage.removeItem('bgareaCurrentUser');
+      location.reload();
+    });
+  } else {
+    // 未登录状态（不变）
+    userMenu.innerHTML = `
+      <a href="Login.html" class="text-primary hover:text-primary/80 font-medium transition-colors">登录</a>
+      <a href="register.html" class="bg-primary hover:bg-primary/90 text-white px-4 py-1.5 rounded-md font-medium transition-colors">注册</a>
+    `;
+  }
+}
+
+// 页面加载时执行（不变）
+document.addEventListener('DOMContentLoaded', function() {
+  checkLoginStatus();
+});
+
+
     document.addEventListener('DOMContentLoaded', function() {
       // 小图表通用配置
       const smallChartConfig = {

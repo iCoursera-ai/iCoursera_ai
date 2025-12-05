@@ -98,6 +98,22 @@
       .preference-chip.selected {
         @apply bg-primary text-white border-primary;
       }
+      /* 模态框样式 */
+      .modal {
+        @apply fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4 hidden;
+      }
+      .modal-content {
+        @apply bg-white rounded-lg shadow-xl w-full max-w-md;
+      }
+      .modal-header {
+        @apply flex justify-between items-center p-4 border-b;
+      }
+      .modal-body {
+        @apply p-4;
+      }
+      .modal-footer {
+        @apply p-4 border-t flex justify-end gap-3;
+      }
     }
   </style>
 </head>
@@ -136,8 +152,9 @@
           <i class="fa fa-search"></i>
         </button>
         <!-- 用户头像 -->
-        <div class="w-8 h-8 rounded-full bg-primary/10 text-primary flex items-center justify-center cursor-pointer border border-primary/20">
-          <span>A</span>
+        <!-- 替换后的用户菜单区域 -->
+        <div class="flex items-center gap-4" id="userMenu">
+          <!-- 用户信息会通过JS动态渲染 -->
         </div>
       </div>
     </div>
@@ -185,23 +202,31 @@
           </div>
         </div>
            
-        <!-- 收藏页 -->
+        <!-- 收藏管理 -->
         <div class="sidebar-group">
-          <div class="sidebar-parent" data-target="submenu-exception">
+          <div class="sidebar-parent" data-target="submenu-favorites">
             <div class="sidebar-parent-content">
-              <i class="fa fa-exclamation-triangle sidebar-icon"></i>
-              <span>收藏页</span>
+              <i class="fa fa-heart sidebar-icon"></i>
+              <span>收藏管理</span>
             </div>
-            <i class="fa fa-angle-right text-xs transition-transform duration-200"></i>
+            <i class="fa fa-angle-right text-xs transition-transform duration-200 rotate-icon"></i>
           </div>
-          <div id="submenu-exception" class="hidden bg-gray-50">
-            <div class="sidebar-child">
-              <i class="fa fa-circle-o text-xs sidebar-icon"></i>
-              <span class="sidebar-child-text">404页面</span>
+          <div id="submenu-favorites" class="hidden bg-gray-50">
+            <div class="sidebar-child" onclick="window.location.href='favorites-management.html?tab=my-collection'">
+              <i class="fa fa-book text-xs sidebar-icon"></i>
+              <span class="sidebar-child-text">我的收藏</span>
+            </div>
+            <div class="sidebar-child" onclick="window.location.href='favorites-management.html?tab=likes'">
+              <i class="fa fa-thumbs-up text-xs sidebar-icon"></i>
+              <span class="sidebar-child-text">点赞</span>
+            </div>
+            <div class="sidebar-child" onclick="window.location.href='favorites-management.html?tab=history'">
+              <i class="fa fa-history text-xs sidebar-icon"></i>
+              <span class="sidebar-child-text">历史记录</span>
             </div>
           </div>
         </div>
-        
+
         <!-- 个人中心 -->
         <div class="sidebar-group">
           <div class="sidebar-parent active" data-target="submenu-user-center">
@@ -246,28 +271,28 @@
               <div class="flex flex-col md:flex-row items-center md:items-start gap-6">
                 <div class="relative">
                   <div class="w-24 h-24 rounded-full overflow-hidden border-4 border-white shadow-sm">
-                    <img src="https://picsum.photos/200/200?random=1" alt="用户头像" class="w-full h-full object-cover">
+                    <img id="user-avatar-img" src="https://picsum.photos/200/200?random=1" alt="用户头像" class="w-full h-full object-cover">
                   </div>
                 </div>
                 
                 <div class="text-center md:text-left flex-1">
-                  <h2 class="text-2xl font-bold text-dark mb-2">谷名</h2>
+                  <h2 id="user-display-name" class="text-2xl font-bold text-dark mb-2">加载中...</h2>
                   <div class="flex flex-wrap items-center gap-x-6 gap-y-2 text-sm text-secondary">
                     <div class="flex items-center gap-1">
                       <i class="fa fa-graduation-cap text-primary"></i>
-                      <span>北京理工大学</span>
+                      <span id="user-school">北京理工大学</span>
                     </div>
                     <div class="flex items-center gap-1">
                       <i class="fa fa-map-marker text-primary"></i>
-                      <span>北京</span>
+                      <span id="user-location">北京</span>
                     </div>
                     <div class="flex items-center gap-1">
                       <i class="fa fa-star text-yellow-500"></i>
-                      <span>粉丝数: 5000</span>
+                      <span>粉丝数: <span id="user-followers">5000</span></span>
                     </div>
                     <div class="flex items-center gap-1">
                       <i class="fa fa-book text-primary"></i>
-                      <span>发布课程: 20</span>
+                      <span>发布课程: <span id="user-courses">20</span></span>
                     </div>
                   </div>
                 </div>
@@ -393,10 +418,10 @@
               </div>
             </div>
             
-            <!-- 我的签名 -->
+            <!-- 我的签名（放回原来位置） -->
             <div class="card p-6 card-shadow">
               <h3 class="text-lg font-semibold text-dark mb-4">我的签名</h3>
-              <div class="text-xl text-dark py-8 border-t border-b border-gray-200">
+              <div id="user-signature" class="text-xl text-dark py-8 border-t border-b border-gray-200">
                 啊啊啊啊啊啊啊啊啊啊啊，摆烂摆烂
               </div>
             </div>
@@ -409,78 +434,89 @@
               <div class="flex flex-col md:flex-row gap-8">
                 <div class="flex flex-col items-center md:items-start">
                   <div class="w-24 h-24 rounded-full overflow-hidden border-4 border-white shadow-sm mb-3">
-                    <img src="https://picsum.photos/200/200?random=1" alt="用户头像" class="w-full h-full object-cover">
+                    <img id="settings-avatar-img" src="https://picsum.photos/200/200?random=1" alt="用户头像" class="w-full h-full object-cover">
                   </div>
-                  <button class="btn-text text-sm flex items-center gap-1 px-4 py-2 rounded-md">
+                  <button class="btn-text text-sm flex items-center gap-1 px-4 py-2 rounded-md" onclick="document.getElementById('avatarInput').click()">
                     <i class="fa fa-upload"></i>
                     <span>更换头像</span>
                   </button>
+                  <input type="file" id="avatarInput" class="hidden" accept="image/*" onchange="handleAvatarUpload(event)">
                 </div>
                 
                 <div class="flex-1 grid grid-cols-1 md:grid-cols-3 gap-x-6 gap-y-4">
                   <div>
                     <div class="text-sm font-medium text-gray-700 mb-1">用户名</div>
                     <div class="flex items-center gap-2">
-                      <span class="font-medium text-dark">dsfuis</span>
-                      <button class="text-link text-sm hover:underline">修改</button>
+                      <span id="settings-username" class="font-medium text-dark">加载中...</span>
+                      <button class="text-link text-sm hover:underline" onclick="showEditModal('username')">修改</button>
                     </div>
                   </div>
                   
                   <div>
                     <div class="text-sm font-medium text-gray-700 mb-1">实名认证</div>
                     <div class="flex items-center gap-2">
-                      <span class="text-success font-medium">已认证</span>
-                      <button class="text-link text-sm hover:underline">修改</button>
+                      <span id="settings-realname-status" class="text-success font-medium">已认证</span>
+                      <button class="text-link text-sm hover:underline" onclick="showEditModal('realname')">修改</button>
                     </div>
                   </div>
                   
                   <div>
-                    <div class="text-sm font-medium text-gray-700 mb-1">姓名</div>
+                    <div class="text-sm font-medium text-gray-700 mb-1">真实姓名</div>
                     <div class="flex items-center gap-2">
-                      <span class="font-medium text-dark">dsfuis</span>
-                      <button class="text-link text-sm hover:underline">修改</button>
+                      <span id="settings-realname" class="font-medium text-dark">加载中...</span>
+                      <button class="text-link text-sm hover:underline" onclick="showEditModal('realname')">修改</button>
                     </div>
                   </div>
                   
                   <div>
                     <div class="text-sm font-medium text-gray-700 mb-1">账号ID</div>
-                    <div class="font-medium text-dark">2489372598</div>
+                    <div id="settings-userid" class="font-medium text-dark">2489372598</div>
                   </div>
                   
                   <div>
                     <div class="text-sm font-medium text-gray-700 mb-1">手机号码</div>
                     <div class="flex items-center gap-2">
-                      <span class="font-medium text-dark">2489372598</span>
-                      <button class="text-link text-sm hover:underline">修改</button>
+                      <span id="settings-phone" class="font-medium text-dark">13800138000</span>
+                      <button class="text-link text-sm hover:underline" onclick="showEditModal('phone')">修改</button>
                     </div>
                   </div>
                   
                   <div>
                     <div class="text-sm font-medium text-gray-700 mb-1">位置</div>
                     <div class="flex items-center gap-1">
-                      <span class="font-medium text-dark">北京</span>
-                      <i class="fa fa-map-marker text-primary"></i>
+                      <span id="settings-location" class="font-medium text-dark">北京</span>
+                      <button class="text-link text-sm hover:underline" onclick="showEditModal('location')">修改</button>
                     </div>
                   </div>
                   
                   <div>
-                    <div class="text-sm font-medium text-gray-700 mb-1">注册时间</div>
-                    <div class="font-medium text-dark">2021-06-30</div>
+                    <div class="text-sm font-medium text-gray-700 mb-1">学校</div>
+                    <div class="flex items-center gap-1">
+                      <span id="settings-school" class="font-medium text-dark">北京理工大学</span>
+                      <button class="text-link text-sm hover:underline" onclick="showEditModal('school')">修改</button>
+                    </div>
                   </div>
                   
                   <div>
-                    <div class="text-sm font-medium text-gray-700 mb-1">教师资格认证</div>
-                    <div class="text-success font-medium">已认证</div>
+                    <div class="text-sm font-medium text-gray-700 mb-1">粉丝数</div>
+                    <div id="settings-followers" class="font-medium text-dark">5000</div>
                   </div>
                   
                   <div>
-                    <div class="text-sm font-medium text-gray-700 mb-1">我的粉丝</div>
-                    <div class="font-medium text-dark">2489372598</div>
+                    <div class="text-sm font-medium text-gray-700 mb-1">发布课程数</div>
+                    <div id="settings-courses" class="font-medium text-dark">20</div>
                   </div>
                   
                   <div class="md:col-span-3">
                     <div class="text-sm font-medium text-gray-700 mb-1">个人简介</div>
-                    <textarea class="input-field" rows="3" placeholder="请输入内容"></textarea>
+                    <textarea id="settings-bio" class="input-field" rows="3" placeholder="请输入个人简介"></textarea>
+                    <button class="btn btn-primary mt-2 px-4 py-2 rounded-md" onclick="saveBio()">保存简介</button>
+                  </div>
+                  
+                  <div class="md:col-span-3">
+                    <div class="text-sm font-medium text-gray-700 mb-1">我的签名</div>
+                    <textarea id="settings-signature" class="input-field" rows="2" placeholder="请输入签名"></textarea>
+                    <button class="btn btn-primary mt-2 px-4 py-2 rounded-md" onclick="saveSignature()">保存签名</button>
                   </div>
                 </div>
               </div>
@@ -505,7 +541,7 @@
                       <div class="font-medium text-dark mb-1">登录密码</div>
                       <div class="text-sm text-secondary">已设置。密码至少6位字符，支持数字、字母和除空格外的特殊字符，且必须同时包含数字和大小写字母。</div>
                     </div>
-                    <button class="btn-text px-4 py-2 rounded-md">修改</button>
+                    <button class="btn-text px-4 py-2 rounded-md" onclick="showEditModal('password')">修改</button>
                   </div>
                   
                   <div class="flex justify-between items-center py-3 border-b border-gray-100">
@@ -513,15 +549,15 @@
                       <div class="font-medium text-dark mb-1">密保问题</div>
                       <div class="text-sm text-secondary">您暂未设置密保问题。密保问题可以有效的保护账号的安全。</div>
                     </div>
-                    <button class="btn-text px-4 py-2 rounded-md">设置</button>
+                    <button class="btn-text px-4 py-2 rounded-md" onclick="alert('密保问题设置功能开发中')">设置</button>
                   </div>
                   
                   <div class="flex justify-between items-center py-3 border-b border-gray-100">
                     <div>
                       <div class="font-medium text-dark mb-1">安全手机</div>
-                      <div class="text-sm text-secondary">已绑定: 150****50</div>
+                      <div class="text-sm text-secondary">已绑定: <span id="security-phone">150****50</span></div>
                     </div>
-                    <button class="btn-text px-4 py-2 rounded-md">修改</button>
+                    <button class="btn-text px-4 py-2 rounded-md" onclick="showEditModal('phone')">修改</button>
                   </div>
                   
                   <div class="flex justify-between items-center py-3">
@@ -529,7 +565,7 @@
                       <div class="font-medium text-dark mb-1">安全邮箱</div>
                       <div class="text-sm text-secondary">您暂未设置邮箱，绑定邮箱可以用来找回密码、接收通知等。</div>
                     </div>
-                    <button class="btn-text px-4 py-2 rounded-md">设置</button>
+                    <button class="btn-text px-4 py-2 rounded-md" onclick="showEditModal('email')">设置</button>
                   </div>
                 </div>
               </div>
@@ -809,6 +845,43 @@
     </main>
   </div>
 
+  <!-- 模态框 -->
+  <div id="editModal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3 id="modalTitle" class="text-lg font-semibold">修改信息</h3>
+        <button onclick="closeModal()" class="text-gray-500 hover:text-gray-700">
+          <i class="fa fa-times"></i>
+        </button>
+      </div>
+      <div class="modal-body">
+        <input type="hidden" id="editField">
+        <div class="mb-4">
+          <label id="modalLabel" class="block text-sm font-medium text-gray-700 mb-1"></label>
+          <input type="text" id="modalInput" class="input-field" placeholder="请输入新的值">
+          <div id="passwordFields" class="mt-4 space-y-3 hidden">
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">原密码</label>
+              <input type="password" id="oldPassword" class="input-field">
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">新密码</label>
+              <input type="password" id="newPassword" class="input-field">
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">确认新密码</label>
+              <input type="password" id="confirmPassword" class="input-field">
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button onclick="closeModal()" class="px-4 py-2 text-gray-700 border border-gray-300 rounded-md hover:bg-gray-50">取消</button>
+        <button onclick="saveEdit()" class="px-4 py-2 bg-primary text-white rounded-md hover:bg-primary/90">保存</button>
+      </div>
+    </div>
+  </div>
+
   <!-- 页脚 -->
   <footer class="bg-white py-6 px-6 border-t border-gray-200">
     <div class="container mx-auto">
@@ -832,236 +905,425 @@
 
   <!-- JavaScript 交互逻辑 -->
   <script>
-    // 所有父菜单的展开/折叠功能
-    document.querySelectorAll('.sidebar-parent').forEach(parent => {
-      parent.addEventListener('click', function() {
-        const targetId = this.getAttribute('data-target');
-        const submenu = document.getElementById(targetId);
-        const icon = this.querySelector('.fa-angle-right');
+    // 当前用户信息
+    let currentUser = null;
+    let userData = null;
+
+    // 检查用户是否已登录
+    function checkLoginStatus() {
+      const userMenu = document.getElementById('userMenu');
+      const storedUser = localStorage.getItem('bgareaCurrentUser') || sessionStorage.getItem('bgareaCurrentUser');
+      
+      if (storedUser) {
+        // 用户已登录
+        currentUser = JSON.parse(storedUser);
         
-        submenu.classList.toggle('hidden');
-        icon.classList.toggle('rotate-icon');
-        this.classList.toggle('active');
+        // 如果本地存储有用户数据，使用它；否则从登录信息初始化
+        const storedUserData = localStorage.getItem('bgareaUserData');
+        if (storedUserData) {
+          userData = JSON.parse(storedUserData);
+        } else {
+          // 从登录信息初始化用户数据
+          userData = {
+            username: currentUser.username || 'dsfuis',
+            realname: currentUser.realname || '谷名',
+            userId: currentUser.userId || '2489372598',
+            phone: currentUser.phone || '13800138000',
+            location: currentUser.location || '北京',
+            school: currentUser.school || '北京理工大学',
+            followers: currentUser.followers || 5000,
+            courses: currentUser.courses || 20,
+            avatar: currentUser.avatar || 'https://picsum.photos/200/200?random=1',
+            bio: currentUser.bio || '',
+            signature: currentUser.signature || '啊啊啊啊啊啊啊啊啊啊啊，摆烂摆烂',
+            realnameStatus: currentUser.realnameStatus || '已认证',
+            teacherCert: currentUser.teacherCert || '已认证',
+            email: currentUser.email || ''
+          };
+          localStorage.setItem('bgareaUserData', JSON.stringify(userData));
+        }
+
+        // 更新右上角用户菜单
+        userMenu.innerHTML = `
+          <div class="relative" id="userDropdownContainer">
+            <button class="flex items-center gap-2 hover:text-primary transition-colors" id="userDropdownBtn">
+              <i class="fa fa-user-circle-o text-lg"></i>
+              <span class="hidden md:inline">${userData.username}</span>
+            </button>
+            <!-- 下拉菜单：默认隐藏，通过JS控制显示/隐藏 -->
+            <div class="absolute right-0 mt-2 w-40 bg-white rounded-md shadow-lg py-2 hidden z-50" id="userDropdownMenu">
+              <a href="Personal Information.html" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors">个人中心</a>
+              <a href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors" id="logoutBtn">退出登录</a>
+            </div>
+          </div>
+        `;
+
+        // 初始化用户信息显示
+        updateUserInfoDisplay();
+        updateUserSettingsDisplay();
+
+        // 下拉菜单显示/隐藏逻辑
+        const dropdownContainer = document.getElementById('userDropdownContainer');
+        const dropdownBtn = document.getElementById('userDropdownBtn');
+        const dropdownMenu = document.getElementById('userDropdownMenu');
+        let hideTimer = null;
+
+        function showMenu() {
+          clearTimeout(hideTimer);
+          dropdownMenu.classList.remove('hidden');
+        }
+
+        function hideMenu() {
+          hideTimer = setTimeout(() => {
+            dropdownMenu.classList.add('hidden');
+          }, 200);
+        }
+
+        dropdownContainer.addEventListener('mouseenter', showMenu);
+        dropdownContainer.addEventListener('mouseleave', hideMenu);
+        
+        dropdownBtn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          dropdownMenu.classList.toggle('hidden');
+        });
+        
+        document.addEventListener('click', hideMenu);
+
+        // 退出登录逻辑
+        document.getElementById('logoutBtn').addEventListener('click', function(e) {
+          e.preventDefault();
+          localStorage.removeItem('bgareaCurrentUser');
+          sessionStorage.removeItem('bgareaCurrentUser');
+          localStorage.removeItem('bgareaUserData');
+          location.reload();
+        });
+      } else {
+        // 未登录状态
+        userMenu.innerHTML = `
+          <a href="Login.html" class="text-primary hover:text-primary/80 font-medium transition-colors">登录</a>
+          <a href="register.html" class="bg-primary hover:bg-primary/90 text-white px-4 py-1.5 rounded-md font-medium transition-colors">注册</a>
+        `;
+      }
+    }
+
+    // 更新用户信息页面显示
+    function updateUserInfoDisplay() {
+      if (!userData) return;
+      
+      document.getElementById('user-display-name').textContent = userData.realname;
+      document.getElementById('user-school').textContent = userData.school;
+      document.getElementById('user-location').textContent = userData.location;
+      document.getElementById('user-followers').textContent = userData.followers;
+      document.getElementById('user-courses').textContent = userData.courses;
+      document.getElementById('user-signature').textContent = userData.signature;
+      document.getElementById('user-avatar-img').src = userData.avatar;
+    }
+
+    // 更新用户设置页面显示
+    function updateUserSettingsDisplay() {
+      if (!userData) return;
+      
+      document.getElementById('settings-username').textContent = userData.username;
+      document.getElementById('settings-realname').textContent = userData.realname;
+      document.getElementById('settings-realname-status').textContent = userData.realnameStatus;
+      document.getElementById('settings-userid').textContent = userData.userId;
+      document.getElementById('settings-phone').textContent = userData.phone;
+      document.getElementById('settings-location').textContent = userData.location;
+      document.getElementById('settings-school').textContent = userData.school;
+      document.getElementById('settings-followers').textContent = userData.followers;
+      document.getElementById('settings-courses').textContent = userData.courses;
+      document.getElementById('settings-bio').value = userData.bio || '';
+      document.getElementById('settings-signature').value = userData.signature;
+      document.getElementById('settings-avatar-img').src = userData.avatar;
+      document.getElementById('security-phone').textContent = userData.phone.replace(/(\d{3})\d{4}(\d{4})/, '$1****$2');
+    }
+
+    // 显示编辑模态框
+    function showEditModal(field) {
+      document.getElementById('editField').value = field;
+      
+      // 设置模态框标题和标签
+      const fieldLabels = {
+        'username': '用户名',
+        'realname': '真实姓名',
+        'phone': '手机号码',
+        'location': '位置',
+        'school': '学校',
+        'password': '密码',
+        'email': '邮箱'
+      };
+      
+      const label = fieldLabels[field] || field;
+      document.getElementById('modalTitle').textContent = '修改' + label;
+      document.getElementById('modalLabel').textContent = label;
+      
+      // 如果是密码字段，显示密码输入框
+      if (field === 'password') {
+        document.getElementById('passwordFields').classList.remove('hidden');
+        document.getElementById('modalInput').classList.add('hidden');
+      } else {
+        document.getElementById('passwordFields').classList.add('hidden');
+        document.getElementById('modalInput').classList.remove('hidden');
+        
+        // 根据字段设置输入框的值
+        let value = '';
+        switch(field) {
+          case 'username': value = userData.username; break;
+          case 'realname': value = userData.realname; break;
+          case 'phone': value = userData.phone; break;
+          case 'location': value = userData.location; break;
+          case 'school': value = userData.school; break;
+          case 'email': value = userData.email || ''; break;
+          default: value = '';
+        }
+        document.getElementById('modalInput').value = value;
+        document.getElementById('modalInput').focus();
+      }
+      
+      document.getElementById('editModal').classList.remove('hidden');
+    }
+
+    // 关闭模态框
+    function closeModal() {
+      document.getElementById('editModal').classList.add('hidden');
+      document.getElementById('modalInput').value = '';
+      document.getElementById('oldPassword').value = '';
+      document.getElementById('newPassword').value = '';
+      document.getElementById('confirmPassword').value = '';
+    }
+
+    // 保存编辑
+    function saveEdit() {
+      const field = document.getElementById('editField').value;
+      const value = field === 'password' ? null : document.getElementById('modalInput').value.trim();
+      
+      if (!userData) {
+        alert('用户数据未加载');
+        return;
+      }
+      
+      // 验证输入
+      if (field === 'password') {
+        const oldPassword = document.getElementById('oldPassword').value;
+        const newPassword = document.getElementById('newPassword').value;
+        const confirmPassword = document.getElementById('confirmPassword').value;
+        
+        if (!oldPassword || !newPassword || !confirmPassword) {
+          alert('请填写所有密码字段');
+          return;
+        }
+        
+        if (newPassword !== confirmPassword) {
+          alert('新密码与确认密码不一致');
+          return;
+        }
+        
+        if (newPassword.length < 6) {
+          alert('密码长度至少6位');
+          return;
+        }
+        
+        // 这里应该发送到服务器验证原密码并更新
+        alert('密码修改成功！');
+        closeModal();
+      } else {
+        if (!value) {
+          alert('请输入有效值');
+          return;
+        }
+        
+        // 验证手机号格式
+        if (field === 'phone' && !/^1[3-9]\d{9}$/.test(value)) {
+          alert('请输入有效的手机号码');
+          return;
+        }
+        
+        // 更新用户数据
+        switch(field) {
+          case 'username':
+            userData.username = value;
+            // 同时更新当前登录信息
+            currentUser.username = value;
+            localStorage.setItem('bgareaCurrentUser', JSON.stringify(currentUser));
+            break;
+          case 'realname':
+            userData.realname = value;
+            break;
+          case 'phone':
+            userData.phone = value;
+            break;
+          case 'location':
+            userData.location = value;
+            break;
+          case 'school':
+            userData.school = value;
+            break;
+          case 'email':
+            userData.email = value;
+            break;
+        }
+        
+        // 保存到本地存储
+        localStorage.setItem('bgareaUserData', JSON.stringify(userData));
+        
+        // 更新页面显示
+        updateUserInfoDisplay();
+        updateUserSettingsDisplay();
+        
+        // 更新右上角用户名
+        const userNameSpan = document.querySelector('#userDropdownBtn span');
+        if (userNameSpan && field === 'username') {
+          userNameSpan.textContent = value;
+        }
+        
+        alert('修改成功！');
+        closeModal();
+      }
+    }
+
+    // 处理头像上传
+    function handleAvatarUpload(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+      
+      if (!file.type.startsWith('image/')) {
+        alert('请选择图片文件');
+        return;
+      }
+      
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        userData.avatar = e.target.result;
+        localStorage.setItem('bgareaUserData', JSON.stringify(userData));
+        
+        // 更新页面显示
+        document.getElementById('user-avatar-img').src = e.target.result;
+        document.getElementById('settings-avatar-img').src = e.target.result;
+        
+        alert('头像上传成功！');
+      };
+      reader.readAsDataURL(file);
+    }
+
+    // 保存个人简介
+    function saveBio() {
+      const bio = document.getElementById('settings-bio').value.trim();
+      if (!userData) return;
+      
+      userData.bio = bio;
+      localStorage.setItem('bgareaUserData', JSON.stringify(userData));
+      alert('个人简介已保存！');
+    }
+
+    // 保存签名
+    function saveSignature() {
+      const signature = document.getElementById('settings-signature').value.trim();
+      if (!userData) return;
+      
+      userData.signature = signature;
+      localStorage.setItem('bgareaUserData', JSON.stringify(userData));
+      
+      // 更新用户信息页面显示
+      document.getElementById('user-signature').textContent = signature;
+      alert('签名已保存！');
+    }
+
+    // 页面加载时执行
+    document.addEventListener('DOMContentLoaded', function() {
+      checkLoginStatus();
+      
+      // 所有父菜单的展开/折叠功能
+      document.querySelectorAll('.sidebar-parent').forEach(parent => {
+        parent.addEventListener('click', function() {
+          const targetId = this.getAttribute('data-target');
+          const submenu = document.getElementById(targetId);
+          const icon = this.querySelector('.fa-angle-right');
+          
+          submenu.classList.toggle('hidden');
+          icon.classList.toggle('rotate-icon');
+          this.classList.toggle('active');
+        });
       });
-    });
-    
-    // 子菜单点击事件
-    document.querySelectorAll('.sidebar-child').forEach(child => {
-      child.addEventListener('click', function(e) {
+      
+      // 子菜单点击事件
+      document.querySelectorAll('.sidebar-child').forEach(child => {
+        child.addEventListener('click', function(e) {
+          e.stopPropagation();
+          
+          const parentSubmenu = this.parentElement;
+          parentSubmenu.querySelectorAll('.sidebar-child').forEach(sib => {
+            sib.classList.remove('active');
+          });
+          
+          this.classList.add('active');
+        });
+      });
+      
+      // 页面导航切换（用户信息 ↔ 用户设置）
+      document.getElementById('nav-user-info').addEventListener('click', function(e) {
         e.stopPropagation();
         
-        const parentSubmenu = this.parentElement;
-        parentSubmenu.querySelectorAll('.sidebar-child').forEach(sib => {
-          sib.classList.remove('active');
-        });
-        
-        this.classList.add('active');
+        document.getElementById('breadcrumb-current').textContent = '用户信息';
+        document.getElementById('page-user-info').classList.remove('hidden');
+        document.getElementById('page-user-settings').classList.add('hidden');
       });
-    });
-    
-    // 页面导航切换（用户信息 ↔ 用户设置）
-    document.getElementById('nav-user-info').addEventListener('click', function(e) {
-      e.stopPropagation();
       
-      document.getElementById('breadcrumb-current').textContent = '用户信息';
-      document.getElementById('page-user-info').classList.remove('hidden');
-      document.getElementById('page-user-settings').classList.add('hidden');
-    });
-    
-    document.getElementById('nav-user-settings').addEventListener('click', function(e) {
-      e.stopPropagation();
-      
-      document.getElementById('breadcrumb-current').textContent = '用户设置';
-      document.getElementById('page-user-settings').classList.remove('hidden');
-      document.getElementById('page-user-info').classList.add('hidden');
-      
-      // 切换到用户设置页面时，加载偏好设置
-      if (document.getElementById('tab-preferences').classList.contains('active')) {
-        loadPreferences();
-      }
-    });
-    
-    // 标签页切换（安全设置 ↔ 教师认证 ↔ 偏好设置）
-    const tabs = {
-      'tab-security': 'content-security',
-      'tab-teacher': 'content-teacher',
-      'tab-preferences': 'content-preferences'
-    };
-    
-    Object.keys(tabs).forEach(tabId => {
-      document.getElementById(tabId).addEventListener('click', function() {
-        // 更新所有标签状态
-        Object.keys(tabs).forEach(id => {
-          const tab = document.getElementById(id);
-          const isActive = id === tabId;
-          
-          if (isActive) {
-            tab.classList.add('text-primary', 'border-b-2', 'border-primary', 'font-medium');
-            tab.classList.remove('text-secondary', 'hover:text-primary');
-          } else {
-            tab.classList.remove('text-primary', 'border-b-2', 'border-primary', 'font-medium');
-            tab.classList.add('text-secondary', 'hover:text-primary');
-          }
-        });
+      document.getElementById('nav-user-settings').addEventListener('click', function(e) {
+        e.stopPropagation();
         
-        // 显示对应的内容
-        Object.values(tabs).forEach(contentId => {
-          const content = document.getElementById(contentId);
-          content.classList.add('hidden');
-        });
+        document.getElementById('breadcrumb-current').textContent = '用户设置';
+        document.getElementById('page-user-settings').classList.remove('hidden');
+        document.getElementById('page-user-info').classList.add('hidden');
         
-        const activeContent = document.getElementById(tabs[tabId]);
-        activeContent.classList.remove('hidden');
-        
-        // 如果是偏好设置标签，加载偏好数据
-        if (tabId === 'tab-preferences') {
+        // 切换到用户设置页面时，加载偏好设置
+        if (document.getElementById('tab-preferences').classList.contains('active')) {
           loadPreferences();
         }
       });
-    });
-    
-    // ============ 偏好设置相关逻辑 ============
-    
-    // 存储用户选择的偏好
-    let userPreferences = {
-      field: [],
-      goal: [],
-      method: [],
-      duration: [],
-      difficulty: []
-    };
-    
-    // DOM元素
-    const preferenceChips = document.querySelectorAll('#content-preferences .preference-chip');
-    const selectedCountElement = document.getElementById('selectedCount');
-    const savePreferencesBtn = document.getElementById('savePreferencesBtn');
-    const resetPreferencesBtn = document.getElementById('resetPreferencesBtn');
-    const currentPreferencesDiv = document.getElementById('currentPreferences');
-    const preferencesListElement = document.getElementById('preferencesList');
-    
-    // 检查必选字段是否已选择
-    function checkRequiredFields() {
-      const hasField = userPreferences.field.length > 0;
-      const hasGoal = userPreferences.goal.length > 0;
-      return hasField && hasGoal;
-    }
-    
-    // 更新已选择偏好数量
-    function updateSelectedCount() {
-      let total = 0;
-      Object.values(userPreferences).forEach(arr => {
-        total += arr.length;
-      });
-      selectedCountElement.textContent = total;
       
-      // 更新保存按钮状态
-      const isRequiredFieldsSelected = checkRequiredFields();
-      savePreferencesBtn.disabled = !isRequiredFieldsSelected;
+      // 标签页切换（安全设置 ↔ 教师认证 ↔ 偏好设置）
+      const tabs = {
+        'tab-security': 'content-security',
+        'tab-teacher': 'content-teacher',
+        'tab-preferences': 'content-preferences'
+      };
       
-      if (!isRequiredFieldsSelected) {
-        savePreferencesBtn.setAttribute('title', '请至少选择一个学习领域和学习目标');
-      } else {
-        savePreferencesBtn.removeAttribute('title');
-      }
-    }
-    
-    // 更新当前偏好展示
-    function updateCurrentPreferencesDisplay() {
-      const savedPreferences = localStorage.getItem('userPreferences');
-      if (savedPreferences) {
-        try {
-          const parsed = JSON.parse(savedPreferences);
-          if (Object.keys(parsed).length > 0) {
-            let html = '<div class="space-y-2">';
+      Object.keys(tabs).forEach(tabId => {
+        document.getElementById(tabId).addEventListener('click', function() {
+          // 更新所有标签状态
+          Object.keys(tabs).forEach(id => {
+            const tab = document.getElementById(id);
+            const isActive = id === tabId;
             
-            // 领域偏好
-            if (parsed.field && parsed.field.length > 0) {
-              const fieldLabels = {
-                'programming': '编程开发',
-                'design': '设计艺术',
-                'business': '商业管理',
-                'data-science': '数据科学',
-                'language': '语言学习',
-                'marketing': '市场营销',
-                'personal-growth': '个人成长',
-                'academic': '学术教育'
-              };
-              const fieldDisplay = parsed.field.map(f => fieldLabels[f] || f).join('、');
-              html += `<div><span class="font-medium">学习领域:</span> ${fieldDisplay}</div>`;
+            if (isActive) {
+              tab.classList.add('text-primary', 'border-b-2', 'border-primary', 'font-medium');
+              tab.classList.remove('text-secondary', 'hover:text-primary');
+            } else {
+              tab.classList.remove('text-primary', 'border-b-2', 'border-primary', 'font-medium');
+              tab.classList.add('text-secondary', 'hover:text-primary');
             }
-            
-            // 目标偏好
-            if (parsed.goal && parsed.goal.length > 0) {
-              const goalLabels = {
-                'career': '职业发展',
-                'skill-upgrade': '技能提升',
-                'exam': '考试认证',
-                'hobby': '兴趣爱好',
-                'school': '学业辅助',
-                'entrepreneurship': '创业指导'
-              };
-              const goalDisplay = parsed.goal.map(g => goalLabels[g] || g).join('、');
-              html += `<div><span class="font-medium">学习目标:</span> ${goalDisplay}</div>`;
-            }
-            
-            // 学习方式
-            if (parsed.method && parsed.method.length > 0) {
-              const methodLabels = {
-                'video': '视频课程',
-                'text': '图文教程',
-                'interactive': '互动练习',
-                'live': '直播授课',
-                'project': '项目实战',
-                'one-on-one': '一对一辅导'
-              };
-              const methodDisplay = parsed.method.map(m => methodLabels[m] || m).join('、');
-              html += `<div><span class="font-medium">学习方式:</span> ${methodDisplay}</div>`;
-            }
-            
-            // 学习时长
-            if (parsed.duration && parsed.duration.length > 0) {
-              const durationDisplay = parsed.duration.join('、');
-              html += `<div><span class="font-medium">学习时长:</span> ${durationDisplay}</div>`;
-            }
-            
-            // 难度级别
-            if (parsed.difficulty && parsed.difficulty.length > 0) {
-              const difficultyLabels = {
-                'beginner': '初级入门',
-                'intermediate': '中级进阶',
-                'advanced': '高级精通',
-                'mixed': '混合难度'
-              };
-              const difficultyDisplay = parsed.difficulty.map(d => difficultyLabels[d] || d).join('、');
-              html += `<div><span class="font-medium">课程难度:</span> ${difficultyDisplay}</div>`;
-            }
-            
-            html += '</div>';
-            preferencesListElement.innerHTML = html;
-            currentPreferencesDiv.classList.remove('hidden');
-          } else {
-            currentPreferencesDiv.classList.add('hidden');
+          });
+          
+          // 显示对应的内容
+          Object.values(tabs).forEach(contentId => {
+            const content = document.getElementById(contentId);
+            content.classList.add('hidden');
+          });
+          
+          const activeContent = document.getElementById(tabs[tabId]);
+          activeContent.classList.remove('hidden');
+          
+          // 如果是偏好设置标签，加载偏好数据
+          if (tabId === 'tab-preferences') {
+            loadPreferences();
           }
-        } catch (e) {
-          console.error('解析偏好设置失败:', e);
-          currentPreferencesDiv.classList.add('hidden');
-        }
-      } else {
-        currentPreferencesDiv.classList.add('hidden');
-      }
-    }
-    
-    // 加载偏好设置
-    function loadPreferences() {
-      const savedPreferences = localStorage.getItem('userPreferences');
-      
-      // 重置UI选择状态
-      preferenceChips.forEach(chip => {
-        chip.classList.remove('selected');
+        });
       });
       
-      // 重置内存中的偏好对象
-      userPreferences = {
+      // ============ 偏好设置相关逻辑 ============
+      
+      // 存储用户选择的偏好
+      let userPreferences = {
         field: [],
         goal: [],
         method: [],
@@ -1069,109 +1331,240 @@
         difficulty: []
       };
       
-      if (savedPreferences) {
-        try {
-          const parsed = JSON.parse(savedPreferences);
-          
-          // 根据保存的数据设置UI状态
-          Object.keys(parsed).forEach(category => {
-            if (parsed[category] && Array.isArray(parsed[category])) {
-              // 更新内存中的偏好
-              userPreferences[category] = [...parsed[category]];
-              
-              // 更新UI选择状态
-              parsed[category].forEach(value => {
-                const chip = document.querySelector(`.preference-chip[data-category="${category}"][data-value="${value}"]`);
-                if (chip) {
-                  chip.classList.add('selected');
-                }
-              });
-            }
-          });
-        } catch (e) {
-          console.error('加载偏好设置失败:', e);
+      // DOM元素
+      const preferenceChips = document.querySelectorAll('#content-preferences .preference-chip');
+      const selectedCountElement = document.getElementById('selectedCount');
+      const savePreferencesBtn = document.getElementById('savePreferencesBtn');
+      const resetPreferencesBtn = document.getElementById('resetPreferencesBtn');
+      const currentPreferencesDiv = document.getElementById('currentPreferences');
+      const preferencesListElement = document.getElementById('preferencesList');
+      
+      // 检查必选字段是否已选择
+      function checkRequiredFields() {
+        const hasField = userPreferences.field.length > 0;
+        const hasGoal = userPreferences.goal.length > 0;
+        return hasField && hasGoal;
+      }
+      
+      // 更新已选择偏好数量
+      function updateSelectedCount() {
+        let total = 0;
+        Object.values(userPreferences).forEach(arr => {
+          total += arr.length;
+        });
+        selectedCountElement.textContent = total;
+        
+        // 更新保存按钮状态
+        const isRequiredFieldsSelected = checkRequiredFields();
+        savePreferencesBtn.disabled = !isRequiredFieldsSelected;
+        
+        if (!isRequiredFieldsSelected) {
+          savePreferencesBtn.setAttribute('title', '请至少选择一个学习领域和学习目标');
+        } else {
+          savePreferencesBtn.removeAttribute('title');
         }
       }
       
-      updateSelectedCount();
-      updateCurrentPreferencesDisplay();
-    }
-    
-    // 偏好选项点击处理
-    preferenceChips.forEach(chip => {
-      chip.addEventListener('click', function() {
-        const category = this.dataset.category;
-        const value = this.dataset.value;
-        
-        const index = userPreferences[category].indexOf(value);
-        
-        if (index > -1) {
-          userPreferences[category].splice(index, 1);
-          this.classList.remove('selected');
+      // 更新当前偏好展示
+      function updateCurrentPreferencesDisplay() {
+        const savedPreferences = localStorage.getItem('userPreferences');
+        if (savedPreferences) {
+          try {
+            const parsed = JSON.parse(savedPreferences);
+            if (Object.keys(parsed).length > 0) {
+              let html = '<div class="space-y-2">';
+              
+              // 领域偏好
+              if (parsed.field && parsed.field.length > 0) {
+                const fieldLabels = {
+                  'programming': '编程开发',
+                  'design': '设计艺术',
+                  'business': '商业管理',
+                  'data-science': '数据科学',
+                  'language': '语言学习',
+                  'marketing': '市场营销',
+                  'personal-growth': '个人成长',
+                  'academic': '学术教育'
+                };
+                const fieldDisplay = parsed.field.map(f => fieldLabels[f] || f).join('、');
+                html += `<div><span class="font-medium">学习领域:</span> ${fieldDisplay}</div>`;
+              }
+              
+              // 目标偏好
+              if (parsed.goal && parsed.goal.length > 0) {
+                const goalLabels = {
+                  'career': '职业发展',
+                  'skill-upgrade': '技能提升',
+                  'exam': '考试认证',
+                  'hobby': '兴趣爱好',
+                  'school': '学业辅助',
+                  'entrepreneurship': '创业指导'
+                };
+                const goalDisplay = parsed.goal.map(g => goalLabels[g] || g).join('、');
+                html += `<div><span class="font-medium">学习目标:</span> ${goalDisplay}</div>`;
+              }
+              
+              // 学习方式
+              if (parsed.method && parsed.method.length > 0) {
+                const methodLabels = {
+                  'video': '视频课程',
+                  'text': '图文教程',
+                  'interactive': '互动练习',
+                  'live': '直播授课',
+                  'project': '项目实战',
+                  'one-on-one': '一对一辅导'
+                };
+                const methodDisplay = parsed.method.map(m => methodLabels[m] || m).join('、');
+                html += `<div><span class="font-medium">学习方式:</span> ${methodDisplay}</div>`;
+              }
+              
+              // 学习时长
+              if (parsed.duration && parsed.duration.length > 0) {
+                const durationDisplay = parsed.duration.join('、');
+                html += `<div><span class="font-medium">学习时长:</span> ${durationDisplay}</div>`;
+              }
+              
+              // 难度级别
+              if (parsed.difficulty && parsed.difficulty.length > 0) {
+                const difficultyLabels = {
+                  'beginner': '初级入门',
+                  'intermediate': '中级进阶',
+                  'advanced': '高级精通',
+                  'mixed': '混合难度'
+                };
+                const difficultyDisplay = parsed.difficulty.map(d => difficultyLabels[d] || d).join('、');
+                html += `<div><span class="font-medium">课程难度:</span> ${difficultyDisplay}</div>`;
+              }
+              
+              html += '</div>';
+              preferencesListElement.innerHTML = html;
+              currentPreferencesDiv.classList.remove('hidden');
+            } else {
+              currentPreferencesDiv.classList.add('hidden');
+            }
+          } catch (e) {
+            console.error('解析偏好设置失败:', e);
+            currentPreferencesDiv.classList.add('hidden');
+          }
         } else {
-          userPreferences[category].push(value);
-          this.classList.add('selected');
+          currentPreferencesDiv.classList.add('hidden');
         }
-        
-        updateSelectedCount();
-      });
-    });
-    
-    // 重置偏好选择
-    resetPreferencesBtn.addEventListener('click', function() {
-      if (confirm('确定要重置所有偏好选择吗？')) {
-        // 重置内存中的偏好对象
-        Object.keys(userPreferences).forEach(key => {
-          userPreferences[key] = [];
-        });
+      }
+      
+      // 加载偏好设置
+      function loadPreferences() {
+        const savedPreferences = localStorage.getItem('userPreferences');
         
         // 重置UI选择状态
         preferenceChips.forEach(chip => {
           chip.classList.remove('selected');
         });
         
+        // 重置内存中的偏好对象
+        userPreferences = {
+          field: [],
+          goal: [],
+          method: [],
+          duration: [],
+          difficulty: []
+        };
+        
+        if (savedPreferences) {
+          try {
+            const parsed = JSON.parse(savedPreferences);
+            
+            // 根据保存的数据设置UI状态
+            Object.keys(parsed).forEach(category => {
+              if (parsed[category] && Array.isArray(parsed[category])) {
+                // 更新内存中的偏好
+                userPreferences[category] = [...parsed[category]];
+                
+                // 更新UI选择状态
+                parsed[category].forEach(value => {
+                  const chip = document.querySelector(`.preference-chip[data-category="${category}"][data-value="${value}"]`);
+                  if (chip) {
+                    chip.classList.add('selected');
+                  }
+                });
+              }
+            });
+          } catch (e) {
+            console.error('加载偏好设置失败:', e);
+          }
+        }
+        
         updateSelectedCount();
+        updateCurrentPreferencesDisplay();
       }
-    });
-    
-    // 保存偏好设置
-    savePreferencesBtn.addEventListener('click', function() {
-      // 收集所有选中的偏好
-      const selectedPreferences = {};
-      Object.keys(userPreferences).forEach(category => {
-        if (userPreferences[category].length > 0) {
-          selectedPreferences[category] = userPreferences[category];
+      
+      // 偏好选项点击处理
+      preferenceChips.forEach(chip => {
+        chip.addEventListener('click', function() {
+          const category = this.dataset.category;
+          const value = this.dataset.value;
+          
+          const index = userPreferences[category].indexOf(value);
+          
+          if (index > -1) {
+            userPreferences[category].splice(index, 1);
+            this.classList.remove('selected');
+          } else {
+            userPreferences[category].push(value);
+            this.classList.add('selected');
+          }
+          
+          updateSelectedCount();
+        });
+      });
+      
+      // 重置偏好选择
+      resetPreferencesBtn.addEventListener('click', function() {
+        if (confirm('确定要重置所有偏好选择吗？')) {
+          // 重置内存中的偏好对象
+          Object.keys(userPreferences).forEach(key => {
+            userPreferences[key] = [];
+          });
+          
+          // 重置UI选择状态
+          preferenceChips.forEach(chip => {
+            chip.classList.remove('selected');
+          });
+          
+          updateSelectedCount();
         }
       });
       
-      // 保存到localStorage
-      localStorage.setItem('userPreferences', JSON.stringify(selectedPreferences));
-      localStorage.setItem('preferencesCompleted', 'true');
-      
-      // 显示加载状态
-      savePreferencesBtn.innerHTML = '<i class="fa fa-spinner fa-spin"></i> 保存中...';
-      savePreferencesBtn.disabled = true;
-      
-      // 模拟API调用延迟
-      setTimeout(() => {
-        // 重置按钮状态
-        savePreferencesBtn.innerHTML = '保存偏好设置';
-        savePreferencesBtn.disabled = false;
+      // 保存偏好设置
+      savePreferencesBtn.addEventListener('click', function() {
+        // 收集所有选中的偏好
+        const selectedPreferences = {};
+        Object.keys(userPreferences).forEach(category => {
+          if (userPreferences[category].length > 0) {
+            selectedPreferences[category] = userPreferences[category];
+          }
+        });
         
-        // 显示成功消息
-        alert('偏好设置已保存！');
+        // 保存到localStorage
+        localStorage.setItem('userPreferences', JSON.stringify(selectedPreferences));
+        localStorage.setItem('preferencesCompleted', 'true');
         
-        // 更新当前偏好展示
-        updateCurrentPreferencesDisplay();
-      }, 1000);
-    });
-    
-    // 页面加载时初始化
-    document.addEventListener('DOMContentLoaded', function() {
-      // 如果当前在用户设置页面，加载偏好设置
-      if (window.location.hash === '#settings') {
-        document.getElementById('nav-user-settings').click();
-      }
+        // 显示加载状态
+        savePreferencesBtn.innerHTML = '<i class="fa fa-spinner fa-spin"></i> 保存中...';
+        savePreferencesBtn.disabled = true;
+        
+        // 模拟API调用延迟
+        setTimeout(() => {
+          // 重置按钮状态
+          savePreferencesBtn.innerHTML = '保存偏好设置';
+          savePreferencesBtn.disabled = false;
+          
+          // 显示成功消息
+          alert('偏好设置已保存！');
+          
+          // 更新当前偏好展示
+          updateCurrentPreferencesDisplay();
+        }, 1000);
+      });
     });
   </script>
 </body>

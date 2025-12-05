@@ -1,0 +1,747 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>BGArea - 收藏管理</title>
+  <!-- 引入外部资源 -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
+  
+  <!-- Tailwind配置 -->
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            primary: '#165DFF',
+            secondary: '#6B7280',
+            light: '#F9FAFB',
+            dark: '#1F2937',
+            success: '#10B981',
+            warning: '#FF9F43',
+            danger: '#F53F3F',
+            gray: {
+              100: '#F7F8FA',
+              200: '#E5E6EB',
+              300: '#C9CDD4',
+              400: '#86909C',
+              500: '#4E5969',
+              600: '#272E3B',
+            }
+          },
+          fontFamily: {
+            inter: ['Inter', 'system-ui', 'sans-serif'],
+          },
+        },
+      }
+    }
+  </script>
+  
+  <!-- 自定义工具类 -->
+  <style type="text/tailwindcss">
+    @layer utilities {
+      .content-auto {
+        content-visibility: auto;
+      }
+      .sidebar-parent {
+        @apply flex items-center justify-between px-4 py-3 text-gray-500 hover:bg-primary/5 hover:text-primary transition-all duration-200 cursor-pointer;
+      }
+      .sidebar-parent.active {
+        @apply bg-primary/10 text-primary font-medium;
+      }
+      .sidebar-parent-content {
+        @apply flex items-center gap-2;
+      }
+      .sidebar-child {
+        @apply flex items-center px-6 py-2 text-gray-500 hover:bg-primary/5 hover:text-primary transition-all duration-200 cursor-pointer text-sm;
+      }
+      .sidebar-child.active {
+        @apply bg-primary/10 text-primary font-medium;
+      }
+      .sidebar-child-text {
+        @apply ml-3;
+      }
+      .btn {
+        @apply px-3 py-1 text-sm rounded transition-all duration-200;
+      }
+      .btn-primary {
+        @apply w-full bg-primary hover:bg-primary/90 text-white font-medium py-2.5 rounded-md transition-all duration-200 transform hover:scale-[1.01] active:scale-[0.99] focus:outline-none focus:ring-2 focus:ring-primary/50;
+      }
+      .btn-text {
+        @apply text-primary hover:bg-primary/10 transition-all duration-200;
+      }
+      .card {
+        @apply bg-white rounded-lg border border-gray-200 shadow-sm;
+      }
+      .rotate-icon {
+        @apply transform transition-transform duration-200 rotate-90;
+      }
+      .sidebar-icon {
+        @apply w-4 text-center;
+      }
+      .card-shadow {
+        box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.02);
+      }
+      .text-link {
+        @apply text-primary hover:text-primary/80 transition-colors duration-200 cursor-pointer;
+      }
+      .input-field {
+        @apply w-full px-4 py-2.5 rounded-md border border-gray-300 focus:border-primary focus:ring-1 focus:ring-primary focus:outline-none transition-all duration-200;
+      }
+      .social-btn {
+        @apply flex items-center justify-center gap-2 px-4 py-2.5 rounded-md border border-gray-300 hover:bg-gray-50 transition-all duration-200;
+      }
+      .sidebar-group {
+        @apply mb-2;
+      }
+      .favorite-tab {
+        @apply px-4 py-2 text-sm font-medium transition-all duration-200 cursor-pointer;
+      }
+      .favorite-tab.active {
+        @apply text-primary border-b-2 border-primary;
+      }
+      .favorite-card {
+        @apply bg-white border border-gray-200 rounded-lg hover:shadow-md transition-all duration-300;
+      }
+      .video-time {
+        @apply absolute bottom-2 right-2 bg-black/70 text-white text-xs px-1.5 py-0.5 rounded;
+      }
+      .badge-hot {
+        @apply absolute top-2 left-2 bg-danger text-white text-xs px-2 py-0.5 rounded;
+      }
+      .badge-new {
+        @apply absolute top-2 left-2 bg-primary text-white text-xs px-2 py-0.5 rounded;
+      }
+      .badge-recommend {
+        @apply absolute top-2 left-2 bg-success text-white text-xs px-2 py-0.5 rounded;
+      }
+      .table-row-hover {
+        @apply hover:bg-gray-50 transition-colors duration-200;
+      }
+      /* 提示框动画 */
+      @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(-10px); }
+        to { opacity: 1; transform: translateY(0); }
+      }
+      .animate-fade-in {
+        animation: fadeIn 0.3s ease forwards;
+      }
+    }
+  </style>
+</head>
+
+<body class="font-inter bg-gray-50 min-h-screen flex flex-col">
+  <!-- 顶部导航栏 -->
+  <header class="bg-white py-4 px-6 md:px-12 shadow-sm sticky top-0 z-40">
+    <div class="container mx-auto flex justify-between items-center">
+      <div class="flex items-center gap-2">
+        <div class="bg-primary text-white p-1.5 rounded-md">
+          <i class="fa fa-graduation-cap"></i>
+        </div>
+        <span class="text-lg font-semibold text-dark">BGarea</span>
+      </div>
+      
+      <!-- 中间文字按钮区域 -->
+      <div class="hidden md:flex items-center gap-6">
+        <button class="text-black hover:text-primary text-sm font-medium transition-colors duration-200 flex items-center gap-1" onclick="window.location.href='index.html'">
+          首页
+        </button>
+        <button class="text-black hover:text-primary text-sm font-medium transition-colors duration-200 flex items-center gap-1" onclick="window.location.href='Personal Information.html'">
+          用户中心
+        </button>
+        <button class="text-black hover:text-primary text-sm font-medium transition-colors duration-200 flex items-center gap-1" onclick="window.location.href='Login.html'">
+          登录界面
+        </button>
+        <button class="text-black hover:text-primary text-sm font-medium transition-colors duration-200 flex items-center gap-1" onclick="window.location.href='稿件管理界面.html'">
+          稿件管理界面
+        </button>
+      </div>
+      
+      <div class="flex items-center gap-4">
+        <button class="text-secondary hover:text-primary text-sm font-medium transition-colors duration-200 flex items-center gap-1">
+          <i class="fa fa-search"></i>
+        </button>
+        <!-- 替换后的用户菜单区域 -->
+        <div class="flex items-center gap-4" id="userMenu">
+          <!-- 用户信息会通过JS动态渲染 -->
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <div class="flex flex-1">
+    <!-- 侧边栏导航 -->
+    <aside class="w-64 bg-white border-r border-gray-200 flex-shrink-0 h-[calc(100vh-5rem)] sticky top-[5rem] overflow-y-auto z-30">
+      <nav class="py-4 space-y-1">
+        <!-- 教师管理 -->
+        <div class="sidebar-group">
+          <div class="sidebar-parent" data-target="submenu-teacher">
+            <div class="sidebar-parent-content">
+              <i class="fa fa-tachometer sidebar-icon"></i>
+              <span>教师管理</span>
+            </div>
+            <i class="fa fa-angle-right text-xs transition-transform duration-200"></i>
+          </div>
+          <div id="submenu-teacher" class="hidden bg-gray-50">
+            <div class="sidebar-child" onclick="window.location.href='Work Engine.html'">
+              <i class="fa fa-circle-o text-xs sidebar-icon"></i>
+              <span class="sidebar-child-text">工作台</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- 管理员管理 -->
+        <div class="sidebar-group">
+          <div class="sidebar-parent" data-target="submenu-admin">
+            <div class="sidebar-parent-content">
+              <i class="fa fa-user-secret sidebar-icon"></i>
+              <span>管理员管理</span>
+            </div>
+            <i class="fa fa-angle-right text-xs transition-transform duration-200"></i>
+          </div>
+          <div id="submenu-admin" class="hidden bg-gray-50">
+            <div class="sidebar-child" onclick="window.location.href='course-management.html'">
+              <i class="fa fa-circle-o text-xs sidebar-icon"></i>
+              <span class="sidebar-child-text">课程管理</span>
+            </div>
+            <div class="sidebar-child" onclick="window.location.href='user-management.html'">
+              <i class="fa fa-circle-o text-xs sidebar-icon"></i>
+              <span class="sidebar-child-text">用户管理</span>
+            </div>
+          </div>
+        </div>
+        
+        <!-- 收藏管理（关键修改：移除onclick跳转，仅保留标签切换） -->
+        <div class="sidebar-group">
+          <div class="sidebar-parent active" data-target="submenu-favorites">
+            <div class="sidebar-parent-content">
+              <i class="fa fa-heart sidebar-icon"></i>
+              <span>收藏管理</span>
+            </div>
+            <i class="fa fa-angle-right text-xs transition-transform duration-200 rotate-icon"></i>
+          </div>
+          <div id="submenu-favorites" class="bg-gray-50">
+            <div class="sidebar-child" id="sidebar-my-collection" onclick="switchTab('my-collection')">
+              <i class="fa fa-book text-xs sidebar-icon"></i>
+              <span class="sidebar-child-text">我的收藏</span>
+            </div>
+            <div class="sidebar-child" id="sidebar-likes" onclick="switchTab('likes')">
+              <i class="fa fa-thumbs-up text-xs sidebar-icon"></i>
+              <span class="sidebar-child-text">点赞</span>
+            </div>
+            <div class="sidebar-child" id="sidebar-history" onclick="switchTab('history')">
+              <i class="fa fa-history text-xs sidebar-icon"></i>
+              <span class="sidebar-child-text">历史记录</span>
+            </div>
+          </div>
+        </div>
+        
+        <!-- 个人中心 -->
+        <div class="sidebar-group">
+          <div class="sidebar-parent" data-target="submenu-user-center">
+            <div class="sidebar-parent-content">
+              <i class="fa fa-user-circle-o sidebar-icon"></i>
+              <span>个人中心</span>
+            </div>
+            <i class="fa fa-angle-right text-xs transition-transform duration-200"></i>
+          </div>
+          <div id="submenu-user-center" class="hidden bg-gray-50">
+            <div class="sidebar-child" onclick="window.location.href='Personal Information.html'">
+              <i class="fa fa-id-card-o text-xs sidebar-icon"></i>
+              <span class="sidebar-child-text">用户信息</span>
+            </div>
+            <div class="sidebar-child" onclick="window.location.href='Personal Information.html#nav-user-settings'">
+              <i class="fa fa-cog text-xs sidebar-icon"></i>
+              <span class="sidebar-child-text">用户设置</span>
+            </div>
+          </div>
+        </div>
+      </nav>
+    </aside>
+
+    <!-- 主内容区域 -->
+    <main class="flex-1 overflow-y-auto p-6">
+      <div class="p-6">
+        <!-- 面包屑导航 -->
+        <div class="text-sm text-secondary mb-6">
+          <span>用户中心</span>
+          <i class="fa fa-angle-right mx-1 text-gray-400"></i>
+          <span>收藏管理</span>
+          <i class="fa fa-angle-right mx-1 text-gray-400"></i>
+          <span class="text-dark font-medium" id="breadcrumb-current">我的收藏</span>
+        </div>
+
+        <!-- 收藏管理页面 -->
+        <div class="card p-6 card-shadow">
+          <!-- 页面标题和批量操作 -->
+          <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
+            <div>
+              <h3 class="text-lg font-semibold text-dark" id="page-title">我的收藏</h3>
+              <p class="text-sm text-secondary mt-1" id="page-desc">管理您收藏的课程内容</p>
+            </div>
+            <div class="flex items-center gap-3">
+              <button class="btn border border-gray-300 hover:bg-gray-50 transition-all duration-200 flex items-center gap-1 px-4" id="batch-cancel-btn">
+                <i class="fa fa-trash-o"></i>
+                <span>批量取消收藏</span>
+              </button>
+            </div>
+          </div>
+          
+          <!-- 收藏标签页 -->
+          <div class="border-b border-gray-200 mb-6">
+            <div class="flex">
+              <div class="favorite-tab" data-tab="my-collection" id="tab-my-collection-btn" onclick="switchTab('my-collection')">
+                我的收藏
+              </div>
+              <div class="favorite-tab" data-tab="likes" id="tab-likes-btn" onclick="switchTab('likes')">
+                点赞
+              </div>
+              <div class="favorite-tab" data-tab="history" id="tab-history-btn" onclick="switchTab('history')">
+                历史记录
+              </div>
+            </div>
+          </div>
+          
+          <!-- 我的收藏页面 -->
+          <div id="tab-my-collection" class="space-y-4">
+            <!-- 课程分类筛选 -->
+            <div class="mb-4">
+              <div class="text-sm font-medium text-gray-500 mb-2">课程分类</div>
+              <div class="flex flex-wrap gap-2">
+                <button class="px-3 py-1 rounded bg-primary/10 text-primary text-sm">全部课程</button>
+                <button class="px-3 py-1 rounded hover:bg-gray-100 text-sm text-gray-500">计算机科学</button>
+                <button class="px-3 py-1 rounded hover:bg-gray-100 text-sm text-gray-500">文学概论</button>
+                <button class="px-3 py-1 rounded hover:bg-gray-100 text-sm text-gray-500">人工智能</button>
+                <button class="px-3 py-1 rounded hover:bg-gray-100 text-sm text-gray-500">网络通信</button>
+                <button class="px-3 py-1 rounded hover:bg-gray-100 text-sm text-gray-500">项目管理</button>
+              </div>
+            </div>
+            
+            <!-- 课程表格 -->
+            <div class="overflow-x-auto">
+              <table class="w-full text-sm">
+                <thead>
+                  <tr class="border-b border-gray-200">
+                    <th class="text-left py-3 px-2 font-medium text-gray-500">课程ID</th>
+                    <th class="text-left py-3 px-2 font-medium text-gray-500">课程名称</th>
+                    <th class="text-left py-3 px-2 font-medium text-gray-500">授课教师</th>
+                    <th class="text-left py-3 px-2 font-medium text-gray-500">课程状态</th>
+                    <th class="text-left py-3 px-2 font-medium text-gray-500">收藏时间</th>
+                    <th class="text-left py-3 px-2 font-medium text-gray-500">操作</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr class="border-b border-gray-200 table-row-hover">
+                    <td class="py-3 px-2 text-gray-500">CS202501</td>
+                    <td class="py-3 px-2">计算机网络与通信</td>
+                    <td class="py-3 px-2">徐冠雷</td>
+                    <td class="py-3 px-2">
+                      <span class="text-success text-xs">进行中</span>
+                    </td>
+                    <td class="py-3 px-2 text-gray-500">2025-11-28</td>
+                    <td class="py-3 px-2">
+                      <button class="text-primary hover:text-primary/80 text-sm" onclick="removeFavorite(this, 'my-collection')">
+                        取消收藏
+                      </button>
+                    </td>
+                  </tr>
+                  <tr class="border-b border-gray-200 table-row-hover">
+                    <td class="py-3 px-2 text-gray-500">MG202501</td>
+                    <td class="py-3 px-2">软件项目管理</td>
+                    <td class="py-3 px-2">徐斌</td>
+                    <td class="py-3 px-2">
+                      <span class="text-warning text-xs">已结束</span>
+                    </td>
+                    <td class="py-3 px-2 text-gray-500">2025-10-15</td>
+                    <td class="py-3 px-2">
+                      <button class="text-primary hover:text-primary/80 text-sm" onclick="removeFavorite(this, 'my-collection')">
+                        取消收藏
+                      </button>
+                    </td>
+                  </tr>
+                  <tr class="border-b border-gray-200 table-row-hover">
+                    <td class="py-3 px-2 text-gray-500">LI202501</td>
+                    <td class="py-3 px-2">中国现代文学</td>
+                    <td class="py-3 px-2">张明</td>
+                    <td class="py-3 px-2">
+                      <span class="text-success text-xs">进行中</span>
+                    </td>
+                    <td class="py-3 px-2 text-gray-500">2025-11-05</td>
+                    <td class="py-3 px-2">
+                      <button class="text-primary hover:text-primary/80 text-sm" onclick="removeFavorite(this, 'my-collection')">
+                        取消收藏
+                      </button>
+                    </td>
+                  </tr>
+                  <tr class="border-b border-gray-200 table-row-hover">
+                    <td class="py-3 px-2 text-gray-500">AI202501</td>
+                    <td class="py-3 px-2">机器学习基础</td>
+                    <td class="py-3 px-2">李华</td>
+                    <td class="py-3 px-2">
+                      <span class="text-success text-xs">进行中</span>
+                    </td>
+                    <td class="py-3 px-2 text-gray-500">2025-11-12</td>
+                    <td class="py-3 px-2">
+                      <button class="text-primary hover:text-primary/80 text-sm" onclick="removeFavorite(this, 'my-collection')">
+                        取消收藏
+                      </button>
+                    </td>
+                  </tr>
+                  <tr class="table-row-hover">
+                    <td class="py-3 px-2 text-gray-500">NE202501</td>
+                    <td class="py-3 px-2">网络安全技术</td>
+                    <td class="py-3 px-2">王强</td>
+                    <td class="py-3 px-2">
+                      <span class="text-warning text-xs">已结束</span>
+                    </td>
+                    <td class="py-3 px-2 text-gray-500">2025-09-30</td>
+                    <td class="py-3 px-2">
+                      <button class="text-primary hover:text-primary/80 text-sm" onclick="removeFavorite(this, 'my-collection')">
+                        取消收藏
+                      </button>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            
+            <!-- 分页区域 -->
+            <div class="flex justify-between items-center mt-6">
+              <div class="text-sm text-secondary">
+                共 <span id="my-collection-count">5</span> 条收藏
+              </div>
+              <div class="flex items-center gap-2">
+                <button class="w-8 h-8 flex items-center justify-center rounded border border-gray-200 text-secondary hover:border-primary hover:text-primary transition-colors">
+                  <i class="fa fa-angle-left"></i>
+                </button>
+                <button class="w-8 h-8 flex items-center justify-center rounded bg-primary text-white">1</button>
+                <button class="w-8 h-8 flex items-center justify-center rounded border border-gray-200 text-secondary hover:border-primary hover:text-primary transition-colors">2</button>
+                <button class="w-8 h-8 flex items-center justify-center rounded border border-gray-200 text-secondary hover:border-primary hover:text-primary transition-colors">
+                  <i class="fa fa-angle-right"></i>
+                </button>
+              </div>
+            </div>
+          </div>
+          
+          <!-- 点赞页面（默认隐藏） -->
+          <div id="tab-likes" class="hidden space-y-4">
+            <div class="text-center py-12">
+              <i class="fa fa-thumbs-up text-4xl text-gray-300 mb-4"></i>
+              <h4 class="text-lg font-medium text-dark mb-2">您还没有点赞内容</h4>
+              <p class="text-secondary mb-6">去浏览课程，给喜欢的内容点赞吧！</p>
+              <button class="btn-primary max-w-xs mx-auto" onclick="window.location.href='index.html'">
+                <i class="fa fa-compass mr-2"></i>去首页看看
+              </button>
+            </div>
+          </div>
+          
+          <!-- 历史记录页面（默认隐藏） -->
+          <div id="tab-history" class="hidden space-y-4">
+            <div class="text-center py-12">
+              <i class="fa fa-history text-4xl text-gray-300 mb-4"></i>
+              <h4 class="text-lg font-medium text-dark mb-2">您还没有浏览历史</h4>
+              <p class="text-secondary mb-6">浏览课程后，这里会显示您的观看记录</p>
+              <button class="btn-primary max-w-xs mx-auto" onclick="window.location.href='index.html'">
+                <i class="fa fa-compass mr-2"></i>去首页看看
+              </button>
+            </div>
+          </div>
+          
+          <!-- 空状态提示 -->
+          <div id="empty-state" class="hidden text-center py-12">
+            <i class="fa fa-heart text-4xl text-gray-300 mb-4"></i>
+            <h4 class="text-lg font-medium text-dark mb-2">暂无收藏内容</h4>
+            <p class="text-secondary mb-6">您还没有收藏任何内容，快去发现您感兴趣的课程吧！</p>
+            <button class="btn-primary max-w-xs mx-auto" onclick="window.location.href='index.html'">
+              <i class="fa fa-compass mr-2"></i>去首页看看
+            </button>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <!-- 页脚 -->
+  <footer class="bg-white py-6 px-6 border-t border-gray-200">
+    <div class="container mx-auto">
+      <div class="text-center text-sm text-gray-500 mb-4">
+        &copy; 2023 BGarea在线学习平台. 保留所有权利.
+      </div>
+      <div class="flex flex-wrap justify-center gap-x-6 gap-y-2 text-xs text-gray-500">
+        <a href="#" class="hover:text-primary transition-colors duration-200">关于我们</a>
+        <a href="#" class="hover:text-primary transition-colors duration-200">隐私政策</a>
+        <a href="#" class="hover:text-primary transition-colors duration-200">服务条款</a>
+        <a href="#" class="hover:text-primary transition-colors duration-200">联系我们</a>
+      </div>
+      <div class="flex justify-center gap-4 mt-4 text-gray-500">
+        <a href="#" class="hover:text-primary transition-colors duration-200"><i class="fa fa-weixin"></i></a>
+        <a href="#" class="hover:text-primary transition-colors duration-200"><i class="fa fa-weibo"></i></a>
+        <a href="#" class="hover:text-primary transition-colors duration-200"><i class="fa fa-twitter"></i></a>
+        <a href="#" class="hover:text-primary transition-colors duration-200"><i class="fa fa-facebook"></i></a>
+      </div>
+    </div>
+  </footer>
+
+  <!-- JavaScript 交互逻辑（关键修改：添加URL参数解析） -->
+  <script>
+    // 检查用户是否已登录
+function checkLoginStatus() {
+  const userMenu = document.getElementById('userMenu');
+  const currentUser = localStorage.getItem('bgareaCurrentUser') || sessionStorage.getItem('bgareaCurrentUser');
+  
+  if (currentUser) {
+    // 用户已登录
+    const user = JSON.parse(currentUser);
+    // 重构HTML结构：增加外层容器，用于统一控制hover
+    userMenu.innerHTML = `
+      <div class="relative" id="userDropdownContainer">
+        <button class="flex items-center gap-2 hover:text-primary transition-colors" id="userDropdownBtn">
+          <i class="fa fa-user-circle-o text-lg"></i>
+          <span class="hidden md:inline">${user.username}</span>
+        </button>
+        <!-- 下拉菜单：默认隐藏，通过JS控制显示/隐藏 -->
+        <div class="absolute right-0 mt-2 w-40 bg-white rounded-md shadow-lg py-2 hidden z-50" id="userDropdownMenu">
+          <a href="Personal Information.html" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors">个人中心</a>
+          <a href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors" id="logoutBtn">退出登录</a>
+        </div>
+      </div>
+    `;
+
+    // ---------- 新增：下拉菜单显示/隐藏逻辑 ----------
+    const dropdownContainer = document.getElementById('userDropdownContainer');
+    const dropdownBtn = document.getElementById('userDropdownBtn');
+    const dropdownMenu = document.getElementById('userDropdownMenu');
+    let hideTimer = null; // 延迟隐藏的定时器
+
+    // 显示菜单
+    function showMenu() {
+      clearTimeout(hideTimer); // 清除延迟隐藏的定时器
+      dropdownMenu.classList.remove('hidden');
+    }
+
+    // 隐藏菜单（加延迟，给用户时间移到菜单上）
+    function hideMenu() {
+      hideTimer = setTimeout(() => {
+        dropdownMenu.classList.add('hidden');
+      }, 200); // 200ms延迟，足够鼠标从按钮移到菜单
+    }
+
+    // 绑定事件：鼠标移到容器（按钮+菜单区域）显示，移开隐藏
+    dropdownContainer.addEventListener('mouseenter', showMenu);
+    dropdownContainer.addEventListener('mouseleave', hideMenu);
+    // 兼容点击触发（移动端/点击场景）
+    dropdownBtn.addEventListener('click', (e) => {
+      e.stopPropagation(); // 阻止事件冒泡
+      dropdownMenu.classList.toggle('hidden');
+    });
+    // 点击页面其他地方隐藏菜单
+    document.addEventListener('click', () => {
+      hideMenu();
+    });
+
+    // 退出登录逻辑（不变）
+    document.getElementById('logoutBtn').addEventListener('click', function(e) {
+      e.preventDefault();
+      localStorage.removeItem('bgareaCurrentUser');
+      sessionStorage.removeItem('bgareaCurrentUser');
+      location.reload();
+    });
+  } else {
+    // 未登录状态（不变）
+    userMenu.innerHTML = `
+      <a href="Login.html" class="text-primary hover:text-primary/80 font-medium transition-colors">登录</a>
+      <a href="register.html" class="bg-primary hover:bg-primary/90 text-white px-4 py-1.5 rounded-md font-medium transition-colors">注册</a>
+    `;
+  }
+}
+
+// 页面加载时执行（不变）
+document.addEventListener('DOMContentLoaded', function() {
+  checkLoginStatus();
+});
+
+    // 当前活动标签页（默认我的收藏）
+    let currentTab = 'my-collection';
+    
+    // 统计数据
+    const counts = {
+      'my-collection': 5,
+      'likes': 0,
+      'history': 0
+    };
+    
+    // 页面信息配置
+    const pageConfig = {
+      'my-collection': {
+        title: '我的收藏',
+        desc: '管理您收藏的课程内容',
+        batchBtn: '批量取消收藏'
+      },
+      'likes': {
+        title: '我的点赞',
+        desc: '管理您点赞的内容',
+        batchBtn: '批量取消点赞'
+      },
+      'history': {
+        title: '浏览历史',
+        desc: '查看您的课程浏览记录',
+        batchBtn: '清空历史记录'
+      }
+    };
+    
+    // 初始化页面（关键修改：解析URL参数）
+    document.addEventListener('DOMContentLoaded', function() {
+      // 1. 解析URL中的tab参数（例如：favorites-management.html?tab=likes）
+      const urlParams = new URLSearchParams(window.location.search);
+      const targetTab = urlParams.get('tab');
+      
+      // 2. 验证参数有效性，有效则切换到对应标签，无效则默认我的收藏
+      if (targetTab && ['my-collection', 'likes', 'history'].includes(targetTab)) {
+        currentTab = targetTab;
+        switchTab(currentTab); // 执行标签切换
+      } else {
+        // 默认激活我的收藏标签
+        document.getElementById('sidebar-my-collection').classList.add('active');
+        document.getElementById('tab-my-collection-btn').classList.add('active');
+      }
+      
+      // 3. 更新页面基础信息
+      updatePageInfo();
+      updateEmptyState();
+    });
+    
+    // 切换标签页（保持原有逻辑，优化侧边栏和标签页状态同步）
+    function switchTab(tab) {
+      // 更新标签页状态
+      document.querySelectorAll('.favorite-tab').forEach(tabElement => {
+        tabElement.classList.remove('active');
+      });
+      document.getElementById(`tab-${tab}-btn`).classList.add('active');
+      
+      // 更新侧边栏菜单状态
+      document.querySelectorAll('#submenu-favorites .sidebar-child').forEach(child => {
+        child.classList.remove('active');
+      });
+      document.getElementById(`sidebar-${tab}`).classList.add('active');
+      
+      // 显示对应内容
+      document.querySelectorAll('[id^="tab-"]').forEach(content => {
+        content.classList.add('hidden');
+      });
+      document.getElementById('tab-' + tab).classList.remove('hidden');
+      
+      // 更新面包屑导航
+      document.getElementById('breadcrumb-current').textContent = pageConfig[tab].title;
+      
+      // 更新当前标签页
+      currentTab = tab;
+      
+      // 更新页面信息
+      updatePageInfo();
+      
+      // 更新空状态
+      updateEmptyState();
+    }
+    
+    // 更新页面标题、描述和批量按钮
+    function updatePageInfo() {
+      document.getElementById('page-title').textContent = pageConfig[currentTab].title;
+      document.getElementById('page-desc').textContent = pageConfig[currentTab].desc;
+      document.getElementById('batch-cancel-btn').innerHTML = 
+        `<i class="fa fa-trash-o"></i><span>${pageConfig[currentTab].batchBtn}</span>`;
+      
+      // 更新统计显示
+      if (currentTab === 'my-collection') {
+        document.getElementById('my-collection-count').textContent = counts[currentTab];
+      }
+    }
+    
+    // 更新空状态显示
+    function updateEmptyState() {
+      const tabContent = document.getElementById('tab-' + currentTab);
+      const emptyState = document.getElementById('empty-state');
+      
+      if (counts[currentTab] === 0 && currentTab === 'my-collection') {
+        tabContent.classList.add('hidden');
+        emptyState.classList.remove('hidden');
+      } else {
+        tabContent.classList.remove('hidden');
+        emptyState.classList.add('hidden');
+      }
+    }
+    
+    // 移除收藏/点赞
+    function removeFavorite(button, type) {
+      if (confirm(`确定要${pageConfig[currentTab].batchBtn.replace('批量', '')}吗？`)) {
+        const row = button.closest('tr');
+        if (row) {
+          row.style.opacity = '0';
+          row.style.transform = 'translateX(20px)';
+          
+          setTimeout(() => {
+            row.remove();
+            counts[type]--;
+            updatePageInfo();
+            updateEmptyState();
+            
+            // 显示操作成功提示
+            showToast(`已${pageConfig[currentTab].batchBtn.replace('批量', '')}`);
+          }, 300);
+        }
+      }
+    }
+    
+    // 显示提示信息（修复拼写错误：原showToast信息重复）
+    function showToast(message) {
+      // 移除已有的提示
+      const existingToast = document.querySelector('.toast-message');
+      if (existingToast) existingToast.remove();
+      
+      // 创建新提示
+      const toast = document.createElement('div');
+      toast.className = 'toast-message fixed top-6 right-6 bg-dark text-white px-4 py-2 rounded-md shadow-lg z-50 animate-fade-in';
+      toast.textContent = message;
+      
+      document.body.appendChild(toast);
+      
+      // 3秒后移除提示
+      setTimeout(() => {
+        toast.style.opacity = '0';
+        toast.style.transform = 'translateY(-10px)';
+        setTimeout(() => toast.remove(), 300);
+      }, 3000);
+    }
+    
+    // 侧边栏菜单交互
+    document.querySelectorAll('.sidebar-parent').forEach(parent => {
+      parent.addEventListener('click', function() {
+        const targetId = this.getAttribute('data-target');
+        const submenu = document.getElementById(targetId);
+        const icon = this.querySelector('.fa-angle-right');
+        
+        if (submenu && icon) {
+          submenu.classList.toggle('hidden');
+          icon.classList.toggle('rotate-icon');
+          this.classList.toggle('active');
+        }
+      });
+    });
+    
+    // 子菜单点击事件
+    document.querySelectorAll('.sidebar-child').forEach(child => {
+      child.addEventListener('click', function(e) {
+        e.stopPropagation();
+        
+        const parentSubmenu = this.parentElement;
+        if (parentSubmenu) {
+          parentSubmenu.querySelectorAll('.sidebar-child').forEach(sib => {
+            sib.classList.remove('active');
+          });
+          this.classList.add('active');
+        }
+      });
+    });
+  </script>
+</body>
+</html>

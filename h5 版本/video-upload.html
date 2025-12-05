@@ -1,0 +1,672 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>BGarea - 内容管理</title>
+  <!-- 引入Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- 引入Font Awesome -->
+  <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
+  
+  <!-- 配置Tailwind自定义颜色和字体 -->
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            primary: '#165DFF',
+            gray: {
+              100: '#F7F8FA',
+              200: '#E5E6EB',
+              300: '#C9CDD4',
+              400: '#86909C',
+              500: '#4E5969',
+            }
+          },
+          fontFamily: {
+            inter: ['Inter', 'system-ui', 'sans-serif'],
+          },
+        },
+      }
+    }
+  </script>
+  
+  <!-- 自定义工具类 -->
+  <style type="text/tailwindcss">
+    @layer utilities {
+      .input-field {
+        @apply w-full px-4 py-2.5 rounded-md border border-gray-300 focus:border-primary focus:ring-1 focus:ring-primary focus:outline-none transition-all duration-200;
+      }
+      .upload-area {
+        @apply border-2 border-dashed border-gray-300 rounded-lg p-8 text-center hover:border-primary/50 transition-all duration-200 cursor-pointer;
+      }
+      .switch {
+        @apply relative inline-block w-10 h-5;
+      }
+      .switch input {
+        @apply opacity-0 w-0 h-0;
+      }
+      .slider {
+        @apply absolute cursor-pointer top-0 left-0 right-0 bottom-0 bg-gray-300 transition-all duration-200 rounded-full;
+      }
+      .slider:before {
+        @apply absolute content-[''] h-4 w-4 left-0.5 bottom-0.5 bg-white rounded-full transition-all duration-200;
+      }
+      input:checked + .slider {
+        @apply bg-primary;
+      }
+      input:checked + .slider:before {
+        @apply transform translate-x-5;
+      }
+      .chapter-item {
+        @apply cursor-pointer transition-colors duration-200;
+      }
+      .chapter-item.active {
+        @apply text-primary;
+      }
+      .sub-item {
+        @apply pl-4 py-1.5 text-sm cursor-pointer transition-colors duration-200;
+      }
+      .sub-item.active {
+        @apply bg-primary/10 text-primary rounded-l-md;
+      }
+      .add-btn {
+        @apply flex items-center gap-2 py-1.5 text-sm cursor-pointer transition-colors duration-200 text-primary;
+      }
+      .option-item {
+        @apply flex items-center gap-2 mb-3;
+      }
+      .option-input {
+        @apply flex-1 px-3 py-2 border border-gray-300 rounded-md focus:border-primary focus:ring-1 focus:ring-primary focus:outline-none;
+      }
+      .answer-label {
+        @apply inline-flex items-center gap-1 text-sm text-gray-700 cursor-pointer;
+      }
+    }
+  </style>
+</head>
+
+<body class="font-inter bg-gray-50 min-h-screen flex flex-col">
+  <!-- 顶部导航栏 -->
+  <header class="bg-white py-4 px-6 md:px-12 shadow-sm">
+    <div class="container mx-auto flex justify-between items-center">
+      <!-- 左侧Logo区域 -->
+      <div class="flex items-center gap-2">
+        <div class="bg-primary text-white p-1.5 rounded-md">
+          <i class="fa fa-graduation-cap"></i>
+        </div>
+        <span class="text-lg font-semibold text-gray-800">BGarea</span>
+      </div>
+	
+      <!-- 中间文字按钮区域 -->
+      <div class="hidden md:flex items-center gap-6">
+        <button class="text-black hover:text-primary text-sm font-medium transition-colors duration-200" onclick="window.location.href='index.html'">
+            首页
+        </button>
+        <button class="text-black hover:text-primary text-sm font-medium transition-colors duration-200" onclick="window.location.href='Personal Information.html'">
+            用户中心
+        </button>
+        <button class="text-black hover:text-primary text-sm font-medium transition-colors duration-200" onclick="window.location.href='Login.html'">
+            登录界面
+        </button>
+        <button class="text-primary font-medium text-sm" onclick="window.location.href='稿件管理界面.html'">
+            稿件管理界面
+        </button>
+      </div>
+      
+      <!-- 右侧用户操作区域 -->
+      <div class="flex items-center gap-4">
+        <button class="text-gray-500 hover:text-primary text-sm font-medium transition-colors duration-200">
+          <i class="fa fa-search"></i>
+        </button>
+        <!-- 用户头像 -->
+        <!-- 替换后的用户菜单区域 -->
+        <div class="flex items-center gap-4" id="userMenu">
+          <!-- 用户信息会通过JS动态渲染 -->
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- 主内容容器 -->
+  <div class="flex flex-1">
+    <!-- 左侧章节导航（修改后） -->
+    <aside class="w-56 bg-white border-r border-gray-200 p-4 h-[calc(100vh-64px)] sticky top-16">
+      
+      <!-- 章节列表容器 -->
+      <div class="space-y-1" id="chapter-list">
+        <!-- 第一章（默认收起） -->
+        <div class="chapter-group">
+          <div class="chapter-item flex items-center justify-between py-1.5" onclick="toggleChapter(this)">
+            <span>第一章</span>
+            <i class="fa fa-chevron-down text-xs text-gray-400 transition-transform duration-200"></i>
+          </div>
+          <div class="chapter-children hidden space-y-1 mt-1">
+            <div class="sub-item" onclick="selectSubItem(this, 'video')">1.1视频</div>
+            <div class="sub-item" onclick="selectSubItem(this, 'exercise')">1.1习题</div>
+            <div class="add-btn pl-4" onclick="addContent('第一章', 'video')">
+              <i class="fa fa-plus-circle text-xs"></i>添加视频
+            </div>
+            <div class="add-btn pl-4" onclick="addContent('第一章', 'exercise')">
+              <i class="fa fa-plus-circle text-xs"></i>添加习题
+            </div>
+          </div>
+        </div>
+
+        <!-- 第二章（默认收起） -->
+        <div class="chapter-group">
+          <div class="chapter-item flex items-center justify-between py-1.5" onclick="toggleChapter(this)">
+            <span>第二章</span>
+            <i class="fa fa-chevron-down text-xs text-gray-400 transition-transform duration-200"></i>
+          </div>
+          <div class="chapter-children hidden space-y-1 mt-1">
+            <div class="sub-item" onclick="selectSubItem(this, 'video')">2.1视频</div>
+            <div class="sub-item" onclick="selectSubItem(this, 'exercise')">2.1习题</div>
+            <div class="add-btn pl-4" onclick="addContent('第二章', 'video')">
+              <i class="fa fa-plus-circle text-xs"></i>添加视频
+            </div>
+            <div class="add-btn pl-4" onclick="addContent('第二章', 'exercise')">
+              <i class="fa fa-plus-circle text-xs"></i>添加习题
+            </div>
+          </div>
+        </div>
+
+        <!-- 第三章（默认收起） -->
+        <div class="chapter-group">
+          <div class="chapter-item flex items-center justify-between py-1.5" onclick="toggleChapter(this)">
+            <span>第三章</span>
+            <i class="fa fa-chevron-down text-xs text-gray-400 transition-transform duration-200"></i>
+          </div>
+          <div class="chapter-children hidden space-y-1 mt-1">
+            <div class="sub-item" onclick="selectSubItem(this, 'video')">3.1视频</div>
+            <div class="sub-item" onclick="selectSubItem(this, 'exercise')">3.1习题</div>
+            <div class="add-btn pl-4" onclick="addContent('第三章', 'video')">
+              <i class="fa fa-plus-circle text-xs"></i>添加视频
+            </div>
+            <div class="add-btn pl-4" onclick="addContent('第三章', 'exercise')">
+              <i class="fa fa-plus-circle text-xs"></i>添加习题
+            </div>
+          </div>
+        </div>
+
+        <!-- 第四章（默认展开 + 激活） -->
+        <div class="chapter-group">
+          <div class="chapter-item active flex items-center justify-between py-1.5" onclick="toggleChapter(this)">
+            <span>第四章</span>
+            <i class="fa fa-chevron-down text-xs text-primary transition-transform duration-200 rotate-180"></i>
+          </div>
+          <div class="chapter-children space-y-1 mt-1">
+            <div class="sub-item" onclick="selectSubItem(this, 'video')">4.1视频</div>
+            <div class="sub-item active" onclick="selectSubItem(this, 'exercise')">4.1习题</div>
+            <div class="add-btn pl-4" onclick="addContent('第四章', 'video')">
+              <i class="fa fa-plus-circle text-xs"></i>添加视频
+            </div>
+            <div class="add-btn pl-4" onclick="addContent('第四章', 'exercise')">
+              <i class="fa fa-plus-circle text-xs"></i>添加习题
+            </div>
+          </div>
+        </div>
+
+        <!-- 添加新章节（最外层） -->
+        <div class="add-btn mt-4" onclick="addChapter()">
+          <i class="fa fa-plus-circle text-xs"></i>添加新章节
+        </div>
+      </div>
+    </aside>
+
+    <!-- 右侧内容区域（支持视频/习题切换） -->
+    <main class="flex-1 p-6">
+      <!-- 视频上传界面（默认隐藏） -->
+      <div id="video-upload-panel" class="bg-white rounded-lg p-6 shadow-sm hidden">
+        <!-- 页面标题 -->
+        <div class="flex justify-between items-center mb-6">
+          <h1 class="text-xl font-bold text-gray-800">视频4.1 - 上传内容</h1>
+          <div class="flex gap-3">
+            <button class="px-4 py-2 text-primary border border-primary rounded-md text-sm hover:bg-primary/5 transition-colors">
+              预览
+            </button>
+            <button class="px-4 py-2 bg-primary text-white rounded-md text-sm hover:bg-primary/90 transition-colors">
+              保存
+            </button>
+          </div>
+        </div>
+
+        <!-- 视频标题 -->
+        <div class="mb-6">
+          <label class="block text-sm font-medium text-gray-700 mb-2">视频标题</label>
+          <input type="text" class="input-field" value="视频4.1">
+        </div>
+
+        <!-- 视频文件上传 -->
+        <div class="mb-6">
+          <label class="block text-sm font-medium text-gray-700 mb-2">视频文件</label>
+          <div class="upload-area">
+            <p class="text-gray-500 mb-2">点击或拖拽视频文件到此处上传</p>
+            <p class="text-xs text-gray-400">支持格式：MP4、AVI、MOV<br>最大2GB，时长≤2小时</p>
+          </div>
+        </div>
+
+        <!-- 视频描述 -->
+        <div class="mb-6">
+          <label class="block text-sm font-medium text-gray-700 mb-2">视频描述</label>
+          <textarea class="input-field min-h-[80px]" placeholder="请输入视频简介..."></textarea>
+        </div>
+
+        <!-- 视频封面 -->
+        <div class="mb-8">
+          <label class="block text-sm font-medium text-gray-700 mb-2">视频封面</label>
+          <div class="flex items-center gap-4">
+            <div class="w-20 h-20 bg-gray-200 rounded flex items-center justify-center border border-gray-300">
+              <span class="text-sm text-gray-500">选择图片</span>
+            </div>
+            <div>
+              <p class="text-xs text-gray-500">建议尺寸：1200x675px</p>
+              <p class="text-xs text-gray-500">格式：JPG、PNG</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- 分割线 -->
+        <div class="border-t border-dashed border-gray-300 my-6"></div>
+
+        <!-- 视频标签 -->
+        <div class="mb-6">
+          <label class="block text-sm font-medium text-gray-700 mb-2">视频标签</label>
+          <div class="flex flex-wrap gap-2">
+            <span class="inline-flex items-center px-3 py-1 rounded-full bg-primary/10 text-primary text-xs">
+              基础知识
+              <button class="ml-1 text-primary hover:text-primary/80">
+                <i class="fa fa-times"></i>
+              </button>
+            </span>
+            <span class="inline-flex items-center px-3 py-1 rounded-full bg-gray-100 text-gray-700 text-xs">
+              添加标签...
+            </span>
+          </div>
+        </div>
+
+        <!-- 视频设置 -->
+        <div class="mb-6">
+          <h3 class="text-base font-medium text-gray-800 mb-4">视频设置</h3>
+          <div class="space-y-4">
+            <div class="flex items-center justify-between">
+              <div>
+                <p class="text-sm font-medium text-gray-800">允许下载</p>
+                <p class="text-xs text-gray-500">学员可下载该视频</p>
+              </div>
+              <label class="switch">
+                <input type="checkbox">
+                <span class="slider"></span>
+              </label>
+            </div>
+            <div class="flex items-center justify-between">
+              <div>
+                <p class="text-sm font-medium text-gray-800">需要观看完整</p>
+                <p class="text-xs text-gray-500">只允许学员完整观看后进行后续操作</p>
+              </div>
+              <label class="switch">
+                <input type="checkbox" checked>
+                <span class="slider"></span>
+              </label>
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-2">视频时长（秒）</label>
+              <input type="text" class="input-field w-32" value="900">
+            </div>
+          </div>
+        </div>
+
+        <!-- 底部提示 -->
+        <div class="mt-8 text-sm text-gray-500">
+          <i class="fa fa-info-circle mr-1"></i>
+          如需上传习题内容，请在左侧导航栏中选择对应的习题
+        </div>
+      </div>
+
+      <!-- 习题上传界面（默认显示） -->
+      <div id="exercise-upload-panel" class="bg-white rounded-lg p-6 shadow-sm">
+        <!-- 页面标题 -->
+        <div class="flex justify-between items-center mb-6">
+          <h1 class="text-xl font-bold text-gray-800">第一章-习题1.1</h1>
+          <p class="text-xs text-gray-500">上传题目时请选择章节节点（支持单选/多选）</p>
+        </div>
+
+        <!-- 题目信息区域 -->
+        <div class="space-y-6">
+          <div>
+            <h3 class="text-base font-medium text-gray-800 mb-3">题目信息</h3>
+            
+            <!-- 题目类型 -->
+            <div class="mb-4">
+              <label class="block text-sm font-medium text-gray-700 mb-2">题目类型</label>
+              <select class="input-field w-40">
+                <option>单选题</option>
+                <option>多选题</option>
+                <option>判断题</option>
+                <option>填空题</option>
+                <option>简答题</option>
+              </select>
+            </div>
+
+            <!-- 题目内容 -->
+            <div class="mb-4">
+              <label class="block text-sm font-medium text-gray-700 mb-2">题目内容</label>
+              <textarea class="input-field min-h-[80px]" placeholder="请输入题目内容..."></textarea>
+            </div>
+
+            <!-- 选项区域 -->
+            <div class="mb-4">
+              <label class="block text-sm font-medium text-gray-700 mb-2">选项（至少2个）</label>
+              <div id="options-container" class="space-y-2">
+                <div class="option-item">
+                  <span class="w-6 text-center">A</span>
+                  <input type="text" class="option-input" placeholder="输入选项内容">
+                </div>
+                <div class="option-item">
+                  <span class="w-6 text-center">B</span>
+                  <input type="text" class="option-input" placeholder="输入选项内容">
+                </div>
+              </div>
+              <button class="text-primary text-sm mt-2" onclick="addOption()">
+                <i class="fa fa-plus-circle text-xs"></i> 添加选项
+              </button>
+            </div>
+
+            <!-- 正确答案 -->
+            <div class="mb-4">
+              <label class="block text-sm font-medium text-gray-700 mb-2">正确答案</label>
+              <div class="flex gap-4">
+                <label class="answer-label">
+                  <input type="checkbox" checked>
+                  <span>A</span>
+                </label>
+                <label class="answer-label">
+                  <input type="checkbox">
+                  <span>B</span>
+                </label>
+              </div>
+            </div>
+
+            <!-- 题目分数 -->
+            <div class="mb-4">
+              <label class="block text-sm font-medium text-gray-700 mb-2">题目分数</label>
+              <input type="text" class="input-field w-20" value="5">
+            </div>
+
+            <!-- 做题时长 -->
+            <div class="mb-4">
+              <label class="block text-sm font-medium text-gray-700 mb-2">做题时长（分钟）</label>
+              <input type="text" class="input-field w-20" value="5">
+              <p class="text-xs text-gray-500 mt-1">设置学员完成该题的时间，未完成则跳时</p>
+            </div>
+
+            <!-- 题目解析 -->
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-2">题目解析（可选）</label>
+              <textarea class="input-field min-h-[80px]" placeholder="简要说明题目考点和解题思路..."></textarea>
+            </div>
+          </div>
+        </div>
+
+        <!-- 操作按钮 -->
+        <div class="flex justify-end gap-3 mt-8">
+          <button class="px-4 py-2 border border-gray-300 text-gray-700 rounded-md text-sm hover:bg-gray-50 transition-colors">
+            取消
+          </button>
+          <button class="px-4 py-2 bg-primary text-white rounded-md text-sm hover:bg-primary/90 transition-colors">
+            保存题目
+          </button>
+        </div>
+
+        <!-- 已上传题目列表 -->
+        <div class="mt-8">
+          <h3 class="text-base font-medium text-gray-800 mb-3">已上传题目</h3>
+          <div class="overflow-x-auto">
+            <table class="w-full text-sm">
+              <thead>
+                <tr class="border-b border-gray-200">
+                  <th class="text-left py-2 px-1 font-medium text-gray-700">题目</th>
+                  <th class="text-left py-2 px-1 font-medium text-gray-700">类型</th>
+                  <th class="text-left py-2 px-1 font-medium text-gray-700">分数</th>
+                  <th class="text-left py-2 px-1 font-medium text-gray-700">时长</th>
+                  <th class="text-left py-2 px-1 font-medium text-gray-700">操作</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr class="border-b border-gray-200">
+                  <td class="py-3 px-1">以下哪个是JavaScript的基本数据类型？</td>
+                  <td class="py-3 px-1">单选题</td>
+                  <td class="py-3 px-1">5分</td>
+                  <td class="py-3 px-1">5分钟</td>
+                  <td class="py-3 px-1">
+                    <button class="text-primary hover:underline mr-2">编辑</button>
+                    <button class="text-red-500 hover:underline">删除</button>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <!-- 交互逻辑脚本 -->
+  <script>
+  // 检查用户是否已登录
+function checkLoginStatus() {
+  const userMenu = document.getElementById('userMenu');
+  const currentUser = localStorage.getItem('bgareaCurrentUser') || sessionStorage.getItem('bgareaCurrentUser');
+  
+  if (currentUser) {
+    // 用户已登录
+    const user = JSON.parse(currentUser);
+    // 重构HTML结构：增加外层容器，用于统一控制hover
+    userMenu.innerHTML = `
+      <div class="relative" id="userDropdownContainer">
+        <button class="flex items-center gap-2 hover:text-primary transition-colors" id="userDropdownBtn">
+          <i class="fa fa-user-circle-o text-lg"></i>
+          <span class="hidden md:inline">${user.username}</span>
+        </button>
+        <!-- 下拉菜单：默认隐藏，通过JS控制显示/隐藏 -->
+        <div class="absolute right-0 mt-2 w-40 bg-white rounded-md shadow-lg py-2 hidden z-50" id="userDropdownMenu">
+          <a href="Personal Information.html" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors">个人中心</a>
+          <a href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors" id="logoutBtn">退出登录</a>
+        </div>
+      </div>
+    `;
+
+    // ---------- 新增：下拉菜单显示/隐藏逻辑 ----------
+    const dropdownContainer = document.getElementById('userDropdownContainer');
+    const dropdownBtn = document.getElementById('userDropdownBtn');
+    const dropdownMenu = document.getElementById('userDropdownMenu');
+    let hideTimer = null; // 延迟隐藏的定时器
+
+    // 显示菜单
+    function showMenu() {
+      clearTimeout(hideTimer); // 清除延迟隐藏的定时器
+      dropdownMenu.classList.remove('hidden');
+    }
+
+    // 隐藏菜单（加延迟，给用户时间移到菜单上）
+    function hideMenu() {
+      hideTimer = setTimeout(() => {
+        dropdownMenu.classList.add('hidden');
+      }, 200); // 200ms延迟，足够鼠标从按钮移到菜单
+    }
+
+    // 绑定事件：鼠标移到容器（按钮+菜单区域）显示，移开隐藏
+    dropdownContainer.addEventListener('mouseenter', showMenu);
+    dropdownContainer.addEventListener('mouseleave', hideMenu);
+    // 兼容点击触发（移动端/点击场景）
+    dropdownBtn.addEventListener('click', (e) => {
+      e.stopPropagation(); // 阻止事件冒泡
+      dropdownMenu.classList.toggle('hidden');
+    });
+    // 点击页面其他地方隐藏菜单
+    document.addEventListener('click', () => {
+      hideMenu();
+    });
+
+    // 退出登录逻辑（不变）
+    document.getElementById('logoutBtn').addEventListener('click', function(e) {
+      e.preventDefault();
+      localStorage.removeItem('bgareaCurrentUser');
+      sessionStorage.removeItem('bgareaCurrentUser');
+      location.reload();
+    });
+  } else {
+    // 未登录状态（不变）
+    userMenu.innerHTML = `
+      <a href="Login.html" class="text-primary hover:text-primary/80 font-medium transition-colors">登录</a>
+      <a href="register.html" class="bg-primary hover:bg-primary/90 text-white px-4 py-1.5 rounded-md font-medium transition-colors">注册</a>
+    `;
+  }
+}
+
+// 页面加载时执行（不变）
+document.addEventListener('DOMContentLoaded', function() {
+  checkLoginStatus();
+});
+
+
+    // 切换章节展开/收起
+    function toggleChapter(el) {
+      const chapterGroup = el.closest('.chapter-group');
+      const children = chapterGroup.querySelector('.chapter-children');
+      const icon = el.querySelector('i');
+      
+      // 切换显示状态
+      children.classList.toggle('hidden');
+      // 切换图标旋转
+      icon.classList.toggle('rotate-180');
+      // 切换章节激活状态
+      el.classList.toggle('active');
+      icon.classList.toggle('text-primary');
+    }
+
+    // 选择子项（区分视频/习题）
+    function selectSubItem(el, type) {
+      // 移除所有子项的激活状态
+      document.querySelectorAll('.sub-item').forEach(item => {
+        item.classList.remove('active');
+      });
+      // 给当前子项添加激活状态
+      el.classList.add('active');
+      
+      // 切换内容面板
+      const contentName = el.textContent.trim();
+      if (type === 'video') {
+        document.getElementById('video-upload-panel').classList.remove('hidden');
+        document.getElementById('exercise-upload-panel').classList.add('hidden');
+        // 更新视频面板标题
+        document.querySelector('#video-upload-panel h1').textContent = `${contentName} - 上传内容`;
+        document.querySelector('#video-upload-panel input[value="视频4.1"]').value = contentName;
+      } else {
+        document.getElementById('exercise-upload-panel').classList.remove('hidden');
+        document.getElementById('video-upload-panel').classList.add('hidden');
+        // 更新习题面板标题
+        document.querySelector('#exercise-upload-panel h1').textContent = `${contentName.replace('习题', '习题')}`;
+      }
+    }
+
+    // 添加视频/习题到章节
+    function addContent(chapterName, type) {
+      const chapterGroup = Array.from(document.querySelectorAll('.chapter-group')).find(
+        group => group.querySelector('.chapter-item span').textContent === chapterName
+      );
+      const childrenContainer = chapterGroup.querySelector('.chapter-children');
+      
+      // 生成新内容的序号（比如“4.2视频”）
+      const subItems = Array.from(childrenContainer.querySelectorAll('.sub-item'));
+      const lastItem = subItems.length > 0 ? subItems[subItems.length - 1].textContent : `${chapterName.slice(-1)}.0${type === 'video' ? '视频' : '习题'}`;
+      const [prefix, typeStr] = lastItem.split('.');
+      const [num, _] = typeStr.split(/(视频|习题)/);
+      const newNum = parseInt(num) + 1;
+      const newContentName = `${prefix}.${newNum}${type === 'video' ? '视频' : '习题'}`;
+      
+      // 创建新子项元素
+      const newSubItem = document.createElement('div');
+      newSubItem.className = 'sub-item';
+      newSubItem.textContent = newContentName;
+      newSubItem.onclick = () => selectSubItem(newSubItem, type);
+      
+      // 插入到“添加”按钮之前
+      const addBtns = childrenContainer.querySelectorAll('.add-btn');
+      childrenContainer.insertBefore(newSubItem, addBtns[0]);
+      
+      // 自动选中新添加的内容
+      selectSubItem(newSubItem, type);
+      
+      // 提示
+      alert(`已在${chapterName}下添加${newContentName}`);
+    }
+
+    // 添加新章节（完善功能）
+    function addChapter() {
+      const chapterList = document.getElementById('chapter-list');
+      const chapterGroups = document.querySelectorAll('.chapter-group');
+      const newChapterNum = chapterGroups.length + 1;
+      const newChapterName = `第${newChapterNum}章`;
+      
+      // 创建新章节组
+      const newChapterGroup = document.createElement('div');
+      newChapterGroup.className = 'chapter-group';
+      newChapterGroup.innerHTML = `
+        <div class="chapter-item flex items-center justify-between py-1.5" onclick="toggleChapter(this)">
+          <span>${newChapterName}</span>
+          <i class="fa fa-chevron-down text-xs text-gray-400 transition-transform duration-200"></i>
+        </div>
+        <div class="chapter-children hidden space-y-1 mt-1">
+          <div class="add-btn pl-4" onclick="addContent('${newChapterName}', 'video')">
+            <i class="fa fa-plus-circle text-xs"></i>添加视频
+          </div>
+          <div class="add-btn pl-4" onclick="addContent('${newChapterName}', 'exercise')">
+            <i class="fa fa-plus-circle text-xs"></i>添加习题
+          </div>
+        </div>
+      `;
+      
+      // 插入到“添加新章节”按钮之前
+      const addChapterBtn = document.querySelector('.add-btn:last-child');
+      chapterList.insertBefore(newChapterGroup, addChapterBtn);
+      
+      // 自动展开新章节
+      const newChapterItem = newChapterGroup.querySelector('.chapter-item');
+      toggleChapter(newChapterItem);
+      
+      // 提示
+      alert(`已添加新章节：${newChapterName}`);
+    }
+
+    // 添加习题选项
+    function addOption() {
+      const optionsContainer = document.getElementById('options-container');
+      const optionCount = optionsContainer.children.length;
+      const optionLetters = ['A', 'B', 'C', 'D', 'E', 'F'];
+      if (optionCount >= optionLetters.length) return; // 最多支持6个选项
+      
+      const newOption = document.createElement('div');
+      newOption.className = 'option-item';
+      newOption.innerHTML = `
+        <span class="w-6 text-center">${optionLetters[optionCount]}</span>
+        <input type="text" class="option-input" placeholder="输入选项内容">
+      `;
+      
+      // 添加到选项容器
+      optionsContainer.appendChild(newOption);
+      
+      // 添加对应的正确答案选择框
+      const answerContainer = document.querySelector('.flex.gap-4');
+      const newAnswerLabel = document.createElement('label');
+      newAnswerLabel.className = 'answer-label';
+      newAnswerLabel.innerHTML = `
+        <input type="checkbox">
+        <span>${optionLetters[optionCount]}</span>
+      `;
+      answerContainer.appendChild(newAnswerLabel);
+    }
+  </script>
+</body>
+</html>

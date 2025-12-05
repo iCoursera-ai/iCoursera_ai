@@ -17,7 +17,9 @@
             secondary: '#6B7280',
             light: '#F9FAFB',
             dark: '#1F2937',
-            success: '#10B981'
+            success: '#10B981',
+            error: '#EF4444',
+            warning: '#F59E0B'
           },
           fontFamily: {
             inter: ['Inter', 'system-ui', 'sans-serif'],
@@ -41,17 +43,43 @@
       .input-field {
         @apply w-full px-4 py-2.5 rounded-md border border-gray-300 focus:border-primary focus:ring-1 focus:ring-primary focus:outline-none transition-all duration-200;
       }
+      .input-error {
+        @apply border-error focus:border-error focus:ring-error;
+      }
       .btn-primary {
         @apply w-full bg-primary hover:bg-primary/90 text-white font-medium py-2.5 rounded-md transition-all duration-200 transform hover:scale-[1.01] active:scale-[0.99] focus:outline-none focus:ring-2 focus:ring-primary/50;
       }
+      .btn-disabled {
+        @apply bg-gray-400 cursor-not-allowed hover:bg-gray-400 transform-none;
+      }
       .social-btn {
         @apply flex items-center justify-center gap-2 px-4 py-2.5 rounded-md border border-gray-300 hover:bg-gray-50 transition-all duration-200;
+      }
+      .toast {
+        @apply fixed top-4 right-4 px-4 py-2 rounded-md shadow-lg z-50 transition-all duration-300 transform translate-x-full opacity-0;
+      }
+      .toast-show {
+        @apply translate-x-0 opacity-100;
+      }
+      .toast-success {
+        @apply bg-success text-white;
+      }
+      .toast-error {
+        @apply bg-error text-white;
+      }
+      .toast-warning {
+        @apply bg-warning text-white;
       }
     }
   </style>
 </head>
 
 <body class="font-inter bg-gray-50 min-h-screen flex flex-col">
+  <!-- 提示框 -->
+  <div id="toast" class="toast">
+    <span id="toast-message"></span>
+  </div>
+
   <!-- 头部 -->
   <header class="bg-white py-4 px-6 md:px-12 shadow-sm">
     <div class="container mx-auto flex justify-between items-center">
@@ -110,18 +138,20 @@
             <p class="text-sm text-secondary">注册成为BGarea用户，享受优质教育资源</p>
           </div>
 
-          <form class="space-y-4">
+          <form id="registerForm" class="space-y-4">
             <!-- 用户名输入框 -->
             <div>
               <label for="username" class="block text-sm font-medium text-gray-700 mb-1">用户名</label>
               <input type="text" id="username" class="input-field" placeholder="请设置用户名">
               <p class="text-xs text-gray-500 mt-1">2-20个字符，支持中文、数字和下划线</p>
+              <p class="text-xs text-error hidden mt-1" id="usernameError"></p>
             </div>
 
             <!-- 邮箱输入框 -->
             <div>
               <label for="reg-email" class="block text-sm font-medium text-gray-700 mb-1">邮箱地址</label>
               <input type="email" id="reg-email" class="input-field" placeholder="请输入邮箱地址">
+              <p class="text-xs text-error hidden mt-1" id="emailError"></p>
             </div>
 
             <!-- 验证码输入框 + 获取按钮 -->
@@ -129,8 +159,9 @@
               <label for="verify-code" class="block text-sm font-medium text-gray-700 mb-1">验证码</label>
               <div class="flex gap-2">
                 <input type="text" id="verify-code" class="input-field flex-grow" placeholder="请输入验证码">
-                <button type="button" class="btn-primary whitespace-nowrap px-4">获取验证码</button>
+                <button type="button" class="btn-primary whitespace-nowrap px-4" id="getCodeBtn">获取验证码</button>
               </div>
+              <p class="text-xs text-error hidden mt-1" id="codeError"></p>
             </div>
 
             <!-- 密码输入框（带眼睛图标） -->
@@ -138,17 +169,19 @@
               <label for="reg-password" class="block text-sm font-medium text-gray-700 mb-1">设置密码</label>
               <div class="relative">
                 <input type="password" id="reg-password" class="input-field pr-10" placeholder="请设置密码">
-                <button type="button" class="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600">
+                <button type="button" class="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600" id="togglePassword">
                   <i class="fa fa-eye-slash"></i>
                 </button>
               </div>
               <p class="text-xs text-gray-500 mt-1">密码长度8-20位，包含字母和数字</p>
+              <p class="text-xs text-error hidden mt-1" id="passwordError"></p>
             </div>
 
             <!-- 确认密码输入框 -->
             <div>
               <label for="confirm-password" class="block text-sm font-medium text-gray-700 mb-1">确认密码</label>
               <input type="password" id="confirm-password" class="input-field" placeholder="请再次输入密码">
+              <p class="text-xs text-error hidden mt-1" id="confirmPasswordError"></p>
             </div>
 
             <!-- 服务条款勾选框 -->
@@ -157,10 +190,11 @@
               <label for="agree-terms" class="ml-2 text-sm text-secondary">
                 我已阅读并同意 <a href="#" class="text-link">服务条款</a> 和 <a href="#" class="text-link">隐私政策</a>
               </label>
+              <p class="text-xs text-error hidden mt-1 ml-6" id="termsError">请同意服务条款和隐私政策</p>
             </div>
 
             <!-- 注册按钮 -->
-            <button type="submit" class="btn-primary mt-2">注册账户</button>
+            <button type="submit" class="btn-primary mt-2" id="registerBtn">注册账户</button>
 
             <!-- 分隔线 -->
             <div class="relative flex items-center my-4">
@@ -171,13 +205,13 @@
 
             <!-- 第三方登录按钮（微信、QQ、Google） -->
             <div class="grid grid-cols-3 gap-2">
-              <button type="button" class="social-btn">
+              <button type="button" class="social-btn" id="wechatReg">
                 <i class="fa fa-weixin text-green-500"></i>
               </button>
-              <button type="button" class="social-btn">
+              <button type="button" class="social-btn" id="qqReg">
                 <i class="fa fa-qq text-blue-500"></i>
               </button>
-              <button type="button" class="social-btn">
+              <button type="button" class="social-btn" id="googleReg">
                 <i class="fa fa-google text-red-500"></i>
               </button>
             </div>
@@ -213,5 +247,278 @@
       </div>
     </div>
   </footer>
+
+  <script>
+    // 显示/隐藏密码
+    const togglePassword = document.getElementById('togglePassword');
+    const passwordInput = document.getElementById('reg-password');
+    
+    togglePassword.addEventListener('click', function() {
+      const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+      passwordInput.setAttribute('type', type);
+      // 切换图标
+      this.querySelector('i').classList.toggle('fa-eye');
+      this.querySelector('i').classList.toggle('fa-eye-slash');
+    });
+
+    // 提示框功能
+    function showToast(message, type = 'success') {
+      const toast = document.getElementById('toast');
+      const toastMessage = document.getElementById('toast-message');
+      
+      toastMessage.textContent = message;
+      toast.className = `toast toast-${type}`;
+      setTimeout(() => {
+        toast.classList.add('toast-show');
+      }, 10);
+      
+      setTimeout(() => {
+        toast.classList.remove('toast-show');
+        setTimeout(() => {
+          toast.className = 'toast';
+        }, 300);
+      }, 3000);
+    }
+
+    // 验证码倒计时
+    let countdown = 0;
+    let countdownTimer = null;
+    
+    function startCountdown() {
+      const getCodeBtn = document.getElementById('getCodeBtn');
+      countdown = 60;
+      getCodeBtn.disabled = true;
+      getCodeBtn.classList.add('btn-disabled');
+      getCodeBtn.textContent = `${countdown}秒后重新获取`;
+      
+      countdownTimer = setInterval(() => {
+        countdown--;
+        getCodeBtn.textContent = `${countdown}秒后重新获取`;
+        
+        if (countdown <= 0) {
+          clearInterval(countdownTimer);
+          getCodeBtn.disabled = false;
+          getCodeBtn.classList.remove('btn-disabled');
+          getCodeBtn.textContent = '获取验证码';
+        }
+      }, 1000);
+    }
+
+    // 获取验证码
+    document.getElementById('getCodeBtn').addEventListener('click', function() {
+      const email = document.getElementById('reg-email').value.trim();
+      const emailError = document.getElementById('emailError');
+      
+      // 验证邮箱
+      if (!email) {
+        emailError.textContent = '请先输入邮箱地址';
+        emailError.classList.remove('hidden');
+        document.getElementById('reg-email').classList.add('input-error');
+        return;
+      } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+        emailError.textContent = '请输入有效的电子邮件地址';
+        emailError.classList.remove('hidden');
+        document.getElementById('reg-email').classList.add('input-error');
+        return;
+      }
+      
+      // 模拟发送验证码
+      showToast('验证码已发送，请注意查收', 'success');
+      startCountdown();
+      
+      // 模拟验证码（实际项目中从后端获取）
+      localStorage.setItem('bgareaVerifyCode', Math.floor(100000 + Math.random() * 900000).toString());
+    });
+
+    // 表单验证
+    function validateRegisterForm() {
+      let isValid = true;
+      const username = document.getElementById('username').value.trim();
+      const email = document.getElementById('reg-email').value.trim();
+      const verifyCode = document.getElementById('verify-code').value.trim();
+      const password = document.getElementById('reg-password').value.trim();
+      const confirmPassword = document.getElementById('confirm-password').value.trim();
+      const agreeTerms = document.getElementById('agree-terms').checked;
+      
+      // 获取错误提示元素
+      const usernameError = document.getElementById('usernameError');
+      const emailError = document.getElementById('emailError');
+      const codeError = document.getElementById('codeError');
+      const passwordError = document.getElementById('passwordError');
+      const confirmPasswordError = document.getElementById('confirmPasswordError');
+      const termsError = document.getElementById('termsError');
+      
+      // 重置错误状态
+      [usernameError, emailError, codeError, passwordError, confirmPasswordError, termsError].forEach(el => {
+        el.classList.add('hidden');
+      });
+      
+      [document.getElementById('username'), document.getElementById('reg-email'), 
+       document.getElementById('verify-code'), document.getElementById('reg-password'), 
+       document.getElementById('confirm-password')].forEach(el => {
+        el.classList.remove('input-error');
+      });
+      
+      // 验证用户名
+      if (!username) {
+        usernameError.textContent = '请输入用户名';
+        usernameError.classList.remove('hidden');
+        document.getElementById('username').classList.add('input-error');
+        isValid = false;
+      } else if (username.length < 2 || username.length > 20) {
+        usernameError.textContent = '用户名长度必须在2-20个字符之间';
+        usernameError.classList.remove('hidden');
+        document.getElementById('username').classList.add('input-error');
+        isValid = false;
+      } else if (!/^[\u4e00-\u9fa5a-zA-Z0-9_]+$/.test(username)) {
+        usernameError.textContent = '用户名只能包含中文、字母、数字和下划线';
+        usernameError.classList.remove('hidden');
+        document.getElementById('username').classList.add('input-error');
+        isValid = false;
+      }
+      
+      // 验证邮箱
+      if (!email) {
+        emailError.textContent = '请输入邮箱地址';
+        emailError.classList.remove('hidden');
+        document.getElementById('reg-email').classList.add('input-error');
+        isValid = false;
+      } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+        emailError.textContent = '请输入有效的电子邮件地址';
+        emailError.classList.remove('hidden');
+        document.getElementById('reg-email').classList.add('input-error');
+        isValid = false;
+      }
+      
+      // 验证验证码
+      const savedCode = localStorage.getItem('bgareaVerifyCode');
+      if (!verifyCode) {
+        codeError.textContent = '请输入验证码';
+        codeError.classList.remove('hidden');
+        document.getElementById('verify-code').classList.add('input-error');
+        isValid = false;
+      } else if (savedCode && verifyCode !== savedCode) {
+        codeError.textContent = '验证码错误';
+        codeError.classList.remove('hidden');
+        document.getElementById('verify-code').classList.add('input-error');
+        isValid = false;
+      }
+      
+      // 验证密码
+      if (!password) {
+        passwordError.textContent = '请设置密码';
+        passwordError.classList.remove('hidden');
+        document.getElementById('reg-password').classList.add('input-error');
+        isValid = false;
+      } else if (password.length < 8 || password.length > 20) {
+        passwordError.textContent = '密码长度必须在8-20位之间';
+        passwordError.classList.remove('hidden');
+        document.getElementById('reg-password').classList.add('input-error');
+        isValid = false;
+      } else if (!/(?=.*[a-zA-Z])(?=.*\d)/.test(password)) {
+        passwordError.textContent = '密码必须包含字母和数字';
+        passwordError.classList.remove('hidden');
+        document.getElementById('reg-password').classList.add('input-error');
+        isValid = false;
+      }
+      
+      // 验证确认密码
+      if (!confirmPassword) {
+        confirmPasswordError.textContent = '请再次输入密码';
+        confirmPasswordError.classList.remove('hidden');
+        document.getElementById('confirm-password').classList.add('input-error');
+        isValid = false;
+      } else if (confirmPassword !== password) {
+        confirmPasswordError.textContent = '两次输入的密码不一致';
+        confirmPasswordError.classList.remove('hidden');
+        document.getElementById('confirm-password').classList.add('input-error');
+        isValid = false;
+      }
+      
+      // 验证服务条款
+      if (!agreeTerms) {
+        termsError.classList.remove('hidden');
+        isValid = false;
+      }
+      
+      return isValid;
+    }
+
+    // 注册表单提交
+    document.getElementById('registerForm').addEventListener('submit', function(e) {
+      e.preventDefault();
+      
+      // 验证表单
+      if (!validateRegisterForm()) {
+        return;
+      }
+      
+      const username = document.getElementById('username').value.trim();
+      const email = document.getElementById('reg-email').value.trim();
+      const password = document.getElementById('reg-password').value.trim();
+      const registerBtn = document.getElementById('registerBtn');
+      
+      // 禁用按钮，显示加载状态
+      registerBtn.disabled = true;
+      registerBtn.innerHTML = '<i class="fa fa-spinner fa-spin mr-2"></i> 注册中...';
+      
+      // 模拟注册过程
+      setTimeout(() => {
+        // 获取已注册用户
+        let registeredUsers = JSON.parse(localStorage.getItem('bgareaUsers') || '[]');
+        
+        // 检查邮箱是否已注册
+        const userExists = registeredUsers.some(u => u.email === email);
+        
+        if (userExists) {
+          // 邮箱已注册
+          showToast('该邮箱已被注册，请使用其他邮箱', 'error');
+          registerBtn.disabled = false;
+          registerBtn.textContent = '注册账户';
+          document.getElementById('emailError').textContent = '该邮箱已被注册';
+          document.getElementById('emailError').classList.remove('hidden');
+          document.getElementById('reg-email').classList.add('input-error');
+        } else {
+          // 注册成功
+          const newUser = {
+            username: username,
+            email: email,
+            password: password,
+            registerTime: new Date().getTime()
+          };
+          
+          registeredUsers.push(newUser);
+          localStorage.setItem('bgareaUsers', JSON.stringify(registeredUsers));
+          
+          showToast('注册成功，即将跳转到登录页面', 'success');
+          
+          // 跳转到登录页面
+          setTimeout(() => {
+            window.location.href = 'login.html?registered=true';
+          }, 1500);
+        }
+      }, 1000);
+    });
+
+    // 第三方注册模拟
+    document.getElementById('wechatReg').addEventListener('click', function() {
+      showToast('微信注册功能暂未开放', 'warning');
+    });
+    
+    document.getElementById('qqReg').addEventListener('click', function() {
+      showToast('QQ注册功能暂未开放', 'warning');
+    });
+    
+    document.getElementById('googleReg').addEventListener('click', function() {
+      showToast('Google注册功能暂未开放', 'warning');
+    });
+
+    // 页面卸载时清除倒计时
+    window.addEventListener('beforeunload', function() {
+      if (countdownTimer) {
+        clearInterval(countdownTimer);
+      }
+    });
+  </script>
 </body>
 </html>
