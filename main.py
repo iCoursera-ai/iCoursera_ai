@@ -1,3 +1,4 @@
+# 核心依赖（保留必需）
 import pymysql
 import numpy as np
 import pandas as pd
@@ -47,7 +48,7 @@ class DBConnector:
         if self.conn:
             self.conn.close()
 
-# ===================== 优化后的混合推荐核心类（返回所有课程 + 降序排序） =====================
+# ===================== 优化后的混合推荐核心类（保留原有完整逻辑） =====================
 class HybridRecommender:
     def __init__(self, db_config):
         # 初始化数据库
@@ -115,23 +116,19 @@ class HybridRecommender:
         behavior_data = self.db.query(sql)
         if not behavior_data:
             return pd.DataFrame(0.0, index=self.user_list, columns=list(self.course_dict.keys()))
-
         # 计算行为评分（权重：收藏5>视频完成4>答题3>点击1）
         behavior_df = pd.DataFrame(behavior_data)
-        behavior_weight = {"collect":5, "video_finish":4, "answer_submit":3, "click":1}
+        behavior_weight = {"collect": 5, "video_finish": 4, "answer_submit": 3, "click": 1}
         behavior_df['weight'] = behavior_df['behavior_type'].map(behavior_weight).fillna(1)
         behavior_df['score'] = behavior_df['behavior_count'] * behavior_df['weight']
         user_course_total = behavior_df.groupby(['user_id', 'course_id'])['score'].sum().reset_index()
-
         # 构建矩阵
         course_ids = list(self.course_dict.keys())
         rating_matrix = pd.DataFrame(0.0, index=self.user_list, columns=course_ids)
-
         # 填充评分（限制1-5分）
         for _, row in user_course_total.iterrows():
             rating = min(row['score'], 5)  # 最大5分
             rating_matrix.loc[row['user_id'], row['course_id']] = max(rating, 1)  # 最小1分
-
         return rating_matrix
 
     def _fill_sparse_matrix(self):
@@ -150,7 +147,7 @@ class HybridRecommender:
                     course_domain = self.course_domain[course_id]
                     domain_courses = [cid for cid in self.course_domain if self.course_domain[cid] == course_domain]
                     domain_mean = filled_matrix.loc[user_id, domain_courses][filled_matrix.loc[user_id, domain_courses] > 0].mean()
-                    # 填充值（保留0值的话注释这行？不，填充是为了SVD有效，评分最终会保留原始逻辑）
+                    # 填充值
                     fill_value = user_mean if not np.isnan(user_mean) else (domain_mean if not np.isnan(domain_mean) else global_mean)
                     filled_matrix.loc[user_id, course_id] = round(fill_value, 2)
         return filled_matrix
@@ -220,7 +217,6 @@ class HybridRecommender:
         user_domain = self.user_domain.get(user_id, "")
         course_domain = self.course_domain.get(course_id, "")
         domain_score = 2 if user_domain == course_domain else 0
-
         # 2. 难度匹配分（0-3分）
         learned_courses = self.rating_matrix.loc[user_id][self.rating_matrix.loc[user_id] > 0].index
         if learned_courses.empty:
@@ -231,52 +227,45 @@ class HybridRecommender:
         course_diff = float(self.course_dict[course_id]["difficulty"])  # 转原生float
         diff_distance = abs(course_diff - learned_avg_diff)
         diff_score = max(3 - diff_distance, 0)  # 距离越近分越高
-
         # 总分（保留0值，转原生float）
         total_score = float(domain_score + diff_score)
         return total_score
 
-    # ---------------------- 核心推荐逻辑（返回所有课程 + 按评分降序） ----------------------
+    # ---------------------- 核心推荐逻辑（保留原有完整功能） ----------------------
     def recommend(self, user_id, top_n=None):
         """
-        核心修改点：
-        1. 候选课程改为【所有课程】（不再限制用户偏好领域）
-        2. 保留所有predicted_rating（包括0值）
-        3. 严格按predicted_rating降序排序所有课程
-        4. top_n=None时返回全部课程，否则返回前top_n条
+        核心逻辑：返回所有课程+按评分降序，保留原有功能
         """
         # 基础校验
         if user_id not in self.rating_matrix.index or user_id not in self.user_domain:
             return []
         
-        # 候选课程：系统内所有课程（关键修改！）
+        # 候选课程：系统内所有课程
         candidate_courses = list(self.course_domain.keys())
         if not candidate_courses:
             return []
-
-        # 计算所有课程的混合评分（SVD×0.7 + 内容×0.3），保留0值
+        
+        # 计算所有课程的混合评分（SVD×0.7 + 内容×0.3）
         hybrid_ratings = {}
         for course_id in candidate_courses:
             svd_rating = self._get_svd_rating(user_id, course_id)
             content_rating = self._get_content_based_rating(user_id, course_id)
             hybrid_rating = svd_rating * 0.7 + content_rating * 0.3
-            hybrid_ratings[course_id] = round(hybrid_rating, 2)  # 保留2位小数
-
-        # 按predicted_rating严格降序排序所有课程
+            hybrid_ratings[course_id] = round(hybrid_rating, 2)
+        
+        # 按评分降序排序
         sorted_courses = sorted(
-            hybrid_ratings.items(), 
-            key=lambda x: x[1], 
-            reverse=True  # 降序
+            hybrid_ratings.items(),
+            key=lambda x: x[1],
+            reverse=True
         )
-
-        # 控制返回条数：top_n=None返回全部，否则返回前top_n条
+        # 控制返回条数
         if top_n is not None and isinstance(top_n, int):
             sorted_courses = sorted_courses[:top_n]
-
-        # 构建最终结果（修复序列化问题）
+        
+        # 构建结果
         result = []
         for course_id, rating in sorted_courses:
-            # 转原生bool，避免序列化错误
             is_viewed_np = self.rating_matrix.loc[user_id, course_id] > 0
             is_viewed = bool(is_viewed_np)
             
@@ -290,21 +279,93 @@ class HybridRecommender:
             })
         return result
 
-# ===================== Flask接口 =====================
-# 全局初始化推荐器
-hybrid_recommender = HybridRecommender(DB_CONFIG)
+# ===================== 独立自适应提示类（复用你提供的逻辑） =====================
+class SimpleAdaptiveHint:
+    def __init__(self, db_config):
+        self.db = DBConnector(**db_config)
+        self.course_knowledge_map = self._load_course_knowledge()  # 课程-知识点映射
+        self.db.close()  # 初始化后关闭连接，避免资源占用
 
+    def _load_course_knowledge(self):
+        """加载课程与知识点的关联关系"""
+        sql = "SELECT course_id, knowledge_id FROM course_knowledge"
+        res = self.db.query(sql)
+        course_knowledge = {}
+        for item in res:
+            cid = item["course_id"]
+            kid = item["knowledge_id"]
+            if cid not in course_knowledge:
+                course_knowledge[cid] = []
+            course_knowledge[cid].append(kid)
+        return course_knowledge
+
+    def get_course_mastery(self, user_id, course_id):
+        """计算用户对指定课程的掌握度（知识点平均掌握度）"""
+        # 1. 获取课程关联的知识点
+        knowledges = self.course_knowledge_map.get(course_id, [])
+        if not knowledges:
+            print(f"课程{course_id}无关联知识点")
+            return None
+
+        # 2. 重新连接数据库查询掌握度（按需连接）
+        db = DBConnector(**DB_CONFIG)
+        placeholders = ', '.join(['%s'] * len(knowledges))
+        mastery_sql = f"""
+        SELECT knowledge_id, mastery_score 
+        FROM user_knowledge_mastery 
+        WHERE user_id = %s AND knowledge_id IN ({placeholders})
+        """
+        mastery_res = db.query(mastery_sql, [user_id] + knowledges)
+        db.close()
+
+        if not mastery_res:
+            print(f"用户{user_id}对课程{course_id}无知识点掌握度数据")
+            return None
+
+        # 3. 计算平均掌握度
+        scores = [item["mastery_score"] for item in mastery_res]
+        avg_mastery = sum(scores) / len(scores)
+        return round(avg_mastery, 2)
+
+    def get_adaptive_hint(self, user_id, course_id, threshold=0.6):
+        """获取自适应提示文字"""
+        # 1. 校验课程是否存在
+        db = DBConnector(**DB_CONFIG)
+        course_check_sql = "SELECT 1 FROM courses WHERE course_id = %s"
+        course_exist = db.query(course_check_sql, (course_id,))
+        db.close()
+        if not course_exist:
+            return {"course_id": course_id, "course_mastery": None, "hint": "课程不存在"}
+
+        # 2. 计算课程掌握度
+        course_mastery = self.get_course_mastery(user_id, course_id)
+
+        # 3. 判断是否触发提示
+        hint = ""
+        if course_mastery is not None and course_mastery < threshold:
+            hint = "如果您觉得本课程学习起来有点困难的话，可以尝试选择难度低一点的入门课程"
+
+        return {
+            "course_id": course_id,
+            "course_mastery": course_mastery,
+            "hint": hint
+        }
+
+# ===================== Flask API接口（独立接口，无冲突） =====================
+# 初始化推荐器和自适应提示实例（独立无耦合）
+hybrid_recommender = HybridRecommender(DB_CONFIG)
+adaptive_hint = SimpleAdaptiveHint(DB_CONFIG)
+
+# 接口1：原有推荐接口（保留完整功能）
 @app.route("/api/recommend", methods=["GET"])
 def get_recommendation():
-    # 获取参数：user_id必传，top_n可选（不传返回全部课程）
     user_id = request.args.get("user_id")
     top_n = request.args.get("top_n")
-
     # 参数校验
     if not user_id:
         return jsonify({"code": 400, "msg": "缺少必传参数user_id", "data": []}), 400
     
-    # 处理top_n：不传则返回全部，传则转为整数
+    # 处理top_n
     if top_n is None:
         top_n = None
     else:
@@ -312,16 +373,40 @@ def get_recommendation():
             top_n = int(top_n)
         except ValueError:
             return jsonify({"code": 400, "msg": "top_n必须为整数", "data": []}), 400
-
-    # 获取推荐结果（所有课程按评分降序）
+    
+    # 获取推荐结果
     result = hybrid_recommender.recommend(user_id, top_n)
-
-    # 返回响应
     return jsonify({
         "code": 200,
         "msg": "推荐成功",
         "data": result
     })
+
+# 接口2：独立自适应提示接口（复用你的逻辑）
+@app.route("/api/adaptive-hint", methods=["GET"])
+def adaptive_hint_api():
+    try:
+        # 获取参数
+        user_id = request.args.get("user_id")
+        course_id = request.args.get("course_id")
+        threshold = request.args.get("threshold", 0.6)
+
+        # 参数校验
+        if not user_id or not course_id:
+            return jsonify({"code": 400, "msg": "缺少必填参数：user_id 或 course_id", "data": {}})
+        try:
+            threshold = float(threshold)
+            if not (0 <= threshold <= 1):
+                return jsonify({"code": 400, "msg": "threshold必须在0-1之间", "data": {}})
+        except ValueError:
+            return jsonify({"code": 400, "msg": "threshold必须为数字", "data": {}})
+
+        # 获取自适应提示
+        result = adaptive_hint.get_adaptive_hint(user_id, course_id, threshold)
+        return jsonify({"code": 200, "msg": "获取提示成功", "data": result})
+
+    except Exception as e:
+        return jsonify({"code": 500, "msg": f"服务器错误：{str(e)}", "data": {}})
 
 # ===================== 运行入口 =====================
 if __name__ == "__main__":
