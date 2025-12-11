@@ -169,7 +169,12 @@ export default {
       this.isLoggedIn = false
       this.currentUser = null
       this.showUserMenu = false
+
+      // 发送登录状态变化事件
+      window.dispatchEvent(new CustomEvent('user-auth-change'))
+      
       this.$router.push('/')
+      
     },
     
     setupClickOutsideListener() {

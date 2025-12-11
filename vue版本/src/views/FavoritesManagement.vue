@@ -22,14 +22,14 @@
                 <i class="fa fa-circle-o text-xs sidebar-icon"></i>
                 <span class="sidebar-child-text">工作台</span>
               </div>
-              <div class="sidebar-child" @click="goToPage('/article-management')">
+              <!-- <div class="sidebar-child" @click="goToPage('/article-management')">
                 <i class="fa fa-file-text-o text-xs sidebar-icon"></i>
                 <span class="sidebar-child-text">稿件管理</span>
-              </div>
+              </div> -->
             </div>
           </div>
 
-          <!-- 管理员管理 -->
+          <!-- 管理员管理
           <div class="sidebar-group">
             <div class="sidebar-parent" @click="toggleSubmenu('admin')">
               <div class="sidebar-parent-content">
@@ -48,7 +48,7 @@
                 <span class="sidebar-child-text">用户管理</span>
               </div>
             </div>
-          </div>
+          </div> -->
           
           <!-- 收藏管理（当前激活） -->
           <div class="sidebar-group">

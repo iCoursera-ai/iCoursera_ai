@@ -18,7 +18,7 @@
             </div>
           </div>
 
-          <!-- 管理员管理 -->
+          <!-- 管理员管理
           <div class="sidebar-group">
             <div class="sidebar-parent active" @click="toggleSubmenu('admin')">
               <div class="sidebar-parent-content">
@@ -37,7 +37,7 @@
                 <span class="sidebar-child-text">用户管理</span>
               </div>
             </div>
-          </div>
+          </div> -->
              
           <!-- 收藏管理 -->
           <div class="sidebar-group">

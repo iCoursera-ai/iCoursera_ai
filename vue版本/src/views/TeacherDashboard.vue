@@ -20,14 +20,14 @@
                 <i class="fa fa-circle-o text-xs sidebar-icon"></i>
                 <span class="sidebar-child-text">工作台</span>
               </div>
-              <div class="sidebar-child" @click="goToPage('/article-management')">
+              <!-- <div class="sidebar-child" @click="goToPage('/article-management')">
                 <i class="fa fa-file-text-o text-xs sidebar-icon"></i>
                 <span class="sidebar-child-text">稿件管理</span>
-              </div>
+              </div> -->
             </div>
           </div>
 
-          <!-- 管理员管理 -->
+          <!-- 管理员管理
           <div class="sidebar-group">
             <div class="sidebar-parent" @click="toggleSubmenu('admin')">
               <div class="sidebar-parent-content">
@@ -46,7 +46,7 @@
                 <span class="sidebar-child-text">用户管理</span>
               </div>
             </div>
-          </div>
+          </div> -->
              
           <!-- 收藏管理 -->
           <div class="sidebar-group">
@@ -267,7 +267,7 @@
 
             <!-- 右侧功能栏 -->
             <div class="w-full lg:w-64 space-y-6">
-              <!-- 热门功能 -->
+              <!-- 热门功能
               <div class="card p-4 card-shadow">
                 <div class="flex justify-between items-center mb-4">
                   <h3 class="font-medium text-dark">热门功能</h3>
@@ -295,9 +295,9 @@
                     <span class="text-xs">内容违规</span>
                   </button>
                 </div>
-              </div>
+              </div> -->
 
-              <!-- 后台提问 -->
+              <!-- 后台提问
               <div class="card p-4 card-shadow">
                 <div class="flex justify-between items-center mb-4">
                   <h3 class="font-medium text-dark">后台提问</h3>
@@ -317,7 +317,7 @@
                     <span>怎么破解这个问题？</span>
                   </div>
                 </div>
-              </div>
+              </div> -->
 
               <!-- 公告 -->
               <div class="card p-4 card-shadow">
@@ -332,7 +332,7 @@
                 </div>
               </div>
 
-              <!-- 视频TOP -->
+              <!-- 视频TOP
               <div class="card p-4 card-shadow">
                 <div class="flex justify-between items-center mb-4">
                   <h3 class="font-medium text-dark">视频TOP</h3>
@@ -341,7 +341,7 @@
                   </select>
                 </div>
                 
-                <!-- 视频TOP标签按钮 -->
+                视频TOP标签按钮
                 <div class="video-top-tabs">
                   <div 
                     v-for="tab in videoTopTabs" 
@@ -354,7 +354,7 @@
                   </div>
                 </div>
                 
-                <!-- 视频TOP内容 -->
+                视频TOP内容
                 <div class="video-top-content">
                   <div v-for="tab in videoTopTabs" :key="tab.type" class="video-top-list" :class="{ 'hidden': activeVideoTab !== tab.type }">
                     <div class="space-y-3">
@@ -374,7 +374,7 @@
                     </div>
                   </div>
                 </div>
-              </div>
+              </div> -->
             </div>
           </div>
         </div>

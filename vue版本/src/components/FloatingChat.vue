@@ -1,5 +1,6 @@
 <template>
-  <div class="floating-chat-container">
+  <!-- 只在登录状态下显示AI助手 -->
+  <div v-if="isLoggedIn" class="floating-chat-container">
     <!-- 悬浮球 -->
     <div 
       v-if="!isChatOpen"
@@ -58,17 +59,62 @@ export default {
         right: 20
       },
       cozeClient: null,
-      chatIframeUrl: ''
+      chatIframeUrl: '',
+      isLoggedIn: false,
+      checkInterval: null
     }
   },
   mounted() {
-    this.initializeCozeChat()
+    // 初始化时检查登录状态
+    this.checkLoginStatus()
+    // 设置定期检查登录状态
+    this.checkInterval = setInterval(this.checkLoginStatus, 2000)
+    
+    // 监听登录状态变化
+    window.addEventListener('storage', this.handleStorageChange)
+    window.addEventListener('user-auth-change', this.checkLoginStatus)
   },
   beforeUnmount() {
     this.cleanup()
+    // 清除定时器
+    if (this.checkInterval) {
+      clearInterval(this.checkInterval)
+    }
+    // 移除事件监听
+    window.removeEventListener('storage', this.handleStorageChange)
+    window.removeEventListener('user-auth-change', this.checkLoginStatus)
   },
   methods: {
+    checkLoginStatus() {
+      // 检查用户是否登录
+      const user = localStorage.getItem('bgareaCurrentUser') || 
+                  sessionStorage.getItem('bgareaCurrentUser')
+      const wasLoggedIn = this.isLoggedIn
+      this.isLoggedIn = !!user
+      
+      // 如果从登录状态变为未登录状态，关闭聊天框
+      if (wasLoggedIn && !this.isLoggedIn) {
+        this.isChatOpen = false
+        this.isMinimized = false
+      }
+      
+      // 只有登录状态下才初始化Coze聊天
+      if (this.isLoggedIn) {
+        this.initializeCozeChat()
+      }
+    },
+    
+    handleStorageChange(event) {
+      // 监听localStorage的变化（主要是用户登录状态的变化）
+      if (event.key === 'bgareaCurrentUser' || event.key === null) {
+        this.checkLoginStatus()
+      }
+    },
+    
     initializeCozeChat() {
+      // 如果已初始化，则跳过
+      if (this.chatIframeUrl) return
+      
       // 动态加载 Coze SDK
       if (!window.CozeWebSDK) {
         this.loadCozeSDK()
@@ -87,12 +133,35 @@ export default {
     },
 
     setupChatIframeUrl() {
+      // 从存储中获取当前用户信息
+      const userData = localStorage.getItem('bgareaCurrentUser') || 
+                      sessionStorage.getItem('bgareaCurrentUser')
+      
+      let userInfo = {
+        id: 'user',
+        name: 'User',
+        avatar: 'https://s3.bmp.ovh/imgs/2025/08/23/6e917ea67f79b68d.png'
+      }
+      
+      if (userData) {
+        try {
+          const user = JSON.parse(userData)
+          userInfo = {
+            id: user.id || 'user',
+            name: user.username || 'User',
+            avatar: user.avatar || 'https://s3.bmp.ovh/imgs/2025/08/23/6e917ea67f79b68d.png'
+          }
+        } catch (e) {
+          console.error('解析用户信息失败:', e)
+        }
+      }
+
       // 创建 iframe URL 参数
       const params = new URLSearchParams({
         bot_id: '7537973732451860514',
-        user_id: 'user',
-        user_name: 'User',
-        user_avatar: 'https://s3.bmp.ovh/imgs/2025/08/23/6e917ea67f79b68d.png',
+        user_id: userInfo.id,
+        user_name: userInfo.name,
+        user_avatar: userInfo.avatar,
         bot_avatar: 'https://s3.bmp.ovh/imgs/2025/09/11/33babec17951a20c.png',
         token: 'cztei_qy8OgftMLBMQmyV81OchH3PHs8AHCd0noLV7XxpLBGvCGxwXCaQV0vlntpJ6DbmK3',
         lang: 'zh-CN',
@@ -103,6 +172,13 @@ export default {
     },
 
     openChat() {
+      // 检查是否登录
+      if (!this.isLoggedIn) {
+        // 未登录时跳转到登录页
+        this.$router.push('/login')
+        return
+      }
+      
       this.isChatOpen = true
       this.isMinimized = false
     },
@@ -114,32 +190,6 @@ export default {
 
     toggleMinimize() {
       this.isMinimized = !this.isMinimized
-    },
-
-    // 拖动功能
-    startDrag(event) {
-      if (event.target.closest('.chat-header')) {
-        const chatDialog = event.currentTarget.querySelector('.chat-dialog')
-        const startX = event.clientX
-        const startY = event.clientY
-        const startRight = parseInt(chatDialog.style.right) || 20
-        const startBottom = parseInt(chatDialog.style.bottom) || 20
-
-        const handleMouseMove = (e) => {
-          const deltaX = startX - e.clientX
-          const deltaY = startY - e.clientY
-          this.position.right = Math.max(10, Math.min(window.innerWidth - 400, startRight + deltaX))
-          this.position.bottom = Math.max(10, Math.min(window.innerHeight - 400, startBottom + deltaY))
-        }
-
-        const handleMouseUp = () => {
-          document.removeEventListener('mousemove', handleMouseMove)
-          document.removeEventListener('mouseup', handleMouseUp)
-        }
-
-        document.addEventListener('mousemove', handleMouseMove)
-        document.addEventListener('mouseup', handleMouseUp)
-      }
     },
 
     cleanup() {

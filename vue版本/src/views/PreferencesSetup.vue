@@ -60,54 +60,6 @@
               </div>
             </div>
           </div>
-          
-          <!-- 学习方式偏好 -->
-          <div class="space-y-4">
-            <h3 class="font-semibold text-lg text-dark">您偏好的学习方式是？</h3>
-            <div class="flex flex-wrap gap-3">
-              <div 
-                v-for="method in methods" 
-                :key="method.value"
-                class="preference-chip"
-                :class="{ 'selected': userPreferences.method.includes(method.value) }"
-                @click="togglePreference('method', method.value)"
-              >
-                <i :class="method.icon"></i>{{ method.label }}
-              </div>
-            </div>
-          </div>
-          
-          <!-- 学习时长偏好 -->
-          <div class="space-y-4">
-            <h3 class="font-semibold text-lg text-dark">您每周的学习时间是？</h3>
-            <div class="flex flex-wrap gap-3">
-              <div 
-                v-for="duration in durations" 
-                :key="duration.value"
-                class="preference-chip"
-                :class="{ 'selected': userPreferences.duration.includes(duration.value) }"
-                @click="togglePreference('duration', duration.value)"
-              >
-                {{ duration.label }}
-              </div>
-            </div>
-          </div>
-          
-          <!-- 难度级别偏好 -->
-          <div class="space-y-4">
-            <h3 class="font-semibold text-lg text-dark">您偏好的课程难度是？</h3>
-            <div class="flex flex-wrap gap-3">
-              <div 
-                v-for="difficulty in difficulties" 
-                :key="difficulty.value"
-                class="preference-chip"
-                :class="{ 'selected': userPreferences.difficulty.includes(difficulty.value) }"
-                @click="togglePreference('difficulty', difficulty.value)"
-              >
-                {{ difficulty.label }}
-              </div>
-            </div>
-          </div>
         </div>
         
         <!-- 底部操作栏 -->
@@ -160,10 +112,7 @@ export default {
     return {
       userPreferences: {
         field: [],
-        goal: [],
-        method: [],
-        duration: [],
-        difficulty: []
+        goal: []
       },
       fields: [
         { value: 'programming', label: '编程开发', icon: 'fa fa-code mr-2' },
@@ -182,27 +131,6 @@ export default {
         { value: 'hobby', label: '兴趣爱好', icon: 'fa fa-heart mr-2' },
         { value: 'school', label: '学业辅助', icon: 'fa fa-graduation-cap mr-2' },
         { value: 'entrepreneurship', label: '创业指导', icon: 'fa fa-rocket mr-2' }
-      ],
-      methods: [
-        { value: 'video', label: '视频课程', icon: 'fa fa-video-camera mr-2' },
-        { value: 'text', label: '图文教程', icon: 'fa fa-file-text mr-2' },
-        { value: 'interactive', label: '互动练习', icon: 'fa fa-mouse-pointer mr-2' },
-        { value: 'live', label: '直播授课', icon: 'fa fa-desktop mr-2' },
-        { value: 'project', label: '项目实战', icon: 'fa fa-code-fork mr-2' },
-        { value: 'one-on-one', label: '一对一辅导', icon: 'fa fa-users mr-2' }
-      ],
-      durations: [
-        { value: '1-3', label: '1-3小时' },
-        { value: '3-5', label: '3-5小时' },
-        { value: '5-10', label: '5-10小时' },
-        { value: '10-15', label: '10-15小时' },
-        { value: '15+', label: '15小时以上' }
-      ],
-      difficulties: [
-        { value: 'beginner', label: '初级入门' },
-        { value: 'intermediate', label: '中级进阶' },
-        { value: 'advanced', label: '高级精通' },
-        { value: 'mixed', label: '混合难度' }
       ],
       loading: false
     }

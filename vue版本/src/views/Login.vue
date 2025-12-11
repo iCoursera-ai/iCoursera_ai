@@ -159,6 +159,9 @@ export default {
             sessionStorage.setItem('bgareaCurrentUser', JSON.stringify(user))
           }
           
+          // 发送登录状态变化事件
+          window.dispatchEvent(new CustomEvent('user-auth-change'))
+
           // 显示成功提示
           this.showToast('登录成功！', 'success')
 

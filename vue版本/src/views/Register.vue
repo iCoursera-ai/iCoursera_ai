@@ -233,6 +233,9 @@ export default {
             sessionStorage.setItem('bgareaCurrentUser', JSON.stringify(newUser))
           }
           
+          // 发送登录状态变化事件
+          window.dispatchEvent(new CustomEvent('user-auth-change'))
+
           // 清除之前的偏好设置记录，确保新用户需要设置偏好
           localStorage.removeItem('preferencesCompleted')
           localStorage.removeItem('preferencesSkipped')
