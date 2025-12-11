@@ -22,6 +22,10 @@
                 <i class="fa fa-circle-o text-xs sidebar-icon"></i>
                 <span class="sidebar-child-text">工作台</span>
               </div>
+              <div class="sidebar-child" @click="goToPage('/article-management')">
+                <i class="fa fa-file-text-o text-xs sidebar-icon"></i>
+                <span class="sidebar-child-text">稿件管理</span>
+              </div>
             </div>
           </div>
 
@@ -163,8 +167,8 @@
                 </div>
               </div>
               
-              <!-- 课程表格 -->
-              <div class="overflow-x-auto" v-if="filteredCourses.length > 0">
+              <!-- 收藏课程表格 -->
+              <div class="overflow-x-auto" v-if="filteredFavorites.length > 0">
                 <table class="w-full text-sm">
                   <thead>
                     <tr class="border-b border-gray-200">
@@ -177,7 +181,7 @@
                     </tr>
                   </thead>
                   <tbody>
-                    <tr v-for="course in filteredCourses" 
+                    <tr v-for="course in filteredFavorites" 
                         :key="course.id"
                         class="border-b border-gray-200 table-row-hover">
                       <td class="py-3 px-2 text-gray-500">{{ course.id }}</td>
@@ -191,7 +195,7 @@
                       <td class="py-3 px-2 text-gray-500">{{ course.collectedAt }}</td>
                       <td class="py-3 px-2">
                         <button class="text-primary hover:text-primary/80 text-sm" 
-                                @click="removeCourse(course.id)">
+                                @click="removeFavorite(course.id)">
                           取消收藏
                         </button>
                       </td>
@@ -209,29 +213,43 @@
                   <i class="fa fa-compass mr-2"></i>去首页看看
                 </button>
               </div>
-              
-              <!-- 分页区域 -->
-              <div v-if="filteredCourses.length > 0" class="flex justify-between items-center mt-6">
-                <div class="text-sm text-secondary">
-                  共 <span>{{ filteredCourses.length }}</span> 条收藏
-                </div>
-                <div class="flex items-center gap-2">
-                  <button class="w-8 h-8 flex items-center justify-center rounded border border-gray-200 text-secondary hover:border-primary hover:text-primary transition-colors"
-                          @click="prevPage">
-                    <i class="fa fa-angle-left"></i>
-                  </button>
-                  <button class="w-8 h-8 flex items-center justify-center rounded bg-primary text-white">1</button>
-                  <button class="w-8 h-8 flex items-center justify-center rounded border border-gray-200 text-secondary hover:border-primary hover:text-primary transition-colors"
-                          @click="nextPage">
-                    <i class="fa fa-angle-right"></i>
-                  </button>
-                </div>
-              </div>
             </div>
             
             <!-- 点赞页面 -->
             <div v-if="currentTab === 'likes'" class="space-y-4">
-              <div class="text-center py-12">
+              <!-- 点赞课程表格 -->
+              <div class="overflow-x-auto" v-if="likes.length > 0">
+                <table class="w-full text-sm">
+                  <thead>
+                    <tr class="border-b border-gray-200">
+                      <th class="text-left py-3 px-2 font-medium text-gray-500">课程ID</th>
+                      <th class="text-left py-3 px-2 font-medium text-gray-500">课程名称</th>
+                      <th class="text-left py-3 px-2 font-medium text-gray-500">授课教师</th>
+                      <th class="text-left py-3 px-2 font-medium text-gray-500">点赞时间</th>
+                      <th class="text-left py-3 px-2 font-medium text-gray-500">操作</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr v-for="like in likes" 
+                        :key="like.id"
+                        class="border-b border-gray-200 table-row-hover">
+                      <td class="py-3 px-2 text-gray-500">{{ like.courseId }}</td>
+                      <td class="py-3 px-2">{{ like.courseName }}</td>
+                      <td class="py-3 px-2">{{ like.teacher }}</td>
+                      <td class="py-3 px-2 text-gray-500">{{ like.likedAt }}</td>
+                      <td class="py-3 px-2">
+                        <button class="text-danger hover:text-danger/80 text-sm" 
+                                @click="removeLike(like.id)">
+                          取消点赞
+                        </button>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+              
+              <!-- 空状态 -->
+              <div v-else class="text-center py-12">
                 <i class="fa fa-thumbs-up text-4xl text-gray-300 mb-4"></i>
                 <h4 class="text-lg font-medium text-dark mb-2">您还没有点赞内容</h4>
                 <p class="text-secondary mb-6">去浏览课程，给喜欢的内容点赞吧！</p>
@@ -243,7 +261,40 @@
             
             <!-- 历史记录页面 -->
             <div v-if="currentTab === 'history'" class="space-y-4">
-              <div class="text-center py-12">
+              <!-- 历史记录列表 -->
+              <div class="space-y-3" v-if="history.length > 0">
+                <div v-for="record in history" 
+                     :key="record.id"
+                     class="bg-white border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
+                  <div class="flex items-start justify-between">
+                    <div class="flex items-start gap-3">
+                      <div class="w-10 h-10 flex items-center justify-center rounded-lg bg-primary/10">
+                        <i class="fa fa-play-circle text-primary"></i>
+                      </div>
+                      <div>
+                        <h4 class="font-medium text-dark mb-1">{{ record.courseName }}</h4>
+                        <p class="text-sm text-gray-500">观看时间: {{ record.watchedAt }}</p>
+                        <p class="text-sm text-gray-500 mt-1">
+                          观看进度: <span class="font-medium">{{ record.progress }}%</span>
+                        </p>
+                      </div>
+                    </div>
+                    <div class="flex gap-2">
+                      <button class="text-xs text-primary hover:text-primary/80 px-3 py-1 border border-primary rounded"
+                              @click="continueWatching(record.courseId)">
+                        继续观看
+                      </button>
+                      <button class="text-xs text-danger hover:text-danger/80" 
+                              @click="removeHistory(record.id)">
+                        删除
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              
+              <!-- 空状态 -->
+              <div v-else class="text-center py-12">
                 <i class="fa fa-history text-4xl text-gray-300 mb-4"></i>
                 <h4 class="text-lg font-medium text-dark mb-2">您还没有浏览历史</h4>
                 <p class="text-secondary mb-6">浏览课程后，这里会显示您的观看记录</p>
@@ -297,49 +348,10 @@ export default {
         { value: 'management', label: '项目管理' }
       ],
       
-      // 收藏的课程数据
-      courses: [
-        { 
-          id: 'CS202501', 
-          name: '计算机网络与通信', 
-          teacher: '徐冠雷', 
-          status: 'ongoing', 
-          collectedAt: '2025-11-28',
-          category: 'network'
-        },
-        { 
-          id: 'MG202501', 
-          name: '软件项目管理', 
-          teacher: '徐斌', 
-          status: 'ended', 
-          collectedAt: '2025-10-15',
-          category: 'management'
-        },
-        { 
-          id: 'LI202501', 
-          name: '中国现代文学', 
-          teacher: '张明', 
-          status: 'ongoing', 
-          collectedAt: '2025-11-05',
-          category: 'literature'
-        },
-        { 
-          id: 'AI202501', 
-          name: '机器学习基础', 
-          teacher: '李华', 
-          status: 'ongoing', 
-          collectedAt: '2025-11-12',
-          category: 'ai'
-        },
-        { 
-          id: 'NE202501', 
-          name: '网络安全技术', 
-          teacher: '王强', 
-          status: 'ended', 
-          collectedAt: '2025-09-30',
-          category: 'computer'
-        }
-      ],
+      // 从localStorage获取的数据
+      favorites: [],
+      likes: [],
+      history: [],
       
       // 页面配置
       pageConfig: {
@@ -383,18 +395,22 @@ export default {
       return this.pageConfig[this.currentTab]?.batchBtn || ''
     },
     
-    // 过滤后的课程
-    filteredCourses() {
+    // 过滤后的收藏课程
+    filteredFavorites() {
       if (this.selectedCategory === 'all') {
-        return this.courses
+        return this.favorites
       }
-      return this.courses.filter(course => course.category === this.selectedCategory)
+      return this.favorites.filter(course => course.category === this.selectedCategory)
     },
     
     // 是否有项目
     hasItems() {
       if (this.currentTab === 'collection') {
-        return this.filteredCourses.length > 0
+        return this.favorites.length > 0
+      } else if (this.currentTab === 'likes') {
+        return this.likes.length > 0
+      } else if (this.currentTab === 'history') {
+        return this.history.length > 0
       }
       return false
     }
@@ -409,8 +425,79 @@ export default {
       this.currentTab = targetTab
       this.updateSidebarActive()
     }
+    
+    // 加载用户数据
+    this.loadUserData()
+    
+    // 监听storage变化（当视频页面更新数据时）
+    window.addEventListener('storage', this.handleStorageChange)
+    
+    // 每30秒刷新一次数据
+    this.refreshInterval = setInterval(this.loadUserData, 30000)
+  },
+  beforeUnmount() {
+    // 移除事件监听器和定时器
+    window.removeEventListener('storage', this.handleStorageChange)
+    if (this.refreshInterval) {
+      clearInterval(this.refreshInterval)
+    }
   },
   methods: {
+    // 加载用户数据
+    loadUserData() {
+      try {
+        // 收藏数据
+        const favorites = JSON.parse(localStorage.getItem('userFavorites') || '[]')
+        this.favorites = favorites
+        
+        // 点赞数据
+        const likes = JSON.parse(localStorage.getItem('userLikes') || '[]')
+        this.likes = likes
+        
+        // 浏览历史数据
+        const history = JSON.parse(localStorage.getItem('userHistory') || '[]')
+        // 按观看时间倒序排列
+        this.history = history.sort((a, b) => new Date(b.watchedAt) - new Date(a.watchedAt))
+      } catch (error) {
+        console.error('加载用户数据失败:', error)
+        // 使用默认数据
+        this.favorites = this.getDefaultFavorites()
+        this.likes = []
+        this.history = []
+      }
+    },
+    
+    // 获取默认收藏数据
+    getDefaultFavorites() {
+      return [
+        { 
+          id: 'CS202501', 
+          name: '计算机网络与通信', 
+          teacher: '徐冠雷', 
+          status: 'ongoing', 
+          collectedAt: '2025-11-28',
+          category: 'network'
+        },
+        { 
+          id: 'MG202501', 
+          name: '软件项目管理', 
+          teacher: '徐斌', 
+          status: 'ended', 
+          collectedAt: '2025-10-15',
+          category: 'management'
+        }
+      ]
+    },
+    
+    // 处理storage变化
+    handleStorageChange(event) {
+      if (event.key === 'userFavorites' || 
+          event.key === 'userLikes' || 
+          event.key === 'userHistory') {
+        this.loadUserData()
+      }
+    },
+    
     // 侧边栏切换
     toggleSubmenu(submenu) {
       this.activeSubmenu = this.activeSubmenu === submenu ? null : submenu
@@ -472,12 +559,36 @@ export default {
       return texts[status] || status
     },
     
-    // 移除课程
-    removeCourse(id) {
+    // 移除收藏课程
+    removeFavorite(id) {
       if (confirm('确定要取消收藏吗？')) {
-        this.courses = this.courses.filter(course => course.id !== id)
+        this.favorites = this.favorites.filter(course => course.id !== id)
+        this.saveToLocalStorage('userFavorites', this.favorites)
         this.showToast('已取消收藏')
       }
+    },
+    
+    // 移除点赞
+    removeLike(id) {
+      if (confirm('确定要取消点赞吗？')) {
+        this.likes = this.likes.filter(like => like.id !== id)
+        this.saveToLocalStorage('userLikes', this.likes)
+        this.showToast('已取消点赞')
+      }
+    },
+    
+    // 移除历史记录
+    removeHistory(id) {
+      if (confirm('确定要删除这条历史记录吗？')) {
+        this.history = this.history.filter(record => record.id !== id)
+        this.saveToLocalStorage('userHistory', this.history)
+        this.showToast('已删除历史记录')
+      }
+    },
+    
+    // 继续观看
+    continueWatching(courseId) {
+      this.$router.push(`/course/${courseId}/player`)
     },
     
     // 批量操作
@@ -488,22 +599,33 @@ export default {
       if (confirm(`确定要${actionText}吗？`)) {
         if (this.currentTab === 'collection') {
           // 清空收藏
-          this.courses = []
+          this.favorites = []
+          this.saveToLocalStorage('userFavorites', this.favorites)
+          
+        } else if (this.currentTab === 'likes') {
+          // 清空点赞
+          this.likes = []
+          this.saveToLocalStorage('userLikes', this.likes)
+          
+        } else if (this.currentTab === 'history') {
+          // 清空历史记录
+          this.history = []
+          this.saveToLocalStorage('userHistory', this.history)
         }
         
         this.showToast(`${actionText}成功`)
       }
     },
     
-    // 分页
-    prevPage() {
-      console.log('上一页')
-      // 这里可以添加分页逻辑
-    },
-    
-    nextPage() {
-      console.log('下一页')
-      // 这里可以添加分页逻辑
+    // 保存数据到localStorage
+    saveToLocalStorage(key, data) {
+      localStorage.setItem(key, JSON.stringify(data))
+      
+      // 触发storage事件，让其他页面也能感知到变化
+      window.dispatchEvent(new StorageEvent('storage', {
+        key: key,
+        newValue: JSON.stringify(data)
+      }))
     },
     
     // 显示提示信息
@@ -543,6 +665,7 @@ export default {
 </script>
 
 <style scoped>
+/* 原有样式保持不变 */
 /* 侧边栏样式 */
 .sidebar-parent {
   @apply flex items-center justify-between px-4 py-3 text-gray-500 hover:bg-primary/5 hover:text-primary transition-all duration-200 cursor-pointer;

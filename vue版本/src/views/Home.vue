@@ -1,249 +1,205 @@
 <template>
-  <div class="min-h-screen flex flex-col">
+  <div class="min-h-screen flex flex-col bg-gray-100">
     <Header />
     
-    <!-- 分类导航栏 -->
-    <nav class="bg-white py-3 px-6 md:px-8 sticky top-[5rem] z-20 border-b border-gray-200">
-      <div class="container mx-auto overflow-x-auto hide-scrollbar">
-        <div class="flex items-center justify-center gap-4 text-sm whitespace-nowrap">
-          <a href="#" class="text-primary font-medium py-1 border-b-2 border-primary text-center w-20">推荐</a>
-          <a href="#" class="text-gray-500 hover:text-primary py-1 border-b-2 border-transparent hover:border-primary/30 transition-colors text-center w-20">编程开发</a>
-          <a href="#" class="text-gray-500 hover:text-primary py-1 border-b-2 border-transparent hover:border-primary/30 transition-colors text-center w-20">人工智能</a>
-          <a href="#" class="text-gray-500 hover:text-primary py-1 border-b-2 border-transparent hover:border-primary/30 transition-colors text-center w-20">数据科学</a>
-          <a href="#" class="text-gray-500 hover:text-primary py-1 border-b-2 border-transparent hover:border-primary/30 transition-colors text-center w-20">商业管理</a>
-          <a href="#" class="text-gray-500 hover:text-primary py-1 border-b-2 border-transparent hover:border-primary/30 transition-colors text-center w-20">设计创意</a>
-          <a href="#" class="text-gray-500 hover:text-primary py-1 border-b-2 border-transparent hover:border-primary/30 transition-colors text-center w-20">市场营销</a>
-          <a href="#" class="text-gray-500 hover:text-primary py-1 border-b-2 border-transparent hover:border-primary/30 transition-colors text-center w-20">语言学习</a>
-          <a href="#" class="text-gray-500 hover:text-primary py-1 border-b-2 border-transparent hover:border-primary/30 transition-colors text-center w-20">职业技能</a>
-          <a href="#" class="text-gray-500 hover:text-primary py-1 border-b-2 border-transparent hover:border-primary/30 transition-colors text-center w-20">考研考证</a>
-          <a href="#" class="text-gray-500 hover:text-primary py-1 border-b-2 border-transparent hover:border-primary/30 transition-colors text-center w-20">生活兴趣</a>
-          <a href="#" class="text-gray-500 hover:text-primary py-1 border-b-2 border-transparent hover:border-primary/30 transition-colors text-center w-20">职场提升</a>
-          <a href="#" class="text-gray-500 hover:text-primary py-1 border-b-2 border-transparent hover:border-primary/30 transition-colors text-center w-20">创业指导</a>
-          <a href="#" class="text-gray-500 hover:text-primary py-1 border-b-2 border-transparent hover:border-primary/30 transition-colors text-center w-20">教师成长</a>
-          <a href="#" class="text-gray-500 hover:text-primary py-1 border-b-2 border-transparent hover:border-primary/30 transition-colors text-center w-20">学生专区</a>
-          <a href="#" class="text-gray-500 hover:text-primary py-1 border-b-2 border-transparent hover:border-primary/30 transition-colors text-center w-20">更多 <i class="fa fa-angle-down text-xs"></i></a>
-          <span class="border-l border-gray-200 h-4 mx-2"></span>
-          <a href="#" class="text-gray-500 hover:text-primary py-1 border-b-2 border-transparent hover:border-primary/30 transition-colors text-center w-20">精品课程</a>
-          <a href="#" class="text-gray-500 hover:text-primary py-1 border-b-2 border-transparent hover:border-primary/30 transition-colors text-center w-20">学习路径</a>
-          <a href="#" class="text-gray-500 hover:text-primary py-1 border-b-2 border-transparent hover:border-primary/30 transition-colors text-center w-20">学习社区</a>
+    <!-- B站样式分类导航栏 -->
+    <nav class="bg-white py-4 px-6 sticky top-[5rem] z-20 border-b border-gray-200 shadow-sm">
+      <div class="max-w-7xl mx-auto">
+        <!-- 第一行分类 -->
+        <div class="grid grid-cols-8 gap-3 mb-3">
+          <a v-for="category in firstRowCategories" :key="category.id" 
+             :href="category.link || '#'" 
+             class="category-tag"
+             @click.prevent="goToCategory(category.id)">
+            {{ category.name }}
+          </a>
+        </div>
+        <!-- 第二行分类 -->
+        <div class="grid grid-cols-8 gap-3">
+          <a v-for="category in secondRowCategories" :key="category.id" 
+             :href="category.link || '#'" 
+             class="category-tag"
+             @click.prevent="goToCategory(category.id)">
+            {{ category.name }}
+          </a>
         </div>
       </div>
     </nav>
 
-    <main class="flex-1">
-      <!-- 第一区域：热门推荐 -->
-      <section class="bg-white p-6 md:p-8">
-        <div class="max-w-6xl mx-auto">
-          <div class="flex items-center gap-2 mb-6">
-            <div class="h-5 w-0.5 bg-primary"></div>
-            <h2 class="text-lg font-semibold text-dark">热门推荐</h2>
-          </div>
-
-          <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            <!-- 左侧主推荐课程 -->
-            <div class="lg:col-span-2 video-card-hover" @click="goToCourseDetail(mainCourse)">
-              <div class="relative rounded-lg overflow-hidden mb-4">
-                <img src="https://picsum.photos/800/450?random=1" alt="深度学习实战" class="w-full h-80 object-cover">
-                <span class="badge-hot">热门</span>
-                <span class="video-time">12:54:00</span>
-                <!-- 播放按钮 -->
-                <div class="absolute inset-0 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity duration-300 bg-black/20">
-                  <div class="w-16 h-16 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center">
-                    <i class="fa fa-play text-white text-xl"></i>
+    <main class="flex-1" ref="mainContent">
+      <!-- 主内容区域 -->
+      <div class="max-w-7xl mx-auto px-4 py-6">
+        <!-- 主推荐区域 -->
+        <div class="flex flex-col lg:flex-row gap-6 mb-8">
+          <!-- 左侧主推荐课程区块 - 宽度等于6个小视频宽度 -->
+          <div class="lg:w-[calc(75%-1rem)]">
+            <div class="relative rounded-lg overflow-hidden bg-white shadow-md">
+              <!-- 视频轮播 -->
+              <div class="relative" style="aspect-ratio: 16/9;">
+                <div class="absolute inset-0 overflow-hidden">
+                  <div ref="carouselTrack" class="flex transition-transform duration-500 ease-in-out h-full">
+                    <div v-for="(course, index) in mainCourses" :key="course.id" 
+                         class="w-full h-full flex-shrink-0 relative cursor-pointer"
+                         @click="goToCourseDetail(course)"
+                         :style="{ transform: `translateX(-${currentSlide * 100}%)` }">
+                      <img :src="course.image" :alt="course.title" class="w-full h-full object-cover">
+                      <!-- 视频信息遮罩 -->
+                      <div class="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-4">
+                        <h3 class="text-white text-xl font-semibold mb-2">{{ course.title }}</h3>
+                        <div class="flex items-center text-gray-300 text-sm">
+                          <span class="flex items-center mr-4">
+                            <i class="fa fa-play mr-1 text-xs"></i>
+                            {{ course.views }}
+                          </span>
+                          <span class="flex items-center mr-4">
+                            <i class="fa fa-comment mr-1 text-xs"></i>
+                            {{ course.comments }}
+                          </span>
+                          <span>{{ course.duration }}</span>
+                        </div>
+                      </div>
+                    </div>
                   </div>
                 </div>
-                <!-- 右上角小图标 -->
-                <div class="absolute top-2 right-2 text-gray-400 hover:text-primary cursor-pointer">
-                  <i class="fa fa-bookmark-o"></i>
-                </div>
-              </div>
-              <!-- 文字信息区域 -->
-              <div class="px-1">
-                <!-- 左右切换箭头 -->
-                <div class="flex justify-between items-center mb-3">
-                  <button class="w-8 h-8 rounded-full border border-gray-200 flex items-center justify-center text-gray-400 hover:border-primary hover:text-primary transition-colors">
-                    <i class="fa fa-angle-left"></i>
-                  </button>
-                  <button class="w-8 h-8 rounded-full border border-gray-200 flex items-center justify-center text-gray-400 hover:border-primary hover:text-primary transition-colors">
-                    <i class="fa fa-angle-right"></i>
+                
+                <!-- 轮播指示器 -->
+                <div class="absolute bottom-4 left-1/2 transform -translate-x-1/2 flex space-x-2">
+                  <button v-for="(_, index) in mainCourses" :key="index"
+                          @click.stop="goToSlide(index)"
+                          :class="[
+                            'w-2 h-2 rounded-full transition-all',
+                            currentSlide === index ? 'bg-white w-4' : 'bg-white/50'
+                          ]">
                   </button>
                 </div>
-                <!-- 课程标题 -->
-                <h3 class="text-xl font-semibold text-dark mb-2 hover:text-primary transition-colors">深度学习实战：从零搭建AI模型</h3>
-                <!-- 讲师信息 -->
-                <div class="text-sm text-gray-500 mb-3 flex items-center gap-2">
-                  <i class="fa fa-user text-gray-400"></i>
-                  <span>李明教授</span>
-                </div>
-                <!-- 课程描述 -->
-                <p class="text-sm text-gray-600 mb-4">
-                  本课程将带你从零开始学习深度学习，掌握TensorFlow和PyTorch框架，构建各种AI模型，包括图像识别、自然语言处理等实际应用案例。
-                </p>
-                <!-- 播放量和好评 -->
-                <div class="flex items-center gap-4 text-sm text-gray-500">
-                  <span class="flex items-center gap-1"><i class="fa fa-eye text-gray-400"></i> 25.6万播放</span>
-                  <span class="flex items-center gap-1"><i class="fa fa-thumbs-up text-gray-400"></i> 98%</span>
-                </div>
-              </div>
-            </div>
-
-            <!-- 右侧热门课程列表 -->
-            <div class="space-y-3 flex flex-col h-full">
-              <div v-for="course in hotCourses" :key="course.id" 
-                   class="flex gap-3 video-card-hover flex-shrink-0 h-24" 
-                   @click="goToCourseDetail(course)">
-                <div class="relative w-1/3 rounded-lg overflow-hidden flex-shrink-0">
-                  <img :src="course.image" :alt="course.title" class="w-full h-full object-cover">
-                  <span :class="course.badgeClass">{{ course.badgeText }}</span>
-                  <span class="video-time">{{ course.duration }}</span>
-                </div>
-                <div class="w-2/3 flex flex-col justify-center">
-                  <h4 class="text-sm font-medium text-dark line-clamp-1 hover:text-primary transition-colors">{{ course.title }}</h4>
-                  <div class="text-xs text-gray-500 mt-1 line-clamp-1">{{ course.teacher }} · {{ course.views }}</div>
-                  <div class="text-xs text-gray-400 mt-1 line-clamp-1">{{ course.date }} · {{ course.category }}</div>
-                </div>
+                
+                <!-- 左右切换按钮 -->
+                <button @click.stop="prevSlide" 
+                        class="absolute left-4 top-1/2 transform -translate-y-1/2 w-10 h-10 rounded-full bg-black/30 hover:bg-black/50 text-white flex items-center justify-center transition-all">
+                  <i class="fa fa-angle-left"></i>
+                </button>
+                <button @click.stop="nextSlide" 
+                        class="absolute right-4 top-1/2 transform -translate-y-1/2 w-10 h-10 rounded-full bg-black/30 hover:bg-black/50 text-white flex items-center justify-center transition-all">
+                  <i class="fa fa-angle-right"></i>
+                </button>
               </div>
             </div>
           </div>
-        </div>
-      </section>
 
-      <!-- 第二区域：推荐视频课程 + 权威师资团队 -->
-      <section class="bg-gray-50 p-6 md:p-8">
-        <div class="max-w-6xl mx-auto">
-          <!-- 推荐视频课程区域 -->
-          <div class="mb-12">
-            <div class="flex items-center justify-between mb-6">
-              <div class="flex items-center gap-2">
-                <div class="h-5 w-0.5 bg-primary"></div>
-                <h2 class="text-lg font-semibold text-dark">推荐视频课程</h2>
-              </div>
-              <div class="flex items-center gap-4 text-sm">
-                <div class="flex items-center gap-3">
-                  <a href="#" class="text-primary font-medium">最新</a>
-                  <a href="#" class="text-gray-500 hover:text-primary">热门</a>
-                  <a href="#" class="text-gray-500 hover:text-primary">更多 <i class="fa fa-angle-right"></i></a>
-                </div>
-              </div>
+          <!-- 右侧副推荐课程区块 - 宽度等于4个小视频宽度 -->
+          <div class="lg:w-[calc(25%-1rem)] relative">
+            <!-- 换一换按钮（在区块右侧边缘） -->
+            <div class="absolute -right-4 top-0 z-10">
+              <button @click="refreshRecommendations" 
+                      class="flex flex-col items-center justify-center w-10 h-20 bg-white rounded-l-lg shadow-md hover:shadow-lg transition-all group border border-gray-200 border-r-0 hover:border-primary/30">
+                <i class="fa fa-refresh text-gray-600 text-sm mb-1 group-hover:text-primary transition-colors"></i>
+                <span class="text-xs text-gray-600 group-hover:text-primary transition-colors">换一换</span>
+              </button>
             </div>
-
-            <!-- 课程卡片 -->
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-              <div v-for="course in recommendedCourses" :key="course.id" 
-                   class="video-card-hover" @click="goToCourseDetail(course)">
-                <div class="relative rounded-lg overflow-hidden mb-2">
-                  <img :src="course.image" :alt="course.title" class="w-full h-40 object-cover">
-                  <span :class="course.badgeClass">{{ course.badgeText }}</span>
-                  <span class="video-time">{{ course.duration }}</span>
-                  <div class="absolute inset-0 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity duration-300 bg-black/20">
+            
+            <!-- 2排2列布局 - 与无限推荐区块完全一致的样式 -->
+            <div class="grid grid-cols-2 gap-4 h-full">
+              <div v-for="course in sideCourses" :key="course.id" 
+                   class="bg-white rounded-lg overflow-hidden cursor-pointer hover:shadow-md transition-shadow group video-card" 
+                   @click="goToCourseDetail(course)">
+                <!-- 视频封面 - 与无限推荐区块相同大小 -->
+                <div class="relative" style="aspect-ratio: 16/9;">
+                  <img :src="course.image" :alt="course.title" 
+                       class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300">
+                  <span class="absolute bottom-2 right-2 bg-black/70 text-white text-xs px-1.5 py-0.5 rounded">
+                    {{ course.duration }}
+                  </span>
+                  <!-- 播放按钮 -->
+                  <div class="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 bg-black/20">
                     <div class="w-12 h-12 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center">
                       <i class="fa fa-play text-white text-lg"></i>
                     </div>
                   </div>
                 </div>
-                <h4 class="text-sm font-medium text-dark mb-1 line-clamp-1 hover:text-primary transition-colors">{{ course.title }}</h4>
-                <div class="text-xs text-gray-500 mb-1">{{ course.teacher }}</div>
-                <div class="flex justify-between items-center text-xs text-gray-400">
-                  <span>{{ course.views }}</span>
-                  <span>{{ course.date }}</span>
+                <!-- 视频信息 - 与无限推荐区块完全一致 -->
+                <div class="p-3">
+                  <h4 class="text-sm font-medium line-clamp-2 mb-2 group-hover:text-primary transition-colors">{{ course.title }}</h4>
+                  <div class="flex items-center justify-between text-xs text-gray-500 mb-1">
+                    <div class="flex items-center space-x-3">
+                      <span class="flex items-center">
+                        <i class="fa fa-play mr-1 text-xs"></i>
+                        {{ course.views }}
+                      </span>
+                      <span class="flex items-center">
+                        <i class="fa fa-comment mr-1 text-xs"></i>
+                        {{ course.comments }}
+                      </span>
+                    </div>
+                    <span>{{ course.timeAgo }}</span>
+                  </div>
+                  <div class="text-xs text-gray-400">{{ course.teacher }}</div>
                 </div>
               </div>
             </div>
           </div>
+        </div>
 
-          <!-- 权威师资团队区域 -->
-          <div class="w-full">
-            <!-- 标题区域 -->
-            <div class="text-center mb-8">
-              <h2 class="text-xl font-semibold text-dark mb-2">权威师资团队</h2>
-              <p class="text-sm text-gray-500 max-w-2xl mx-auto">汇聚全国顶尖名校知名教授，带你探索学科奥秘，提升专业素养。</p>
-            </div>
-
-            <!-- 师资列表容器 -->
-            <div class="relative">
-              <!-- 左右切换箭头 -->
-              <button class="absolute left-0 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-white border border-gray-200 flex items-center justify-center text-gray-500 hover:text-primary hover:border-primary z-10 shadow-sm">
-                <i class="fa fa-angle-left"></i>
-              </button>
-              <button class="absolute right-0 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-white border border-gray-200 flex items-center justify-center text-gray-500 hover:text-primary hover:border-primary z-10 shadow-sm">
-                <i class="fa fa-angle-right"></i>
-              </button>
-
-              <!-- 滚动容器 -->
-              <div class="flex justify-center overflow-x-auto hide-scrollbar pb-6">
-                <div class="flex items-center gap-10 min-w-max">
-                  <div v-for="teacher in teachers" :key="teacher.id" class="teacher-card">
-                    <div class="teacher-avatar-container">
-                      <img :src="teacher.image" :alt="teacher.name" class="w-full h-full object-cover">
-                    </div>
-                    <h4 class="text-base font-medium text-dark">{{ teacher.name }}</h4>
-                    <p class="text-sm text-gray-500 mt-1">{{ teacher.university }}</p>
-                    <p class="text-base text-primary mt-0.5">{{ teacher.major }}</p>
+        <!-- 无限视频推荐 -->
+        <div class="mb-8">
+          <!-- 视频网格 - 一行5个 -->
+          <div ref="videoGrid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+            <div v-for="course in videoCourses" :key="course.id" 
+                 class="bg-white rounded-lg overflow-hidden cursor-pointer hover:shadow-md transition-shadow group video-card"
+                 @click="goToCourseDetail(course)">
+              <!-- 视频封面 - 16:9比例 -->
+              <div class="relative" style="aspect-ratio: 16/9;">
+                <img :src="course.image" :alt="course.title" 
+                     class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300">
+                <span class="absolute bottom-2 right-2 bg-black/70 text-white text-xs px-1.5 py-0.5 rounded">
+                  {{ course.duration }}
+                </span>
+                <!-- 播放按钮 -->
+                <div class="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 bg-black/20">
+                  <div class="w-12 h-12 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center">
+                    <i class="fa fa-play text-white text-lg"></i>
                   </div>
                 </div>
               </div>
-            </div>
-
-            <!-- 查看全部按钮 -->
-            <div class="text-center mt-8">
-              <button @click="goToTeacherDashboard" class="inline-flex items-center gap-1 px-4 py-2 border border-primary text-primary rounded-md hover:bg-primary/5 transition-colors">
-                <span>查看全部师资</span>
-                <i class="fa fa-angle-right text-xs"></i>
-              </button>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <!-- 第三区域：热门热搜课程 + 注册横幅 + 页脚 -->
-      <section class="bg-white">
-        <!-- 热门热搜课程区域 -->
-        <div class="p-6 md:p-8">
-          <div class="max-w-6xl mx-auto">
-            <div class="flex items-center gap-2 mb-6">
-              <div class="h-5 w-0.5 bg-primary"></div>
-              <h2 class="text-lg font-semibold text-dark">热门热搜课程</h2>
-            </div>
-
-            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
-              <div v-for="course in hotSearchCourses" :key="course.id" 
-                   class="video-card-hover" @click="goToCourseDetail(course)">
-                <div class="relative rounded-lg overflow-hidden mb-2">
-                  <img :src="course.image" :alt="course.title" class="w-full h-24 object-cover">
-                  <span class="video-time">{{ course.duration }}</span>
+              <!-- 视频信息 -->
+              <div class="p-3">
+                <h4 class="text-sm font-medium line-clamp-2 mb-2 group-hover:text-primary transition-colors">{{ course.title }}</h4>
+                <div class="flex items-center justify-between text-xs text-gray-500 mb-1">
+                  <div class="flex items-center space-x-3">
+                    <span class="flex items-center">
+                      <i class="fa fa-play mr-1 text-xs"></i>
+                      {{ course.views }}
+                    </span>
+                    <span class="flex items-center">
+                      <i class="fa fa-comment mr-1 text-xs"></i>
+                      {{ course.comments }}
+                    </span>
+                  </div>
+                  <span>{{ course.timeAgo }}</span>
                 </div>
-                <h4 class="text-sm font-medium text-dark mb-1 line-clamp-1 hover:text-primary transition-colors">{{ course.title }}</h4>
-                <div class="text-xs text-gray-500 mb-1">{{ course.teacher }}</div>
-                <div class="flex justify-between items-center text-xs text-gray-400">
-                  <span>{{ course.views }}</span>
-                  <span>{{ course.rating }}</span>
-                </div>
+                <div class="text-xs text-gray-400">{{ course.teacher }}</div>
               </div>
             </div>
           </div>
-        </div>
-
-        <!-- 注册横幅 -->
-        <div class="w-full bg-gradient-to-r from-blue-900 to-purple-900 py-16 px-6 relative overflow-hidden">
-          <div class="max-w-4xl mx-auto bg-black/30 rounded-none p-10 shadow-2xl border border-white/10">
-            <div class="text-center">
-              <h3 class="text-2xl font-bold text-white mb-4">立即注册，开启学习之旅</h3>
-              <p class="text-base text-white/70 mb-8 max-w-2xl mx-auto">加入BGarea，立享优质教育资源，提升专业技能，实现职业发展目标。专属学习路径、权威师资指导、社区交流互动，助你快速成长。</p>
-              <div class="flex flex-wrap justify-center gap-6">
-                <button @click="goToRegister" class="px-8 py-3 bg-white text-primary font-semibold rounded-md hover:bg-white/90 transition-all duration-300 transform hover:scale-[1.02] active:scale-[0.98] shadow-lg">
-                  免费注册
-                </button>
-                <button @click="showMemberBenefits" class="px-8 py-3 bg-transparent border-2 border-white text-white font-semibold rounded-md hover:bg-white/10 transition-all duration-300">
-                  了解会员特权
-                </button>
-              </div>
+          
+          <!-- 加载提示 -->
+          <div v-if="loading" class="text-center py-8">
+            <div class="inline-flex items-center justify-center space-x-2">
+              <div class="w-3 h-3 bg-primary rounded-full animate-pulse"></div>
+              <div class="w-3 h-3 bg-primary rounded-full animate-pulse" style="animation-delay: 0.2s"></div>
+              <div class="w-3 h-3 bg-primary rounded-full animate-pulse" style="animation-delay: 0.4s"></div>
+            </div>
+            <div class="text-gray-500 text-sm mt-2">正在加载更多课程...</div>
+          </div>
+          
+          <!-- 底部提示 -->
+          <div v-if="!hasMore && videoCourses.length > 0" class="text-center py-12 text-gray-500 text-sm">
+            <div class="flex flex-col items-center">
+              <i class="fa fa-check-circle text-green-500 text-xl mb-3"></i>
+              <div>已经到底了，看看其他内容吧~</div>
             </div>
           </div>
-          <!-- 装饰性元素 -->
-          <div class="absolute top-1/4 left-10 w-20 h-20 bg-primary/20 rounded-full blur-2xl"></div>
-          <div class="absolute bottom-1/4 right-10 w-32 h-32 bg-purple-500/20 rounded-full blur-3xl"></div>
         </div>
-      </section>
+      </div>
     </main>
 
     <Footer />
@@ -262,301 +218,357 @@ export default {
   },
   data() {
     return {
-      // 主推课程数据
-      mainCourse: {
-        id: 1,
-        title: '深度学习实战：从零搭建AI模型',
-        teacher: '李明教授',
-        views: '25.6万播放',
-        rating: '98%'
-      },
-      // 热门课程数据
-      hotCourses: [
+      // B站样式分类（2x8格式）
+      firstRowCategories: [
+        { id: 1, name: '推荐', link: '#' },
+        { id: 2, name: '编程开发', link: '#' },
+        { id: 3, name: '人工智能', link: '#' },
+        { id: 4, name: '数据科学', link: '#' },
+        { id: 5, name: '商业管理', link: '#' },
+        { id: 6, name: '设计创意', link: '#' },
+        { id: 7, name: '市场营销', link: '#' },
+        { id: 8, name: '语言学习', link: '#' }
+      ],
+      secondRowCategories: [
+        { id: 9, name: '职业技能', link: '#' },
+        { id: 10, name: '考研考证', link: '#' },
+        { id: 11, name: '生活兴趣', link: '#' },
+        { id: 12, name: '职场提升', link: '#' },
+        { id: 13, name: '创业指导', link: '#' },
+        { id: 14, name: '教师成长', link: '#' },
+        { id: 15, name: '学生专区', link: '#' },
+        { id: 16, name: '更多分类', link: '#' }
+      ],
+      
+      // 轮播图相关
+      currentSlide: 0,
+      autoSlideInterval: null,
+      
+      // 主推荐课程（轮播）- 大小为6个小视频的宽度
+      mainCourses: [
         { 
           id: 1, 
-          title: 'Python数据分析实战', 
-          teacher: '陈老师', 
-          views: '12.3万播放', 
-          date: '2023-10-15', 
-          category: '数据分析', 
-          duration: '38:20', 
-          image: 'https://picsum.photos/200/120?random=2', 
-          badgeClass: 'badge-blue', 
-          badgeText: '新品' 
+          title: '深度学习实战：从零搭建AI模型', 
+          teacher: '李明教授', 
+          views: '25.6万播放', 
+          comments: '1.2万',
+          duration: '12:54:00', 
+          image: 'https://picsum.photos/1200/675?random=1'
         },
         { 
           id: 2, 
-          title: '金融投资策略分析', 
-          teacher: '王教授', 
-          views: '9.3万播放', 
-          date: '2023-09-28', 
-          category: '金融理财', 
-          duration: '45:15', 
-          image: 'https://picsum.photos/200/120?random=3', 
-          badgeClass: 'badge-green', 
-          badgeText: '精讲' 
+          title: 'Python数据分析实战：从入门到精通', 
+          teacher: '张老师', 
+          views: '18.3万播放', 
+          comments: '8.5千',
+          duration: '15:20:00', 
+          image: 'https://picsum.photos/1200/675?random=22'
         },
         { 
           id: 3, 
-          title: '现代医学前沿研究', 
-          teacher: '张医生', 
-          views: '7.5万播放', 
-          date: '2023-10-22', 
-          category: '医学健康', 
-          duration: '32:40', 
-          image: 'https://picsum.photos/200/120?random=4', 
-          badgeClass: 'badge-orange', 
-          badgeText: '新课' 
+          title: 'Web全栈开发：React + Node.js实战', 
+          teacher: '王工程师', 
+          views: '22.1万播放', 
+          comments: '1.5万',
+          duration: '20:10:00', 
+          image: 'https://picsum.photos/1200/675?random=23'
         },
         { 
           id: 4, 
-          title: '建筑设计创新思维', 
-          teacher: '刘芳教授', 
-          views: '6.2万播放', 
-          date: '2023-10-18', 
-          category: '建筑设计', 
-          duration: '38:10', 
-          image: 'https://picsum.photos/200/120?random=5', 
-          badgeClass: 'badge-blue', 
-          badgeText: '新品' 
-        },
-        { 
-          id: 5, 
-          title: '区块链技术与应用', 
-          teacher: '刘教授', 
-          views: '5.8万播放', 
-          date: '2023-10-10', 
-          category: '区块链', 
-          duration: '48:35', 
-          image: 'https://picsum.photos/200/120?random=6', 
-          badgeClass: 'badge-green', 
-          badgeText: '精讲' 
+          title: '机器学习算法精讲与实战', 
+          teacher: '陈教授', 
+          views: '30.5万播放', 
+          comments: '2.3万',
+          duration: '18:45:00', 
+          image: 'https://picsum.photos/1200/675?random=24'
         }
       ],
-      // 推荐课程数据
-      recommendedCourses: [
-        { 
-          id: 1, 
-          title: '人工智能基础：从原理到实践', 
-          teacher: '李明教授', 
-          views: '12.3万播放', 
-          date: '2023-10-10', 
-          duration: '48:25', 
-          image: 'https://picsum.photos/300/180?random=7', 
-          badgeClass: 'badge-blue', 
-          badgeText: '新品' 
-        },
-        { 
-          id: 2, 
-          title: '数据结构与算法：进阶与应用', 
-          teacher: '陈明教授', 
-          views: '8.9万播放', 
-          date: '2023-09-28', 
-          duration: '62:18', 
-          image: 'https://picsum.photos/300/180?random=8', 
-          badgeClass: 'badge-green', 
-          badgeText: '精讲' 
-        },
-        { 
-          id: 3, 
-          title: '财务管理：理论与实践', 
-          teacher: '王静教授', 
-          views: '5.6万播放', 
-          date: '2023-10-20', 
-          duration: '54:36', 
-          image: 'https://picsum.photos/300/180?random=9', 
-          badgeClass: 'badge-orange', 
-          badgeText: '新课' 
-        },
-        { 
-          id: 4, 
-          title: '医学基础知识精讲', 
-          teacher: '张伟教授', 
-          views: '7.8万播放', 
-          date: '2023-09-15', 
-          duration: '42:10', 
-          image: 'https://picsum.photos/300/180?random=10', 
-          badgeClass: 'badge-blue', 
-          badgeText: '新品' 
-        }
-      ],
-      // 师资数据
-      teachers: [
-        { id: 1, name: '李明教授', university: '北京大学', major: '计算机科学', image: 'https://picsum.photos/400/500?random=11' },
-        { id: 2, name: '王静教授', university: '清华大学', major: '经济学', image: 'https://picsum.photos/400/500?random=12' },
-        { id: 3, name: '张伟教授', university: '复旦大学', major: '医学', image: 'https://picsum.photos/400/500?random=13' },
-        { id: 4, name: '陈明教授', university: '上海交通大学', major: '机械工程', image: 'https://picsum.photos/400/500?random=14' },
-        { id: 5, name: '刘芳教授', university: '浙江大学', major: '建筑学', image: 'https://picsum.photos/400/500?random=15' }
-      ],
-      // 热搜课程数据
-      hotSearchCourses: [
-        { 
-          id: 1, 
-          title: 'Python编程从入门到精通', 
-          teacher: '李明教授', 
-          views: '12.3万播放', 
-          rating: '4.5分', 
-          duration: '40:20', 
-          image: 'https://picsum.photos/200/120?random=16' 
-        },
-        { 
-          id: 2, 
-          title: '机器学习实战：核心方法与应用', 
-          teacher: '李明教授', 
-          views: '8.9万播放', 
-          rating: '4.5分', 
-          duration: '60:25', 
-          image: 'https://picsum.photos/200/120?random=17' 
-        },
-        { 
-          id: 3, 
-          title: '金融投资学：投资与理财', 
-          teacher: '王静教授', 
-          views: '15.5万播放', 
-          rating: '4.3分', 
-          duration: '54:16', 
-          image: 'https://picsum.photos/200/120?random=18' 
-        },
-        { 
-          id: 4, 
-          title: '医学基础知识精讲', 
-          teacher: '张伟教授', 
-          views: '21.3万播放', 
-          rating: '4.5分', 
-          duration: '72:40', 
-          image: 'https://picsum.photos/200/120?random=19' 
-        },
+      
+      // 右侧副推荐课程（2排2列共4个）
+      sideCourses: [
         { 
           id: 5, 
-          title: '机械设计原理与应用', 
-          teacher: '陈明教授', 
-          views: '9.4万播放', 
-          rating: '4.5分', 
-          duration: '45:30', 
-          image: 'https://picsum.photos/200/120?random=20' 
+          title: 'Java核心技术精讲', 
+          teacher: '刘老师', 
+          views: '8.3万播放', 
+          comments: '3.2千',
+          duration: '45:20', 
+          timeAgo: '3天前',
+          image: 'https://picsum.photos/400/225?random=25' 
         },
         { 
           id: 6, 
-          title: '现代建筑设计与理论', 
-          teacher: '刘芳教授', 
+          title: '前端框架Vue3实战', 
+          teacher: '赵工程师', 
           views: '12.1万播放', 
-          rating: '4.7分', 
-          duration: '50:40', 
-          image: 'https://picsum.photos/200/120?random=21' 
+          comments: '5.6千',
+          duration: '38:45', 
+          timeAgo: '5天前',
+          image: 'https://picsum.photos/400/225?random=26' 
+        },
+        { 
+          id: 7, 
+          title: '数据结构与算法面试', 
+          teacher: '李教授', 
+          views: '15.8万播放', 
+          comments: '4.8千',
+          duration: '52:10', 
+          timeAgo: '1天前',
+          image: 'https://picsum.photos/400/225?random=27' 
+        },
+        { 
+          id: 8, 
+          title: 'Python自动化办公', 
+          teacher: '王老师', 
+          views: '9.6万播放', 
+          comments: '2.9千',
+          duration: '41:25', 
+          timeAgo: '2天前',
+          image: 'https://picsum.photos/400/225?random=28' 
         }
-      ]
+      ],
+      
+      // 视频推荐列表
+      videoCourses: [],
+      page: 1,
+      pageSize: 20,
+      hasMore: true,
+      loading: false,
+      isLoadingMore: false,
+      scrollObserver: null,
+      lastScrollPosition: 0,
+      loadingTriggered: false
     }
   },
   mounted() {
-    // 添加滚动效果
-    this.setupScrollEffects();
+    this.startAutoSlide();
+    this.loadVideos();
+    this.$nextTick(() => {
+      this.setupScrollObserver();
+    });
+  },
+  beforeUnmount() {
+    this.stopAutoSlide();
+    if (this.scrollObserver) {
+      this.scrollObserver.disconnect();
+    }
   },
   methods: {
-    // 修复的跳转方法：添加防御性编程
+    // 轮播图方法
+    startAutoSlide() {
+      this.autoSlideInterval = setInterval(() => {
+        this.nextSlide();
+      }, 5000);
+    },
+    
+    stopAutoSlide() {
+      if (this.autoSlideInterval) {
+        clearInterval(this.autoSlideInterval);
+        this.autoSlideInterval = null;
+      }
+    },
+    
+    nextSlide() {
+      this.currentSlide = (this.currentSlide + 1) % this.mainCourses.length;
+    },
+    
+    prevSlide() {
+      this.currentSlide = this.currentSlide === 0 ? this.mainCourses.length - 1 : this.currentSlide - 1;
+    },
+    
+    goToSlide(index) {
+      this.currentSlide = index;
+    },
+    
+    // 跳转到分类页面
+    goToCategory(categoryId) {
+      this.$router.push({
+        name: 'Category',
+        params: { categoryId: categoryId }
+      })
+    },
+    
+    // 跳转到课程详情
     goToCourseDetail(course) {
-      // 检查 course 是否存在
-      if (!course) {
-        console.warn('Course is undefined');
-        alert('课程信息加载失败，请稍后再试');
+      if (!course || !course.id) {
+        console.warn('课程信息不完整');
         return;
       }
       
-      // 检查是否有 id
-      if (!course.id) {
-        console.warn('Course missing id property', course);
-        alert('课程信息不完整');
-        // 可以给一个默认的 id 或跳转到列表页
-        this.$router.push('/');
-        return;
-      }
+      this.$router.push({
+        name: 'VideoPlayer',
+        params: { courseId: course.id }
+      });
+    },
+    
+    // 刷新推荐课程
+    refreshRecommendations() {
+      // 保存当前滚动位置
+      this.lastScrollPosition = window.scrollY;
       
-      // 跳转到课程详情页
-      this.$router.push(`/course/${course.id}`);
+      // 刷新右侧推荐课程
+      const newSideCourses = [...this.sideCourses];
+      for (let i = 0; i < newSideCourses.length; i++) {
+        const randomId = Date.now() + i;
+        newSideCourses[i].id = 1000 + i; // 避免ID冲突
+        newSideCourses[i].image = `https://picsum.photos/400/225?random=${randomId}`;
+        newSideCourses[i].title = this.getRandomTitle();
+        newSideCourses[i].views = `${(Math.random() * 30 + 5).toFixed(1)}万播放`;
+        newSideCourses[i].comments = `${Math.floor(Math.random() * 4000 + 1000)}`;
+        newSideCourses[i].timeAgo = `${Math.floor(Math.random() * 7 + 1)}天前`;
+      }
+      this.sideCourses = this.shuffleArray(newSideCourses);
+      
+      // 刷新主推荐的一个课程
+      const randomIndex = Math.floor(Math.random() * this.mainCourses.length);
+      this.mainCourses[randomIndex].image = `https://picsum.photos/1200/675?random=${Date.now()}`;
+      this.mainCourses[randomIndex].title = this.getRandomMainTitle();
+      
+      // 刷新视频推荐
+      this.page = 1;
+      this.hasMore = true;
+      this.loadVideos(true);
+      
+      // 使用更安全的消息提示方式
+      this.showMessage('推荐已刷新', 'success');
     },
     
-    // 跳转到教师管理后台
-    goToTeacherDashboard() {
-      this.$router.push('/teacher-dashboard');
+    // 获取随机标题
+    getRandomTitle() {
+      const titles = [
+        'Spring Boot企业级开发',
+        'React Hooks深度解析',
+        'TypeScript高级技巧',
+        'Docker容器化实践',
+        '微服务架构设计',
+        'Redis缓存优化',
+        'MySQL性能调优',
+        'Web安全攻防实战',
+        '小程序云开发',
+        'Flutter跨平台开发'
+      ];
+      return titles[Math.floor(Math.random() * titles.length)];
     },
     
-    // 跳转到注册页面
-    goToRegister() {
-      this.$router.push('/register');
+    getRandomMainTitle() {
+      const titles = [
+        '全栈工程师成长之路',
+        '人工智能算法实战',
+        '大数据处理与分析',
+        '云计算架构设计',
+        'DevOps实践指南'
+      ];
+      return titles[Math.floor(Math.random() * titles.length)];
     },
     
-    // 显示会员特权（临时实现）
-    showMemberBenefits() {
-      alert('会员特权页面开发中，敬请期待！\n\n会员特权包括：\n1. 无限制观看所有课程\n2. 专属学习路径\n3. 一对一导师辅导\n4. 优先参与线下活动\n5. 高清视频下载权限');
+    // 数组洗牌
+    shuffleArray(array) {
+      const newArray = [...array];
+      for (let i = newArray.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [newArray[i], newArray[j]] = [newArray[j], newArray[i]];
+      }
+      return newArray;
     },
     
-    // 其他页面跳转方法
-    goToLogin() {
-      this.$router.push('/login');
-    },
-    
-    goToPersonalInfo() {
-      this.$router.push('/personal-information');
-    },
-    
-    goToArticleManagement() {
-      this.$router.push('/article-management');
-    },
-    
-    setupScrollEffects() {
-      // 师资团队左右箭头滚动
-      const teacherContainer = document.querySelector('.overflow-x-auto');
-      if (teacherContainer) {
-        const leftBtn = teacherContainer.previousElementSibling;
-        const rightBtn = teacherContainer.nextElementSibling;
+    // 加载视频列表
+    async loadVideos(isRefresh = false) {
+      if ((this.loading && !isRefresh) || (!isRefresh && !this.hasMore)) return;
+      
+      this.loading = true;
+      
+      // 模拟API调用延迟
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      // 生成模拟数据
+      const newVideos = Array.from({ length: this.pageSize }, (_, index) => {
+        const baseId = (this.page - 1) * this.pageSize + index + (isRefresh ? 10000 : 1);
         
-        if (leftBtn && rightBtn) {
-          leftBtn.addEventListener('click', () => {
-            teacherContainer.scrollBy({ left: -300, behavior: 'smooth' });
-          });
-          
-          rightBtn.addEventListener('click', () => {
-            teacherContainer.scrollBy({ left: 300, behavior: 'smooth' });
-          });
-        }
+        return {
+          id: baseId,
+          title: this.getRandomTitle(),
+          teacher: ['张老师', '李教授', '王工程师', '刘老师', '陈教授'][Math.floor(Math.random() * 5)],
+          views: `${(Math.random() * 50 + 5).toFixed(1)}万播放`,
+          comments: `${Math.floor(Math.random() * 5000 + 1000)}`,
+          duration: `${Math.floor(Math.random() * 60 + 10)}:${Math.floor(Math.random() * 60).toString().padStart(2, '0')}`,
+          timeAgo: `${Math.floor(Math.random() * 30 + 1)}天前`,
+          image: `https://picsum.photos/400/225?random=${baseId}`
+        };
+      });
+      
+      if (this.page === 1 || isRefresh) {
+        this.videoCourses = newVideos;
+      } else {
+        this.videoCourses = [...this.videoCourses, ...newVideos];
       }
+      
+      // 模拟是否有更多数据
+      this.hasMore = this.page < 10;
+      this.loading = false;
+      this.loadingTriggered = false;
+      
+      // 如果是刷新操作，保持滚动位置
+      if (isRefresh) {
+        this.$nextTick(() => {
+          window.scrollTo(0, this.lastScrollPosition);
+        });
+      }
+    },
+    
+    // 设置滚动监听
+    setupScrollObserver() {
+      const options = {
+        root: null,
+        rootMargin: '200px', // 提前200px触发
+        threshold: 0.1
+      };
+      
+      this.scrollObserver = new IntersectionObserver((entries) => {
+        if (entries[0].isIntersecting && this.hasMore && !this.loading && !this.loadingTriggered) {
+          this.loadingTriggered = true;
+          this.page++;
+          this.loadVideos();
+        }
+      }, options);
+      
+      // 创建并观察底部哨兵元素
+      const sentinel = document.createElement('div');
+      sentinel.id = 'scroll-sentinel';
+      sentinel.className = 'h-1 w-full';
+      sentinel.style.cssText = 'opacity: 0; pointer-events: none;';
+      
+      this.$nextTick(() => {
+        const mainContent = this.$refs.mainContent;
+        if (mainContent) {
+          mainContent.appendChild(sentinel);
+          this.scrollObserver.observe(sentinel);
+        }
+      });
+    },
+    
+    // 显示消息提示
+    showMessage(text, type = 'success') {
+      // 可以使用UI库的消息提示，这里用简单的alert替代
+      alert(text);
     }
   }
 }
 </script>
 
 <style scoped>
-/* 引入Tailwind中的自定义工具类 */
+/* B站样式分类标签 */
+.category-tag {
+  @apply inline-flex items-center justify-center px-3 py-2 text-sm font-medium text-gray-800 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors cursor-pointer text-center;
+  min-height: 36px;
+}
+
+/* 隐藏滚动条 */
 .hide-scrollbar::-webkit-scrollbar {
   display: none;
 }
 .hide-scrollbar {
   -ms-overflow-style: none;
   scrollbar-width: none;
-}
-
-/* 视频卡片hover效果优化 */
-.video-card-hover img {
-  transition: transform 0.3s ease;
-}
-.video-card-hover:hover img {
-  transform: scale(1.03);
-}
-
-/* 确保分类导航栏文字居中且宽度一致 */
-.text-center.w-20 {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-}
-
-/* 注册横幅黑色区块阴影增强 */
-.bg-black\/30 {
-  background-color: rgba(0, 0, 0, 0.3);
-}
-
-/* 确保所有课程卡片都有手型光标 */
-.video-card-hover {
-  cursor: pointer;
 }
 
 /* 限制行数 */
@@ -573,31 +585,124 @@ export default {
   -webkit-line-clamp: 2;
 }
 
-/* 视频相关工具类 */
-.badge-hot {
-  @apply absolute top-2 left-2 bg-red-500 text-white text-xs px-2 py-0.5 rounded z-10;
-}
-.badge-blue {
-  @apply absolute top-2 left-2 bg-primary text-white text-xs px-2 py-0.5 rounded z-10;
-}
-.badge-green {
-  @apply absolute top-2 left-2 bg-success text-white text-xs px-2 py-0.5 rounded z-10;
-}
-.badge-orange {
-  @apply absolute top-2 left-2 bg-orange-500 text-white text-xs px-2 py-0.5 rounded z-10;
-}
-.video-time {
-  @apply absolute bottom-2 right-2 bg-black/70 text-white text-xs px-1.5 py-0.5 rounded z-10;
-}
-.video-card-hover {
-  @apply hover:shadow-md transition-shadow duration-200 cursor-pointer;
+/* 视频卡片统一样式 */
+.video-card {
+  /* 确保所有视频卡片样式完全一致 */
+  transition: all 0.3s ease;
 }
 
-/* 师资卡片样式 */
-.teacher-card {
-  @apply flex flex-col items-center text-center w-44 bg-white border border-transparent rounded-lg p-4 shadow-sm hover:shadow-md transition-all duration-300;
+/* 阴影效果 */
+.shadow-md {
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
 }
-.teacher-avatar-container {
-  @apply w-36 h-52 bg-gray-200 rounded-lg overflow-hidden mb-5;
+
+.shadow-sm {
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+}
+
+/* 换一换按钮样式 */
+.refresh-button {
+  transition: all 0.3s ease;
+}
+
+.refresh-button:hover {
+  transform: translateX(-2px);
+  box-shadow: 0 6px 12px -2px rgba(0, 0, 0, 0.1);
+}
+
+/* 响应式调整 */
+@media (max-width: 1024px) {
+  /* 在小屏幕上调整宽度 */
+  .lg\:w-\[calc\(75\%-1rem\)\], .lg\:w-\[calc\(25\%-1rem\)\] {
+    width: 100%;
+  }
+  
+  /* 在小屏幕上调整换一换按钮位置 */
+  .absolute.-right-4.top-0 {
+    position: relative;
+    right: 0;
+    top: 0;
+    margin-top: 1rem;
+    margin-bottom: 1rem;
+    display: flex;
+    justify-content: center;
+  }
+  
+  .absolute.-right-4.top-0 button {
+    border-radius: 0.5rem;
+    border: 1px solid #e5e7eb;
+    width: 80px;
+    height: 40px;
+    flex-direction: row;
+    gap: 0.5rem;
+  }
+  
+  /* 在小屏幕上调整右侧副推荐区块的布局 */
+  .lg\:w-\[calc\(25\%-1rem\)\] .grid-cols-2 {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+/* 视频卡片hover效果 */
+.group:hover .group-hover\:scale-105 {
+  transform: scale(1.05);
+}
+
+/* 播放按钮动画 */
+.group:hover .group-hover\:opacity-100 {
+  opacity: 1;
+}
+
+/* 文字颜色过渡 */
+.group:hover .group-hover\:text-primary {
+  color: var(--primary-color, #3b82f6);
+}
+
+/* 加载动画 */
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+.animate-pulse {
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
+/* 确保右侧副推荐区块与无限推荐区块的视频大小完全一致 */
+.lg\:w-\[calc\(25\%-1rem\)\] .video-card {
+  width: 100%;
+}
+
+.lg\:w-\[calc\(25\%-1rem\)\] .video-card > div:first-child {
+  aspect-ratio: 16/9;
+}
+
+.lg\:w-\[calc\(25\%-1rem\)\] .video-card .p-3 {
+  padding: 0.75rem;
+}
+
+/* 左侧主推荐区块宽度计算：6个小视频宽度 */
+.lg\:w-\[calc\(75\%-1rem\)\] {
+  width: calc(6 * (100% / 10) - 1rem); /* 6/10 = 60%，但为了匹配6个小视频，调整为75% */
+}
+
+/* 右侧副推荐区块宽度计算：4个小视频宽度 */
+.lg\:w-\[calc\(25\%-1rem\)\] {
+  width: calc(4 * (100% / 10) - 1rem); /* 4/10 = 40%，但为了匹配4个小视频，调整为25% */
+}
+
+/* 大屏幕上的精确布局 */
+@media (min-width: 1280px) {
+  .lg\:w-\[calc\(75\%-1rem\)\] {
+    width: calc(6 * (100% / 10) - 1rem);
+  }
+  
+  .lg\:w-\[calc\(25\%-1rem\)\] {
+    width: calc(4 * (100% / 10) - 1rem);
+  }
 }
 </style>

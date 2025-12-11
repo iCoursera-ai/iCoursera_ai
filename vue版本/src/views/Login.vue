@@ -61,28 +61,11 @@
                 <span v-else>登录账户</span>
               </button>
 
-              <div class="relative flex items-center my-4">
-                <div class="flex-grow border-t border-gray-200"></div>
-                <span class="flex-shrink mx-4 text-gray-400 text-sm">或者</span>
-                <div class="flex-grow border-t border-gray-200"></div>
-              </div>
-
-              <div class="grid grid-cols-2 gap-3">
-                <button type="button" @click="handleThirdPartyLogin('google')" class="social-btn">
-                  <i class="fa fa-google text-red-500"></i>
-                  <span>使用Google登录</span>
-                </button>
-                <button type="button" @click="handleThirdPartyLogin('wechat')" class="social-btn">
-                  <i class="fa fa-weixin text-green-500"></i>
-                  <span>使用微信登录</span>
-                </button>
+              <div class="text-center mt-6 text-sm">
+                <span class="text-secondary">还没有账户? </span>
+                <router-link to="/register" class="text-link font-medium">立即注册</router-link>
               </div>
             </form>
-
-            <div class="text-center mt-6 text-sm">
-              <span class="text-secondary">还没有账户? </span>
-              <router-link to="/register" class="text-link font-medium">立即注册</router-link>
-            </div>
           </div>
         </div>
 
@@ -204,10 +187,6 @@ export default {
       } finally {
         this.loading = false
       }
-    },
-    
-    handleThirdPartyLogin(provider) {
-      this.showToast(`${provider === 'google' ? 'Google' : '微信'}登录功能暂未开放`, 'error')
     },
     
     showToast(message, type = 'success') {

@@ -1,248 +1,358 @@
 <template>
-  <div class="min-h-screen flex flex-col bg-gray-50">
-    <!-- 使用Header组件 -->
+  <div class="font-inter bg-gray-50 min-h-screen flex flex-col">
     <Header />
     
-    <!-- 主内容容器 -->
-    <div class="flex-1 p-4 md:p-6">
-      <div class="max-w-7xl mx-auto">
-        <!-- 页面标题区域 -->
-        <div class="mb-6">
-          <h1 class="text-xl font-bold text-gray-800 mb-1">稿件管理</h1>
-          <p class="text-gray-500 text-sm">管理课程相关视频文件的上传、发布与下载操作</p>
-        </div>
-
-        <!-- 新增稿件区域 -->
-        <div class="bg-white rounded-lg p-4 mb-6">
-          <h2 class="text-base font-semibold text-gray-800 mb-4">新增稿件</h2>
-          <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <!-- 上传区域 -->
-            <div>
-              <label class="block text-sm font-medium text-gray-700 mb-2">选择课程</label>
-              <div 
-                @click="triggerFileInput"
-                @dragover.prevent="dragover = true"
-                @dragleave.prevent="dragover = false"
-                @drop.prevent="handleDrop"
-                :class="[
-                  'upload-area',
-                  dragover ? 'active' : '',
-                  uploadForm.previewImage ? 'has-preview' : ''
-                ]"
-              >
-                <div v-if="uploadForm.previewImage" class="mb-4">
-                  <img :src="uploadForm.previewImage" alt="预览图" class="w-32 h-32 object-cover rounded mx-auto">
-                </div>
-                <p class="text-gray-500 mb-2">{{ uploadForm.file ? uploadForm.file.name : '点击或拖拽图片文件到此处上传' }}</p>
-                <p class="text-xs text-gray-400 mb-4">支持png格式，单个文件不超过25MB</p>
-                <input 
-                  type="file" 
-                  ref="fileInput"
-                  @change="handleFileSelect"
-                  accept="image/png" 
-                  class="hidden"
-                >
-                <button class="px-3 py-1 bg-primary text-white rounded text-sm">选择文件</button>
+    <div class="flex flex-1">
+      <!-- 侧边栏导航 -->
+      <aside class="w-64 bg-white border-r border-gray-200 flex-shrink-0 h-[calc(100vh-5rem)] sticky top-[5rem] overflow-y-auto z-30">
+        <nav class="py-4 space-y-1">
+          <!-- 教师管理 -->
+          <div class="sidebar-group">
+            <div class="sidebar-parent active" @click="toggleSubmenu('dashboard')">
+              <div class="sidebar-parent-content">
+                <i class="fa fa-tachometer sidebar-icon"></i>
+                <span>教师管理</span>
+              </div>
+              <i class="fa fa-angle-right text-xs transition-transform duration-200"></i>
+            </div>
+            <div id="submenu-dashboard" class="bg-gray-50" :class="{'hidden': activeSubmenu !== 'dashboard'}">
+              <div class="sidebar-child" @click="goToTeacherDashboard">
+                <i class="fa fa-circle-o text-xs sidebar-icon"></i>
+                <span class="sidebar-child-text">工作台</span>
+              </div>
+              <div class="sidebar-child active" @click="goToPage('/article-management')">
+                <i class="fa fa-file-text-o text-xs sidebar-icon"></i>
+                <span class="sidebar-child-text">稿件管理</span>
               </div>
             </div>
-            
-            <!-- 课程简介 -->
-            <div>
-              <label class="block text-sm font-medium text-gray-700 mb-2">课程简介</label>
-              <textarea 
-                v-model="uploadForm.description" 
-                class="input-field h-32" 
-                placeholder="输入课程简介（将显示给学员）"
-              ></textarea>
+          </div>
+
+          <!-- 管理员管理 -->
+          <div class="sidebar-group">
+            <div class="sidebar-parent" @click="toggleSubmenu('admin')">
+              <div class="sidebar-parent-content">
+                <i class="fa fa-user-secret sidebar-icon"></i>
+                <span>管理员管理</span>
+              </div>
+              <i class="fa fa-angle-right text-xs transition-transform duration-200" :class="{'rotate-icon': activeSubmenu === 'admin'}"></i>
             </div>
-            
-            <!-- 课程信息 -->
-            <div>
-              <label class="block text-sm font-medium text-gray-700 mb-2">课程节数</label>
-              <input 
-                v-model="uploadForm.chapterCount" 
-                type="text" 
-                class="input-field mb-4" 
-                placeholder="输入章节数"
-              >
-              <input 
-                v-model="uploadForm.title" 
-                type="text" 
-                class="input-field mb-4" 
-                placeholder="输入课程标题（将显示给学员）"
-              >
-              <button 
-                @click="handleUpload"
-                :disabled="!canUpload"
-                :class="[
-                  'btn-primary w-full',
-                  !canUpload ? 'opacity-50 cursor-not-allowed' : ''
-                ]"
-              >
-                {{ uploading ? '上传中...' : '开始上传' }}
-              </button>
+            <div id="submenu-admin" class="bg-gray-50" :class="{'hidden': activeSubmenu !== 'admin'}">
+              <div class="sidebar-child" @click="goToCourseManagement">
+                <i class="fa fa-circle-o text-xs sidebar-icon"></i>
+                <span class="sidebar-child-text">课程管理</span>
+              </div>
+              <div class="sidebar-child" @click="goToUserManagement">
+                <i class="fa fa-circle-o text-xs sidebar-icon"></i>
+                <span class="sidebar-child-text">用户管理</span>
+              </div>
             </div>
           </div>
+             
+          <!-- 收藏管理 -->
+          <div class="sidebar-group">
+            <div class="sidebar-parent" @click="toggleSubmenu('favorites')">
+              <div class="sidebar-parent-content">
+                <i class="fa fa-heart sidebar-icon"></i>
+                <span>收藏管理</span>
+              </div>
+              <i class="fa fa-angle-right text-xs transition-transform duration-200" :class="{'rotate-icon': activeSubmenu === 'favorites'}"></i>
+            </div>
+            <div id="submenu-favorites" class="bg-gray-50" :class="{'hidden': activeSubmenu !== 'favorites'}">
+              <div class="sidebar-child" @click="goToFavorites('my-collection')">
+                <i class="fa fa-book text-xs sidebar-icon"></i>
+                <span class="sidebar-child-text">我的收藏</span>
+              </div>
+              <div class="sidebar-child" @click="goToFavorites('likes')">
+                <i class="fa fa-thumbs-up text-xs sidebar-icon"></i>
+                <span class="sidebar-child-text">点赞</span>
+              </div>
+              <div class="sidebar-child" @click="goToFavorites('history')">
+                <i class="fa fa-history text-xs sidebar-icon"></i>
+                <span class="sidebar-child-text">历史记录</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- 个人中心 -->
+          <div class="sidebar-group">
+            <div class="sidebar-parent" @click="toggleSubmenu('user-center')">
+              <div class="sidebar-parent-content">
+                <i class="fa fa-user-circle-o sidebar-icon"></i>
+                <span>个人中心</span>
+              </div>
+              <i class="fa fa-angle-right text-xs transition-transform duration-200" :class="{'rotate-icon': activeSubmenu === 'user-center'}"></i>
+            </div>
+            <div id="submenu-user-center" class="bg-gray-50" :class="{'hidden': activeSubmenu !== 'user-center'}">
+              <div 
+                class="sidebar-child" 
+                @click="goToPersonalCenter('user-info')"
+              >
+                <i class="fa fa-id-card-o text-xs sidebar-icon"></i>
+                <span class="sidebar-child-text">用户信息</span>
+              </div>
+              <div 
+                class="sidebar-child" 
+                @click="goToPersonalCenter('user-settings')"
+              >
+                <i class="fa fa-cog text-xs sidebar-icon"></i>
+                <span class="sidebar-child-text">用户设置</span>
+              </div>
+            </div>
+          </div>
+        </nav>
+      </aside>
+
+      <!-- 主内容区域 -->
+      <main class="flex-1 overflow-y-auto p-6" style="max-height: calc(100vh - 5rem);">
+        <!-- 面包屑导航 -->
+        <div class="text-sm text-secondary mb-6">
+          <span>用户中心</span>
+          <i class="fa fa-angle-right mx-1 text-gray-400"></i>
+          <span>教师管理</span>
+          <i class="fa fa-angle-right mx-1 text-gray-400"></i>
+          <span class="text-dark font-medium">稿件管理</span>
         </div>
 
-        <!-- 稿件管理列区域 -->
-        <div class="bg-white rounded-lg p-4">
-          <div class="flex justify-between items-center mb-4">
-            <h2 class="text-base font-semibold text-gray-800">稿件管理列</h2>
-            <div class="relative">
-              <input 
-                v-model="searchQuery" 
-                type="text" 
-                class="input-field w-48 pr-8 text-sm" 
-                placeholder="输入时间，课程名等"
-                @keyup.enter="handleSearch"
-              >
-              <button @click="handleSearch" class="absolute right-2 top-1/2 -translate-y-1/2 text-gray-500">
-                <i class="fa fa-search"></i>
-              </button>
+        <!-- 稿件管理内容 -->
+        <div class="space-y-6">
+          <!-- 页面标题区域 -->
+          <div class="mb-2">
+            <h1 class="text-xl font-bold text-gray-800 mb-1">稿件管理</h1>
+            <p class="text-gray-500 text-sm">管理课程相关视频文件的上传、发布与下载操作</p>
+          </div>
+
+          <!-- 新增稿件区域 -->
+          <div class="card p-4 card-shadow">
+            <h2 class="text-base font-semibold text-gray-800 mb-4">新增稿件</h2>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <!-- 上传区域 -->
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">选择课程</label>
+                <div 
+                  @click="triggerFileInput"
+                  @dragover.prevent="dragover = true"
+                  @dragleave.prevent="dragover = false"
+                  @drop.prevent="handleDrop"
+                  :class="[
+                    'upload-area',
+                    dragover ? 'active' : '',
+                    uploadForm.previewImage ? 'has-preview' : ''
+                  ]"
+                >
+                  <div v-if="uploadForm.previewImage" class="mb-4">
+                    <img :src="uploadForm.previewImage" alt="预览图" class="w-32 h-32 object-cover rounded mx-auto">
+                  </div>
+                  <p class="text-gray-500 mb-2">{{ uploadForm.file ? uploadForm.file.name : '点击或拖拽图片文件到此处上传' }}</p>
+                  <p class="text-xs text-gray-400 mb-4">支持png格式，单个文件不超过25MB</p>
+                  <input 
+                    type="file" 
+                    ref="fileInput"
+                    @change="handleFileSelect"
+                    accept="image/png" 
+                    class="hidden"
+                  >
+                  <button class="px-3 py-1 bg-primary text-white rounded text-sm">选择文件</button>
+                </div>
+              </div>
+              
+              <!-- 课程简介 -->
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">课程简介</label>
+                <textarea 
+                  v-model="uploadForm.description" 
+                  class="input-field h-32" 
+                  placeholder="输入课程简介（将显示给学员）"
+                ></textarea>
+              </div>
+              
+              <!-- 课程信息 -->
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">课程节数</label>
+                <input 
+                  v-model="uploadForm.chapterCount" 
+                  type="text" 
+                  class="input-field mb-4" 
+                  placeholder="输入章节数"
+                >
+                <input 
+                  v-model="uploadForm.title" 
+                  type="text" 
+                  class="input-field mb-4" 
+                  placeholder="输入课程标题（将显示给学员）"
+                >
+                <button 
+                  @click="handleUpload"
+                  :disabled="!canUpload"
+                  :class="[
+                    'btn-primary w-full',
+                    !canUpload ? 'opacity-50 cursor-not-allowed' : ''
+                  ]"
+                >
+                  {{ uploading ? '上传中...' : '开始上传' }}
+                </button>
+              </div>
             </div>
           </div>
 
-          <!-- 表格区域 -->
-          <div class="overflow-x-auto">
-            <table class="w-full text-sm">
-              <thead>
-                <tr class="border-b border-gray-200">
-                  <th class="text-left py-2 px-1 font-medium text-gray-700">预览图</th>
-                  <th class="text-left py-2 px-1 font-medium text-gray-700">文件信息</th>
-                  <th class="text-left py-2 px-1 font-medium text-gray-700">章节数</th>
-                  <th class="text-left py-2 px-1 font-medium text-gray-700">文件大小</th>
-                  <th class="text-left py-2 px-1 font-medium text-gray-700">上传时间</th>
-                  <th class="text-left py-2 px-1 font-medium text-gray-700">状态</th>
-                  <th class="text-left py-2 px-1 font-medium text-gray-700">操作</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr v-for="file in paginatedFiles" :key="file.id" class="border-b border-gray-200 hover:bg-gray-50">
-                  <!-- 预览图列 - 点击跳转到编辑界面 -->
-                  <td class="py-3 px-1">
-                    <div 
-                      class="w-8 h-8 bg-gray-200 rounded cursor-pointer hover:opacity-80 transition-opacity"
+          <!-- 稿件管理列区域 -->
+          <div class="card p-4 card-shadow">
+            <div class="flex justify-between items-center mb-4">
+              <h2 class="text-base font-semibold text-gray-800">稿件管理列</h2>
+              <div class="relative">
+                <input 
+                  v-model="searchQuery" 
+                  type="text" 
+                  class="input-field w-48 pr-8 text-sm" 
+                  placeholder="输入时间，课程名等"
+                  @keyup.enter="handleSearch"
+                >
+                <button @click="handleSearch" class="absolute right-2 top-1/2 -translate-y-1/2 text-gray-500">
+                  <i class="fa fa-search"></i>
+                </button>
+              </div>
+            </div>
+
+            <!-- 表格区域 -->
+            <div class="overflow-x-auto">
+              <table class="w-full text-sm">
+                <thead>
+                  <tr class="border-b border-gray-200">
+                    <th class="text-left py-2 px-1 font-medium text-gray-700">预览图</th>
+                    <th class="text-left py-2 px-1 font-medium text-gray-700">文件信息</th>
+                    <th class="text-left py-2 px-1 font-medium text-gray-700">章节数</th>
+                    <th class="text-left py-2 px-1 font-medium text-gray-700">文件大小</th>
+                    <th class="text-left py-2 px-1 font-medium text-gray-700">上传时间</th>
+                    <th class="text-left py-2 px-1 font-medium text-gray-700">状态</th>
+                    <th class="text-left py-2 px-1 font-medium text-gray-700">操作</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr v-for="file in paginatedFiles" :key="file.id" class="border-b border-gray-200 hover:bg-gray-50">
+                    <!-- 预览图列 - 点击跳转到编辑界面 -->
+                    <td class="py-3 px-1">
+                      <div 
+                        class="w-8 h-8 bg-gray-200 rounded cursor-pointer hover:opacity-80 transition-opacity"
+                        @click="goToVideoUpload(file.id)"
+                        title="点击编辑稿件"
+                      ></div>
+                    </td>
+                    
+                    <!-- 文件信息列 - 点击跳转到编辑界面 -->
+                    <td class="py-3 px-1">
+                      <div 
+                        class="cursor-pointer hover:text-primary transition-colors"
+                        @click="goToVideoUpload(file.id)"
+                      >
+                        <p class="font-medium text-gray-800">{{ file.title }}</p>
+                        <p class="text-xs text-gray-500">时长: {{ file.duration }}</p>
+                      </div>
+                    </td>
+                    
+                    <!-- 章节数列 - 点击跳转到编辑界面 -->
+                    <td 
+                      class="py-3 px-1 cursor-pointer hover:text-primary transition-colors"
                       @click="goToVideoUpload(file.id)"
                       title="点击编辑稿件"
-                    ></div>
-                  </td>
-                  
-                  <!-- 文件信息列 - 点击跳转到编辑界面 -->
-                  <td class="py-3 px-1">
-                    <div 
-                      class="cursor-pointer hover:text-primary transition-colors"
+                    >
+                      {{ file.chapter }}
+                    </td>
+                    
+                    <!-- 文件大小列 - 不点击 -->
+                    <td class="py-3 px-1">{{ file.size }}</td>
+                    
+                    <!-- 上传时间列 - 不点击 -->
+                    <td class="py-3 px-1">{{ file.time }}</td>
+                    
+                    <!-- 状态列 - 点击跳转到编辑界面 -->
+                    <td 
+                      class="py-3 px-1 cursor-pointer"
                       @click="goToVideoUpload(file.id)"
+                      title="点击编辑稿件"
                     >
-                      <p class="font-medium text-gray-800">{{ file.title }}</p>
-                      <p class="text-xs text-gray-500">时长: {{ file.duration }}</p>
-                    </div>
-                  </td>
-                  
-                  <!-- 章节数列 - 点击跳转到编辑界面 -->
-                  <td 
-                    class="py-3 px-1 cursor-pointer hover:text-primary transition-colors"
-                    @click="goToVideoUpload(file.id)"
-                    title="点击编辑稿件"
-                  >
-                    {{ file.chapter }}
-                  </td>
-                  
-                  <!-- 文件大小列 - 不点击 -->
-                  <td class="py-3 px-1">{{ file.size }}</td>
-                  
-                  <!-- 上传时间列 - 不点击 -->
-                  <td class="py-3 px-1">{{ file.time }}</td>
-                  
-                  <!-- 状态列 - 点击跳转到编辑界面 -->
-                  <td 
-                    class="py-3 px-1 cursor-pointer"
-                    @click="goToVideoUpload(file.id)"
-                    title="点击编辑稿件"
-                  >
-                    <span :class="getStatusBadgeClass(file.status)">
-                      {{ file.statusText }}
-                    </span>
-                  </td>
-                  
-                  <!-- 操作按钮列 -->
-                  <td class="py-3 px-1">
-                    <!-- 预览按钮 - 点击打开预览面板 -->
-                    <button 
-                      @click="previewFile(file)" 
-                      class="text-primary hover:underline mr-2"
-                      title="预览稿件详情"
-                    >
-                      预览
-                    </button>
-                    <template v-if="file.status === 'published'">
+                      <span :class="getStatusBadgeClass(file.status)">
+                        {{ file.statusText }}
+                      </span>
+                    </td>
+                    
+                    <!-- 操作按钮列 -->
+                    <td class="py-3 px-1">
+                      <!-- 预览按钮 - 点击打开预览面板 -->
                       <button 
-                        @click="downloadFile(file)" 
-                        class="text-red-500 hover:underline"
-                        title="下载文件"
+                        @click="previewFile(file)" 
+                        class="text-primary hover:underline mr-2"
+                        title="预览稿件详情"
                       >
-                        下载
+                        预览
                       </button>
-                    </template>
-                    <template v-else-if="file.status === 'draft'">
-                      <button 
-                        @click="publishFile(file)" 
-                        class="text-green-500 hover:underline"
-                        title="发布稿件"
-                      >
-                        发布
-                      </button>
-                    </template>
-                    <template v-else-if="file.status === 'pending'">
-                      <button 
-                        @click="cancelReview(file)" 
-                        class="text-gray-500 hover:underline"
-                        title="取消审核"
-                      >
-                        取消
-                      </button>
-                    </template>
-                    <template v-else-if="file.status === 'unpublished'">
-                      <button 
-                        @click="republishFile(file)" 
-                        class="text-blue-500 hover:underline mr-2"
-                        title="重新发布"
-                      >
-                        重新发布
-                      </button>
-                      <button 
-                        @click="deleteFile(file)" 
-                        class="text-red-500 hover:underline"
-                        title="删除稿件"
-                      >
-                        删除
-                      </button>
-                    </template>
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
+                      <template v-if="file.status === 'published'">
+                        <button 
+                          @click="downloadFile(file)" 
+                          class="text-red-500 hover:underline"
+                          title="下载文件"
+                        >
+                          下载
+                        </button>
+                      </template>
+                      <template v-else-if="file.status === 'draft'">
+                        <button 
+                          @click="publishFile(file)" 
+                          class="text-green-500 hover:underline"
+                          title="发布稿件"
+                        >
+                          发布
+                        </button>
+                      </template>
+                      <template v-else-if="file.status === 'pending'">
+                        <button 
+                          @click="cancelReview(file)" 
+                          class="text-gray-500 hover:underline"
+                          title="取消审核"
+                        >
+                          取消
+                        </button>
+                      </template>
+                      <template v-else-if="file.status === 'unpublished'">
+                        <button 
+                          @click="republishFile(file)" 
+                          class="text-blue-500 hover:underline mr-2"
+                          title="重新发布"
+                        >
+                          重新发布
+                        </button>
+                        <button 
+                          @click="deleteFile(file)" 
+                          class="text-red-500 hover:underline"
+                          title="删除稿件"
+                        >
+                          删除
+                        </button>
+                      </template>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
 
-          <!-- 分页区域 -->
-          <div class="flex justify-between items-center mt-4 text-sm">
-            <p class="text-gray-500">显示{{ startIndex + 1 }}至{{ endIndex }}条，共{{ filteredFiles.length }}条</p>
-            <div class="flex gap-1">
-              <button 
-                v-for="page in totalPages" 
-                :key="page"
-                @click="goToPage(page)"
-                :class="[
-                  'page-btn w-6 h-6 flex items-center justify-center rounded',
-                  currentPage === page ? 'bg-primary text-white' : 'hover:bg-gray-200'
-                ]"
-              >
-                {{ page }}
-              </button>
+            <!-- 分页区域 -->
+            <div class="flex justify-between items-center mt-4 text-sm">
+              <p class="text-gray-500">显示{{ startIndex + 1 }}至{{ endIndex }}条，共{{ filteredFiles.length }}条</p>
+              <div class="flex gap-1">
+                <button 
+                  v-for="page in totalPages" 
+                  :key="page"
+                  @click="goToPage(page)"
+                  :class="[
+                    'page-btn w-6 h-6 flex items-center justify-center rounded',
+                    currentPage === page ? 'bg-primary text-white' : 'hover:bg-gray-200'
+                  ]"
+                >
+                  {{ page }}
+                </button>
+              </div>
             </div>
           </div>
         </div>
-      </div>
+      </main>
     </div>
 
     <!-- 文件详情预览区域 -->
@@ -346,7 +456,6 @@
       <span>{{ toastMessage }}</span>
     </div>
 
-    <!-- 使用Footer组件 -->
     <Footer />
   </div>
 </template>
@@ -363,6 +472,7 @@ export default {
   },
   data() {
     return {
+      activeSubmenu: 'dashboard',
       currentUser: null,
       // 文件数据
       fileData: [
@@ -550,6 +660,57 @@ export default {
     this.checkLoginStatus()
   },
   methods: {
+    // 侧边栏导航方法
+    toggleSubmenu(submenu) {
+      this.activeSubmenu = this.activeSubmenu === submenu ? null : submenu
+    },
+
+    goToPage(path) {
+      this.$router.push(path)
+    },
+
+    goToTeacherDashboard() {
+      this.$router.push('/teacher-dashboard')
+    },
+
+    
+    goToFavorites(tab) {
+      this.$router.push({
+        path: '/favorites-management',
+        query: { tab }
+      })
+    },
+
+    goToPersonalCenter(page = 'user-info') {
+      this.$router.push({ 
+        path: '/personal-information',
+        query: { page }
+      })
+    },
+
+    goToVideoAnalysis(videoId) {
+      this.$router.push({ 
+        path: '/video-analysis',
+        query: { videoId }
+      })
+    },
+
+    goToWorkEngine() {
+      this.$router.push('/work-engine')
+    },
+    
+    goToCourseManagement() {
+      this.$router.push('/course-management')
+    },
+    
+    goToUserManagement() {
+      this.$router.push('/user-management')
+    },
+
+    goToTeacherDashboard() {
+    this.$router.push('/teacher-dashboard')
+    },
+    
     // 检查登录状态
     checkLoginStatus() {
       const user = localStorage.getItem('bgareaCurrentUser') || sessionStorage.getItem('bgareaCurrentUser')
@@ -805,7 +966,46 @@ export default {
 </script>
 
 <style scoped>
-/* 继承HTML文件中的样式 */
+/* 侧边栏样式 */
+.sidebar-parent {
+  @apply flex items-center justify-between px-4 py-3 text-gray-500 hover:bg-primary/5 hover:text-primary transition-all duration-200 cursor-pointer;
+}
+.sidebar-parent.active {
+  @apply bg-primary/10 text-primary font-medium;
+}
+.sidebar-parent-content {
+  @apply flex items-center gap-2;
+}
+.sidebar-child {
+  @apply flex items-center px-6 py-2 text-gray-500 hover:bg-primary/5 hover:text-primary transition-all duration-200 cursor-pointer text-sm;
+}
+.sidebar-child.active {
+  @apply bg-primary/10 text-primary font-medium;
+}
+.sidebar-child-text {
+  @apply ml-3;
+}
+.sidebar-icon {
+  @apply w-4 text-center;
+}
+.rotate-icon {
+  @apply transform transition-transform duration-200 rotate-90;
+}
+
+/* 卡片样式 */
+.card {
+  @apply bg-white rounded-lg border border-gray-200 shadow-sm;
+}
+.card-shadow {
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.02);
+}
+
+/* 链接样式 */
+.text-link {
+  @apply text-primary hover:text-primary/80 transition-colors duration-200 cursor-pointer;
+}
+
+/* 稿件管理样式 */
 .btn-primary {
   @apply bg-primary hover:bg-primary/90 text-white font-medium py-2.5 rounded-md transition-all duration-200;
 }

@@ -16,9 +16,13 @@
               <i class="fa fa-angle-right text-xs transition-transform duration-200"></i>
             </div>
             <div id="submenu-dashboard" class="bg-gray-50" :class="{'hidden': activeSubmenu !== 'dashboard'}">
-              <div class="sidebar-child active">
+              <div class="sidebar-child">
                 <i class="fa fa-circle-o text-xs sidebar-icon"></i>
                 <span class="sidebar-child-text">工作台</span>
+              </div>
+              <div class="sidebar-child" @click="goToPage('/article-management')">
+                <i class="fa fa-file-text-o text-xs sidebar-icon"></i>
+                <span class="sidebar-child-text">稿件管理</span>
               </div>
             </div>
           </div>
@@ -894,6 +898,10 @@ export default {
     
     goToUserManagement() {
       this.$router.push('/user-management')
+    },
+
+    goToPage(path) {
+      this.$router.push(path)
     },
 
     loadUserData() {

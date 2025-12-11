@@ -224,9 +224,28 @@
                                 :class="option.correct ? 'bg-success/10 text-success' : 'bg-gray-100 text-gray-500'">
                             {{ option.letter }}
                           </span>
-                          <div>
-                            <span>{{ option.text }}</span>
-                            <span v-if="option.correct" class="ml-2 text-xs text-success bg-success/10 px-1.5 py-0.25 rounded">正确答案</span>
+                          <div class="flex-1">
+                            <div class="flex justify-between items-start">
+                              <div>
+                                <span>{{ option.text }}</span>
+                                <span v-if="option.correct" class="ml-2 text-xs text-success bg-success/10 px-1.5 py-0.25 rounded">正确答案</span>
+                              </div>
+                              <span class="text-xs font-medium ml-2"
+                                    :class="option.correct ? 'text-success' : 'text-secondary'">
+                                {{ option.percentage }}
+                              </span>
+                            </div>
+                            <!-- 人数比例进度条 -->
+                            <div class="mt-1 w-full bg-gray-200 rounded-full h-1.5">
+                              <div class="h-1.5 rounded-full"
+                                   :class="option.correct ? 'bg-success' : 'bg-primary'"
+                                   :style="`width: ${option.percentageValue}%`"></div>
+                            </div>
+                            <!-- 详细人数信息 -->
+                            <div class="flex justify-between mt-1">
+                              <span class="text-xs text-gray-500">选择人数: {{ option.peopleCount }}</span>
+                              <span class="text-xs text-gray-500">占总人数: {{ option.percentage }}</span>
+                            </div>
                           </div>
                         </div>
                       </div>
@@ -349,20 +368,84 @@ export default {
           id: 1,
           title: '(2分) 计算机之父是指：',
           options: [
-            { id: 1, letter: 'A', text: '艾伦·图灵', correct: true },
-            { id: 2, letter: 'B', text: '赫尔曼·豪瑟', correct: false },
-            { id: 3, letter: 'C', text: '蒂姆·伯纳斯-李', correct: false },
-            { id: 4, letter: 'D', text: '马克·安德森', correct: false }
+            { 
+              id: 1, 
+              letter: 'A', 
+              text: '艾伦·图灵', 
+              correct: true,
+              percentage: '65%',
+              percentageValue: 65,
+              peopleCount: '8,168人'
+            },
+            { 
+              id: 2, 
+              letter: 'B', 
+              text: '赫尔曼·豪瑟', 
+              correct: false,
+              percentage: '12%',
+              percentageValue: 12,
+              peopleCount: '1,508人'
+            },
+            { 
+              id: 3, 
+              letter: 'C', 
+              text: '蒂姆·伯纳斯-李', 
+              correct: false,
+              percentage: '18%',
+              percentageValue: 18,
+              peopleCount: '2,262人'
+            },
+            { 
+              id: 4, 
+              letter: 'D', 
+              text: '马克·安德森', 
+              correct: false,
+              percentage: '5%',
+              percentageValue: 5,
+              peopleCount: '628人'
+            }
           ]
         },
         {
           id: 2,
           title: '(2分) 下列属于比较新的人工智能的研究方向：',
           options: [
-            { id: 5, letter: 'A', text: '人工神经元网络', correct: false },
-            { id: 6, letter: 'B', text: '类脑人工智能', correct: true },
-            { id: 7, letter: 'C', text: '深度学习', correct: false },
-            { id: 8, letter: 'D', text: '贝叶斯网络', correct: false }
+            { 
+              id: 5, 
+              letter: 'A', 
+              text: '人工神经元网络', 
+              correct: false,
+              percentage: '28%',
+              percentageValue: 28,
+              peopleCount: '3,519人'
+            },
+            { 
+              id: 6, 
+              letter: 'B', 
+              text: '类脑人工智能', 
+              correct: true,
+              percentage: '45%',
+              percentageValue: 45,
+              peopleCount: '5,655人'
+            },
+            { 
+              id: 7, 
+              letter: 'C', 
+              text: '深度学习', 
+              correct: false,
+              percentage: '22%',
+              percentageValue: 22,
+              peopleCount: '2,765人'
+            },
+            { 
+              id: 8, 
+              letter: 'D', 
+              text: '贝叶斯网络', 
+              correct: false,
+              percentage: '5%',
+              percentageValue: 5,
+              peopleCount: '629人'
+            }
           ]
         }
       ],
@@ -426,7 +509,6 @@ export default {
     
     toggleOtherSection(sectionId) {
       this.openSections[sectionId] = !this.openSections[sectionId]
-      this.$set(this.openSections, sectionId, this.openSections[sectionId])
     },
     
     goToDashboard() {
@@ -579,7 +661,7 @@ export default {
   @apply font-medium text-dark mb-3 flex items-center gap-2;
 }
 .option-item {
-  @apply pl-6 py-2 hover:bg-gray-50 transition-colors cursor-pointer;
+  @apply pl-6 py-3 hover:bg-gray-50 transition-colors cursor-pointer border-b border-gray-100 last:border-b-0;
 }
 .option-item.correct {
   @apply bg-success/5 border-l-4 border-success pl-4;

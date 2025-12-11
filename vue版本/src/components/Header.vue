@@ -9,36 +9,28 @@
         <span class="text-lg font-semibold text-dark">BGarea</span>
       </div>
 
-      <!-- 中间导航按钮区域 -->
-      <div class="hidden md:flex items-center gap-6">
-        <button @click="$router.push('/')" class="text-black hover:text-primary text-sm font-medium transition-colors duration-200 flex items-center gap-1">
-          首页
-        </button>
-        <button @click="$router.push('/personal-info')" class="text-black hover:text-primary text-sm font-medium transition-colors duration-200 flex items-center gap-1">
-          用户中心
-        </button>
-        <button @click="$router.push('/login')" class="text-black hover:text-primary text-sm font-medium transition-colors duration-200 flex items-center gap-1">
-          登录界面
-        </button>
-        <button @click="$router.push('/article-management')" class="text-black hover:text-primary text-sm font-medium transition-colors duration-200 flex items-center gap-1">
-          稿件管理界面
-        </button>
-      </div>
-
-      <!-- 右侧用户操作区域 -->
-      <div class="flex items-center gap-4">
-        <!-- 搜索框 -->
-        <div class="relative hidden md:block">
+      <!-- 中间搜索框区域 -->
+      <div class="flex-1 mx-6 md:mx-10 lg:mx-16">
+        <div class="relative max-w-2xl mx-auto">
           <input 
             type="text" 
             v-model="searchQuery"
             placeholder="搜索课程、讲师..." 
-            class="w-48 px-4 py-2 pl-10 rounded-md border border-gray-300 focus:border-primary focus:ring-1 focus:ring-primary focus:outline-none transition-all duration-200 text-sm"
+            class="w-full px-4 py-2.5 pl-4 pr-12 rounded-md border-none bg-gray-100 hover:bg-gray-200 focus:bg-white focus:outline-none transition-all duration-200 text-sm"
             @keypress.enter="handleSearch"
           >
-          <i class="fa fa-search absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
+          <!-- 搜索按钮（右侧） -->
+          <button 
+            @click="handleSearch"
+            class="absolute right-0 top-0 h-full w-10 flex items-center justify-center text-gray-500 hover:text-primary transition-colors"
+          >
+            <i class="fa fa-search"></i>
+          </button>
         </div>
-        
+      </div>
+
+      <!-- 右侧用户操作区域 -->
+      <div class="flex items-center gap-4">
         <!-- 移动端搜索按钮 -->
         <button @click="showMobileSearch = !showMobileSearch" class="md:hidden text-secondary hover:text-primary text-sm font-medium transition-colors duration-200 flex items-center gap-1">
           <i class="fa fa-search"></i>
@@ -75,11 +67,18 @@
           type="text" 
           v-model="mobileSearchQuery"
           placeholder="搜索课程、讲师..." 
-          class="w-full px-4 py-2 pl-10 rounded-md border border-gray-300 focus:border-primary focus:ring-1 focus:ring-primary focus:outline-none transition-all duration-200 text-sm"
+          class="w-full px-4 py-3 pl-4 pr-12 rounded-md border-none bg-gray-100 hover:bg-gray-200 focus:bg-white focus:outline-none transition-all duration-200 text-sm"
           @keypress.enter="handleMobileSearch"
         >
-        <i class="fa fa-search absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
-        <button @click="showMobileSearch = false" class="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-primary">
+        <!-- 移动端搜索按钮（右侧） -->
+        <button 
+          @click="handleMobileSearch"
+          class="absolute right-0 top-0 h-full w-8 flex items-center justify-center text-gray-500 hover:text-primary transition-colors"
+        >
+          <i class="fa fa-search"></i>
+        </button>
+        <!-- 移动端关闭按钮 -->
+        <button @click="showMobileSearch = false" class="absolute right-12 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-primary">
           <i class="fa fa-times"></i>
         </button>
       </div>
@@ -195,5 +194,22 @@ export default {
 /* 确保下拉菜单有足够的空间 */
 .absolute {
   min-width: 160px;
+}
+
+/* 搜索框样式优化 */
+input::placeholder {
+  color: #9CA3AF;
+}
+
+/* 移除所有蓝色边框效果 */
+input:focus {
+  --tw-ring-offset-shadow: none;
+  --tw-ring-shadow: none;
+  box-shadow: none;
+}
+
+/* 搜索按钮样式优化 */
+button[class*="absolute"]:hover {
+  background-color: transparent;
 }
 </style>

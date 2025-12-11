@@ -70,11 +70,6 @@ const routes = [
     component: () => import('../views/TeacherDashboard.vue')
   },
   {
-    path: '/course/:id',
-    name: 'CourseDetail',
-    component: () => import('../views/CourseDetail.vue')
-  },
-  {
     path: '/search',
     name: 'Search',
     component: () => import('../views/SearchPage.vue')
@@ -86,6 +81,15 @@ const routes = [
     props: route => ({
       courseId: parseInt(route.params.courseId)
     })
+  },
+  {
+  path: '/course/:courseId/exercise/:seriesId',
+  name: 'ExerciseSeries',
+  component: () => import('../views/ExerciseSeries.vue'),
+  props: route => ({
+    courseId: parseInt(route.params.courseId),
+    seriesId: route.params.seriesId
+  })
   },
   {
     path: '/video-upload',
@@ -101,6 +105,12 @@ const routes = [
       requiresAuth: true,
       newUserOnly: true // 只有新用户需要访问
     }
+  },
+  {
+  path: '/category/:categoryId?',
+  name: 'Category',
+  component: () => import('../views/Category.vue'),
+  props: true
   }
 ]
 

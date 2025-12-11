@@ -68,21 +68,6 @@
               </div>
 
               <div>
-                <label for="verifyCode" class="block text-sm font-medium text-gray-700 mb-1">验证码</label>
-                <div class="flex gap-2">
-                  <input type="text" id="verifyCode" v-model="form.verifyCode"
-                         :class="['input-field flex-grow', errors.verifyCode ? 'input-error' : '']" 
-                         placeholder="请输入验证码">
-                  <button type="button" @click="getVerifyCode" 
-                          :disabled="countdown > 0" 
-                          :class="['btn-primary whitespace-nowrap px-4', countdown > 0 ? 'btn-disabled' : '']">
-                    {{ countdown > 0 ? `${countdown}秒后重新获取` : '获取验证码' }}
-                  </button>
-                </div>
-                <p v-if="errors.verifyCode" class="text-xs text-red-500 mt-1">{{ errors.verifyCode }}</p>
-              </div>
-
-              <div>
                 <label for="password" class="block text-sm font-medium text-gray-700 mb-1">设置密码</label>
                 <div class="relative">
                   <input :type="showPassword ? 'text' : 'password'" id="password" v-model="form.password"
@@ -118,24 +103,6 @@
                 </span>
                 <span v-else>注册账户</span>
               </button>
-
-              <div class="relative flex items-center my-4">
-                <div class="flex-grow border-t border-gray-200"></div>
-                <span class="flex-shrink mx-4 text-gray-400 text-sm">或者</span>
-                <div class="flex-grow border-t border-gray-200"></div>
-              </div>
-
-              <div class="grid grid-cols-3 gap-2">
-                <button type="button" @click="handleThirdPartyRegister('wechat')" class="social-btn">
-                  <i class="fa fa-weixin text-green-500"></i>
-                </button>
-                <button type="button" @click="handleThirdPartyRegister('qq')" class="social-btn">
-                  <i class="fa fa-qq text-blue-500"></i>
-                </button>
-                <button type="button" @click="handleThirdPartyRegister('google')" class="social-btn">
-                  <i class="fa fa-google text-red-500"></i>
-                </button>
-              </div>
             </form>
 
             <div class="text-center mt-6 text-sm">
@@ -164,17 +131,13 @@ export default {
       form: {
         username: '',
         email: '',
-        verifyCode: '',
         password: '',
         confirmPassword: '',
         agreeTerms: false
       },
       errors: {},
       loading: false,
-      showPassword: false,
-      countdown: 0,
-      countdownTimer: null,
-      savedVerifyCode: ''
+      showPassword: false
     }
   },
   methods: {
@@ -195,13 +158,6 @@ export default {
         this.errors.email = '请输入邮箱地址'
       } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(this.form.email)) {
         this.errors.email = '请输入有效的电子邮件地址'
-      }
-      
-      // 验证验证码
-      if (!this.form.verifyCode) {
-        this.errors.verifyCode = '请输入验证码'
-      } else if (this.savedVerifyCode && this.form.verifyCode !== this.savedVerifyCode) {
-        this.errors.verifyCode = '验证码错误'
       }
       
       // 验证密码
@@ -226,34 +182,6 @@ export default {
       }
       
       return Object.keys(this.errors).length === 0
-    },
-    
-    getVerifyCode() {
-      // 验证邮箱
-      if (!this.form.email) {
-        this.errors.email = '请先输入邮箱地址'
-        return
-      } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(this.form.email)) {
-        this.errors.email = '请输入有效的电子邮件地址'
-        return
-      }
-      
-      // 模拟发送验证码
-      this.savedVerifyCode = Math.floor(100000 + Math.random() * 900000).toString()
-      localStorage.setItem('bgareaVerifyCode', this.savedVerifyCode)
-      
-      this.showToast('验证码已发送，请注意查收', 'success')
-      this.startCountdown()
-    },
-    
-    startCountdown() {
-      this.countdown = 60
-      this.countdownTimer = setInterval(() => {
-        this.countdown--
-        if (this.countdown <= 0) {
-          clearInterval(this.countdownTimer)
-        }
-      }, 1000)
     },
     
     async handleRegister() {
@@ -325,24 +253,9 @@ export default {
       }
     },
     
-    handleThirdPartyRegister(provider) {
-      const providerName = {
-        wechat: '微信',
-        qq: 'QQ',
-        google: 'Google'
-      }[provider]
-      
-      this.showToast(`${providerName}注册功能暂未开放`, 'warning')
-    },
-    
     showToast(message, type = 'success') {
       // 这里可以添加Toast组件逻辑
       alert(message)
-    }
-  },
-  beforeUnmount() {
-    if (this.countdownTimer) {
-      clearInterval(this.countdownTimer)
     }
   },
   mounted() {

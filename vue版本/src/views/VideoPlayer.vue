@@ -1,325 +1,334 @@
 <template>
-  <div class="font-inter min-h-screen bg-gray-100">
+  <div class="min-h-screen bg-gray-100">
     <Header />
     
-    <!-- 页面导航 -->
-    <div class="page-header">
-      <div class="breadcrumb">
+    <!-- 面包屑导航 -->
+    <div class="container">
+      <nav class="breadcrumb">
         <router-link to="/">首页</router-link> > 
-        <router-link to="/courses?category=programming">我的课程</router-link> > 
-        <router-link :to="`/course/${course.id}`">{{ course.title }}</router-link> > 
-        <span>{{ currentLesson.title }}</span>
-      </div>
+        <router-link to="/category/2">编程开发</router-link> > 
+        <span>{{ course.title }}</span>
+      </nav>
     </div>
 
     <!-- 主要内容区域 -->
-    <div class="main-content">
-      <!-- 左侧视频播放区域 -->
-      <div class="video-section">
-        <!-- 视频播放器 -->
-        <div class="video-container" ref="videoContainer">
-          <div class="video-player" id="videoPlayer" @click="togglePlay">
-            <div class="video-placeholder" v-if="!isPlaying">
-              <i class="fas fa-play-circle text-white text-6xl mb-4 opacity-70 cursor-pointer hover:opacity-100 transition-opacity"></i>
-              <p class="text-white text-lg">点击播放视频</p>
-            </div>
-            <video 
-              class="video-element w-full h-full object-contain"
-              ref="videoElement"
-              preload="metadata"
-              @timeupdate="updateProgress"
-              @loadedmetadata="onVideoLoaded"
-              @ended="onVideoEnded"
-              v-show="isPlaying"
-              @error="handleVideoError"
-            >
-              <!-- 使用可靠的测试视频源 -->
-              <source src="https://test-videos.co.uk/vids/bigbuckbunny/mp4/h264/720/Big_Buck_Bunny_720_10s_1MB.mp4" type="video/mp4">
-              <source src="https://videos.pexels.com/video-files/3195399/3195399-hd_1920_1080_30fps.mp4" type="video/mp4">
-              您的浏览器不支持视频播放。
-            </video>
-            
-            <!-- 字幕区域 -->
-            <div class="subtitle-container" v-show="showSubtitles && isPlaying">
-              <div class="subtitle-text">{{ currentSubtitle }}</div>
-            </div>
-          </div>
-          
-          <div class="video-controls">
-            <div class="control-group">
-              <button class="control-btn play-pause" @click="togglePlay">
-                <i :class="playPauseIcon"></i>
-              </button>
-              <button class="control-btn" @click="prevLesson">
-                <i class="fas fa-step-backward"></i>
-              </button>
-              <button class="control-btn" @click="nextLesson">
-                <i class="fas fa-step-forward"></i>
-              </button>
-              
-              <div class="progress-container" @click="seekToTime">
-                <div class="progress-bar">
-                  <div class="progress-fill" :style="{ width: progressPercentage + '%' }"></div>
-                  <div class="progress-handle" :style="{ left: progressPercentage + '%' }"></div>
-                </div>
+    <div class="container">
+      <div class="main-layout">
+        <!-- 左侧视频播放区 -->
+        <div class="left-column">
+          <!-- 视频容器 -->
+          <div class="video-container" ref="videoContainer">
+            <!-- 视频播放器 -->
+            <div class="video-player" id="videoPlayer" @click="togglePlay">
+              <div class="video-placeholder" v-if="!isPlaying">
+                <i class="fa fa-play-circle text-white text-6xl mb-4 opacity-70 cursor-pointer hover:opacity-100 transition-opacity"></i>
+                <p class="text-white text-lg">点击播放视频</p>
               </div>
-              
-              <div class="time-display">
-                {{ formatTime(currentTime) }} / {{ formatTime(duration) }}
-              </div>
+              <video 
+                class="video-element w-full h-full object-contain"
+                ref="videoElement"
+                preload="metadata"
+                @timeupdate="updateProgress"
+                @loadedmetadata="onVideoLoaded"
+                @ended="onVideoEnded"
+                v-show="isPlaying"
+                @error="handleVideoError"
+              >
+                <source src="https://test-videos.co.uk/vids/bigbuckbunny/mp4/h264/720/Big_Buck_Bunny_720_10s_1MB.mp4" type="video/mp4">
+                <source src="https://videos.pexels.com/video-files/3195399/3195399-hd_1920_1080_30fps.mp4" type="video/mp4">
+                您的浏览器不支持视频播放。
+              </video>
             </div>
             
-            <div class="control-group">
-              <button class="control-btn" @click="toggleMute">
-                <i :class="volumeIcon"></i>
-              </button>
-              
-              <div class="video-settings relative">
-                <button class="control-btn" @click="showSettings = !showSettings">
-                  <i class="fas fa-cog"></i>
+            <!-- 视频控制栏 -->
+            <div class="video-controls">
+              <div class="control-group">
+                <!-- 播放/暂停按钮 -->
+                <button class="control-btn play-pause" @click="togglePlay">
+                  <i :class="playPauseIcon"></i>
                 </button>
-                <div class="settings-menu" v-show="showSettings" @click.stop>
-                  <div 
-                    v-for="speed in playbackSpeeds" 
-                    :key="speed.value"
-                    class="settings-item" 
-                    :class="{ 'active': playbackRate === speed.value }"
-                    @click="setPlaybackSpeed(speed.value)"
-                  >
-                    {{ speed.label }}
+                
+                <!-- 上一集/下一集 -->
+                <button class="control-btn" @click="prevVideo">
+                  <i class="fa fa-step-backward"></i>
+                </button>
+                <button class="control-btn" @click="nextVideo">
+                  <i class="fa fa-step-forward"></i>
+                </button>
+                
+                <!-- 进度条 -->
+                <div class="progress-container" @click="seekToTime">
+                  <div class="progress-bar">
+                    <div class="progress-fill" :style="{ width: progressPercentage + '%' }"></div>
+                    <div class="progress-handle" :style="{ left: progressPercentage + '%' }"></div>
                   </div>
-                  <div class="settings-item" @click="toggleSubtitles">
-                    {{ showSubtitles ? '关闭AI字幕' : '开启AI字幕' }}
+                </div>
+                
+                <!-- 时间显示 -->
+                <div class="time-display">
+                  {{ formatTime(currentTime) }} / {{ formatTime(duration) }}
+                </div>
+                
+                <!-- 新的全屏按钮 -->
+                <button class="control-btn fullscreen-btn" @click="toggleFullscreenV2" :title="isFullscreenV2 ? '退出全屏 (ESC)' : '进入全屏 (F)'">
+                  <div class="fullscreen-icon-wrapper">
+                    <i class="fa fa-expand" :class="{ 'hidden': isFullscreenV2 }"></i>
+                    <i class="fa fa-compress" :class="{ 'hidden': !isFullscreenV2 }"></i>
                   </div>
-                  <div class="settings-item" @click="togglePictureInPicture">
-                    画中画模式
+                </button>
+              </div>
+            </div>
+          </div>
+          
+          <!-- 视频信息 -->
+          <div class="video-details">
+            <h1 class="video-title">{{ course.title }}</h1>
+            <div class="author-section">
+              <div class="author-info">
+                <div class="author-avatar">👤</div>
+                <div>
+                  <div class="author-name">{{ instructor.name }}</div>
+                  <div class="author-date">{{ course.updateTime }}</div>
+                </div>
+                <button class="follow-btn" @click="toggleFollow">
+                  {{ isFollowing ? '已关注' : '关注' }}
+                </button>
+              </div>
+              <div class="video-stats">
+                <!-- 点赞 -->
+                <span class="stat-item" @click="toggleLike">
+                  <i :class="isLiked ? 'fa fa-heart text-red-500' : 'fa fa-heart'"></i>
+                  <span class="stat-number">{{ likeCount }}</span>
+                </span>
+                
+                <!-- 收藏（关联到收藏管理页面） -->
+                <span class="stat-item" @click="toggleFavoriteWithRedirect">
+                  <i :class="isFavorited ? 'fa fa-star text-yellow-500' : 'fa fa-star'"></i>
+                  <span class="stat-number">{{ favoriteCount }}</span>
+                </span>
+                
+                <!-- 我的收藏链接 -->
+                <span class="stat-item" @click="goToFavorites">
+                  <i class="fa fa-bookmark"></i>
+                  <span class="stat-number">我的收藏</span>
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <!-- 标签页 -->
+          <div class="tabs">
+            <button 
+              class="tab" 
+              :class="{ active: activeTab === 'intro' }" 
+              @click="activeTab = 'intro'"
+            >
+              简介
+            </button>
+            <button 
+              class="tab" 
+              :class="{ active: activeTab === 'comments' }" 
+              @click="activeTab = 'comments'"
+            >
+              评论 ({{ comments.length }})
+            </button>
+          </div>
+
+          <!-- 课程简介 -->
+          <div class="course-intro" v-if="activeTab === 'intro'">
+            <h3>【王道论坛】欢迎你我，青春无悔！来和大咖朋友交朋友吧啦！</h3>
+            <p>{{ course.description }}</p>
+            <div class="tags">
+              <span class="tag" v-for="tag in course.tags" :key="tag">{{ tag }}</span>
+            </div>
+          </div>
+
+          <!-- 评论区 -->
+          <div class="comments-section" v-if="activeTab === 'comments'">
+            <div class="comments-header">
+              <h3>💬 评论 ({{ comments.length }})</h3>
+              <div class="comment-sort">
+                <span @click="sortBy = 'all'" :class="{ active: sortBy === 'all' }">全部</span>
+                <span @click="sortBy = 'hot'" :class="{ active: sortBy === 'hot' }">最热</span>
+              </div>
+            </div>
+
+            <div class="comment-input-box">
+              <textarea 
+                placeholder="说点什么吧..." 
+                class="comment-input"
+                v-model="newComment"
+                @keypress.ctrl.enter="submitComment"
+              ></textarea>
+              <div class="comment-actions">
+                <button class="submit-comment-btn" @click="submitComment">发送评论</button>
+              </div>
+            </div>
+
+            <!-- 评论列表 -->
+            <div class="comments-list">
+              <div class="comment" v-for="comment in sortedComments" :key="comment.id">
+                <div class="comment-avatar">{{ comment.avatar }}</div>
+                <div class="comment-content">
+                  <div class="comment-header">
+                    <span class="comment-author">{{ comment.author }}</span>
+                    <span class="comment-time">{{ comment.time }}</span>
+                  </div>
+                  <p>{{ comment.content }}</p>
+                  <div class="comment-stats">
+                    <span @click="likeComment(comment.id)">
+                      👍 {{ comment.likes }}
+                    </span>
+                    <span @click="showReplyBox(comment.id)">💬 回复</span>
                   </div>
                 </div>
               </div>
-              
-              <button class="control-btn" @click="toggleFullscreen">
-                <i :class="fullscreenIcon"></i>
+            </div>
+
+            <div class="load-more">
+              <button class="load-more-btn" @click="loadMoreComments">
+                加载更多评论
               </button>
             </div>
           </div>
         </div>
-        
-        <!-- 视频信息 -->
-        <div class="video-info">
-          <h2 class="current-video-title">{{ currentLesson.title }}</h2>
-          <p class="video-description">
-            {{ currentLesson.description }}
-          </p>
-          
-          <div class="video-meta">
-            <div class="meta-item">
-              <i class="fas fa-clock text-primary"></i>
-              <span>时长: {{ formatDuration(currentLesson.duration) }}</span>
-            </div>
-            <div class="meta-item">
-              <i class="fas fa-eye text-primary"></i>
-              <span>已学习: {{ formatDuration(learnedTime) }}</span>
-            </div>
-            <div class="meta-item">
-              <i class="fas fa-closed-captioning text-primary"></i>
-              <span>AI字幕: {{ showSubtitles ? '已开启' : '已关闭' }}</span>
-            </div>
-            <div class="meta-item">
-              <i class="fas fa-download text-primary"></i>
-              <span>资料: {{ currentLesson.hasMaterials ? '可下载' : '无资料' }}</span>
-            </div>
-          </div>
-        </div>
-        
-        <!-- 学习工具 -->
-        <div class="learning-tools">
-          <h2 class="tools-title">学习工具</h2>
-          
-          <div class="tool-buttons">
-            <button class="tool-btn" :class="{ 'active': activeTool === 'qa' }" @click="activateTool('qa')">
-              <i class="fas fa-question-circle text-primary text-xl"></i>
-              <span>课程问答</span>
-            </button>
-            <button class="tool-btn" :class="{ 'active': activeTool === 'notes' }" @click="activateTool('notes')">
-              <i class="fas fa-file-alt text-primary text-xl"></i>
-              <span>课堂笔记</span>
-            </button>
-            <button class="tool-btn active" @click="activateTool('exercise')">
-              <i class="fas fa-tasks text-primary text-xl"></i>
-              <span>章节习题</span>
-            </button>
-            <button class="tool-btn" :class="{ 'active': activeTool === 'download' }" @click="activateTool('download')">
-              <i class="fas fa-download text-primary text-xl"></i>
-              <span>资料下载</span>
-            </button>
-          </div>
-          
-          <div class="ai-assistant" @click="showAIModal = true">
-            <div class="ai-icon">
-              <i class="fas fa-robot text-white"></i>
-            </div>
-            <div class="ai-text">
-              <h4>AI学习助手小翔</h4>
-              <p>点击我可以解答学习疑问、生成个性化习题</p>
-            </div>
-          </div>
-        </div>
-        
-        <!-- 讨论区 -->
-        <div class="discussion-section">
-          <div class="discussion-header">
-            <h3 class="discussion-title">课程讨论区</h3>
-            <button class="new-question-btn" @click="showQuestionModal = true">
-              <i class="fas fa-plus"></i>
-              <span>提问</span>
-            </button>
-          </div>
-          
-          <ul class="question-list">
-            <li class="question-item" v-for="question in questions" :key="question.id">
-              <div class="question-header">
-                <div class="questioner">
-                  <div class="questioner-avatar">
-                    <img :src="question.avatar" :alt="question.name">
-                  </div>
-                  <div class="questioner-info">
-                    <h4>{{ question.name }}</h4>
-                    <div class="question-date">{{ question.date }}</div>
-                  </div>
-                </div>
-                <div class="question-ai-tag" v-if="question.aiAnswered">
-                  <span class="ai-tag">
-                    <i class="fas fa-robot"></i> AI已解答
-                  </span>
+
+        <!-- 右侧课程导航栏 -->
+        <div class="right-column-nav">
+          <!-- 课程信息卡片 -->
+          <div class="course-card">
+            <div class="course-card-header">
+              <div class="course-author">
+                <div class="course-author-avatar">👤</div>
+                <div>
+                  <div class="course-author-name">{{ instructor.name }}</div>
+                  <div class="course-author-fans">粉丝: {{ instructor.fans }}</div>
                 </div>
               </div>
-              <div class="question-content">
-                {{ question.content }}
-              </div>
-              <div class="question-actions">
-                <div class="action-btn" @click="likeQuestion(question.id)">
-                  <i class="fas fa-thumbs-up"></i>
-                  <span>{{ question.likes }}</span>
-                </div>
-                <div class="action-btn" @click="showNotification('评论功能开发中')">
-                  <i class="fas fa-comment"></i>
-                  <span>{{ question.comments }}</span>
-                </div>
-                <div class="action-btn" @click="showNotification('分享功能开发中')">
-                  <i class="fas fa-share"></i>
-                  <span>分享</span>
-                </div>
-              </div>
-            </li>
-          </ul>
-        </div>
-      </div>
-      
-      <!-- 右侧课程目录区域 -->
-      <div class="course-sidebar">
-        <!-- 课程目录 -->
-        <div class="course-directory">
-          <div class="directory-header">
-            <h3 class="directory-title">课程目录</h3>
-            <div class="course-progress">
-              <i class="fas fa-chart-line"></i>
-              <span>已学 {{ progressPercentage }}%</span>
+              <button 
+                class="follow-btn-small" 
+                @click="toggleFollow"
+                :class="{ 'following': isFollowing }"
+              >
+                {{ isFollowing ? '已关注' : '关注' }}
+              </button>
             </div>
+            <p class="course-description">{{ instructor.description }}</p>
+            <button class="enter-space-btn" @click="goToInstructorSpace">进入空间</button>
           </div>
-          
-          <ul class="directory-list">
-            <li class="directory-section" v-for="chapter in syllabus" :key="chapter.id">
-              <div class="section-header" @click="toggleChapter(chapter.id)">
-                <span>{{ chapter.title }}</span>
-                <i class="fas fa-chevron-down" :class="{ 'rotated': !chapter.expanded }"></i>
+
+          <!-- 课程章节导航 -->
+          <div class="course-navigation">
+            <div class="course-section-title">
+              操作系统课程
+            </div>
+            
+            <!-- 第一章 -->
+            <div class="border-b border-gray-200">
+              <div class="course-section-title flex justify-between items-center cursor-pointer" @click="toggleSection('section1')">
+                <span>第一章</span>
+                <i class="fa" :class="section1Open ? 'fa-angle-down' : 'fa-angle-right'"></i>
               </div>
-              <ul class="lesson-list" v-show="chapter.expanded">
-                <li 
-                  class="lesson-item" 
-                  v-for="lesson in chapter.lessons" 
-                  :key="lesson.id"
-                  :class="{ 
-                    'active': currentLesson.id === lesson.id,
-                    'completed': lesson.completed 
-                  }"
-                  @click="selectLesson(lesson)"
+              <div class="pl-2" v-show="section1Open">
+                <div 
+                  class="course-item" 
+                  :class="{ 'active': currentItemId === 2 }"
+                  @click="selectPlaylistItem({ id: 2, type: 'video', title: '1.1 什么是机器学习？- 机器学习与机器视觉介绍' })"
                 >
-                  <div class="lesson-info">
-                    <div class="lesson-icon">
-                      <i class="fas fa-play-circle"></i>
-                    </div>
-                    <div>
-                      <div class="lesson-title">{{ lesson.title }}</div>
-                      <div class="lesson-duration">{{ formatDuration(lesson.duration) }}</div>
-                    </div>
+                  <div class="course-item-icon course-item-video">
+                    <i class="fa fa-play text-xs"></i>
                   </div>
-                  <div class="lesson-status">
-                    <i 
-                      v-if="currentLesson.id === lesson.id" 
-                      class="fas fa-volume-up text-green-500"
-                    ></i>
-                    <i 
-                      v-else-if="lesson.completed" 
-                      class="fas fa-check-circle text-green-500"
-                    ></i>
+                  <span>1.1 什么是机器学习？</span>
+                </div>
+                <div 
+                  class="course-item" 
+                  :class="{ 'active': currentItemId === 3 }"
+                  @click="selectPlaylistItem({ id: 3, type: 'exercise', title: '1.1 课后习题集：机器学习基本概念' })"
+                >
+                  <div class="course-item-icon course-item-exercise">
+                    <i class="fa fa-pencil text-xs"></i>
                   </div>
-                </li>
-              </ul>
-            </li>
-          </ul>
-        </div>
-        
-        <!-- AI学习分析 -->
-        <div class="learning-tools mt-6">
-          <h2 class="tools-title">AI学习分析</h2>
-          
-          <div class="mb-6">
-            <div class="flex justify-between mb-2">
-              <span class="text-sm text-gray-600">当前章节掌握度</span>
-              <span class="font-semibold text-primary">{{ masteryPercentage }}%</span>
+                  <span>习题1.1</span>
+                </div>
+                <div 
+                  class="course-item" 
+                  :class="{ 'active': currentItemId === 4 }"
+                  @click="selectPlaylistItem({ id: 4, type: 'video', title: '1.2 监督学习与非监督学习' })"
+                >
+                  <div class="course-item-icon course-item-video">
+                    <i class="fa fa-play text-xs"></i>
+                  </div>
+                  <span>1.2 监督学习与非监督学习</span>
+                </div>
+                <div 
+                  class="course-item" 
+                  :class="{ 'active': currentItemId === 5 }"
+                  @click="selectPlaylistItem({ id: 5, type: 'exercise', title: '1.2 课后习题集：监督学习算法' })"
+                >
+                  <div class="course-item-icon course-item-exercise">
+                    <i class="fa fa-pencil text-xs"></i>
+                  </div>
+                  <span>习题1.2</span>
+                </div>
+              </div>
             </div>
-            <div class="h-2 bg-gray-200 rounded-full overflow-hidden">
-              <div 
-                class="h-full rounded-full transition-all duration-300" 
-                :class="masteryPercentage >= 80 ? 'bg-green-500' : masteryPercentage >= 60 ? 'bg-yellow-500' : 'bg-red-500'"
-                :style="{ width: masteryPercentage + '%' }"
-              ></div>
+            
+            <!-- 第二章 -->
+            <div class="border-b border-gray-200">
+              <div class="course-section-title flex justify-between items-center cursor-pointer" @click="toggleSection('section2')">
+                <span>第二章</span>
+                <i class="fa" :class="section2Open ? 'fa-angle-down' : 'fa-angle-right'"></i>
+              </div>
+              <div class="pl-2" v-show="section2Open">
+                <div 
+                  class="course-item" 
+                  @click="selectPlaylistItem({ id: 7, type: 'video', title: '2.1 神经网络基础' })"
+                >
+                  <div class="course-item-icon course-item-video">
+                    <i class="fa fa-play text-xs"></i>
+                  </div>
+                  <span>2.1 神经网络基础</span>
+                </div>
+                <div 
+                  class="course-item" 
+                  @click="selectPlaylistItem({ id: 8, type: 'exercise', title: '2.1 课后习题集：神经网络基础' })"
+                >
+                  <div class="course-item-icon course-item-exercise">
+                    <i class="fa fa-pencil text-xs"></i>
+                  </div>
+                  <span>习题2.1</span>
+                </div>
+                <div 
+                  class="course-item" 
+                  @click="selectPlaylistItem({ id: 9, type: 'video', title: '2.2 卷积神经网络' })"
+                >
+                  <div class="course-item-icon course-item-video">
+                    <i class="fa fa-play text-xs"></i>
+                  </div>
+                  <span>2.2 卷积神经网络</span>
+                </div>
+              </div>
+            </div>
+            
+            <!-- 其他章节 -->
+            <div v-for="chapter in otherChapters" :key="chapter.id" class="border-b border-gray-200">
+              <div class="course-section-title flex justify-between items-center cursor-pointer" @click="toggleOtherSection(chapter.id)">
+                <span>{{ chapter.name }}</span>
+                <i class="fa" :class="openSections[chapter.id] ? 'fa-angle-down' : 'fa-angle-right'"></i>
+              </div>
             </div>
           </div>
-          
-          <div class="bg-yellow-50 border-l-4 border-yellow-500 p-4 rounded mb-4">
-            <div class="font-semibold text-gray-800 mb-1 flex items-center">
-              <i class="fas fa-lightbulb text-yellow-500 mr-2"></i>
-              AI学习建议
-            </div>
-            <div class="text-sm text-gray-600">
-              {{ aiSuggestion }}
-            </div>
-          </div>
-          
-          <button 
-            class="w-full bg-blue-50 hover:bg-blue-100 text-primary border border-blue-200 py-3 px-4 rounded-lg cursor-pointer flex items-center justify-center gap-2 transition-colors"
-            @click="showNotification('学习报告功能开发中')"
-          >
-            <i class="fas fa-chart-bar"></i>
-            <span>查看详细学习报告</span>
-          </button>
         </div>
       </div>
     </div>
 
-    <!-- 模态框 -->
-    <ExerciseModal v-if="showExerciseModal" @close="showExerciseModal = false" />
-    <AIAssistantModal v-if="showAIModal" @close="showAIModal = false" />
-    <QuestionModal v-if="showQuestionModal" @close="showQuestionModal = false" />
+    <Footer />
   </div>
 </template>
 
 <script>
 import Header from '@/components/Header.vue'
-import ExerciseModal from '@/components/ExerciseModal.vue'
-import AIAssistantModal from '@/components/AIAssistantModal.vue'
-import QuestionModal from '@/components/QuestionModal.vue'
+import Footer from '@/components/Footer.vue'
 import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
@@ -327,9 +336,7 @@ export default {
   name: 'VideoPlayer',
   components: {
     Header,
-    ExerciseModal,
-    AIAssistantModal,
-    QuestionModal
+    Footer
   },
   setup() {
     const route = useRoute()
@@ -339,131 +346,103 @@ export default {
     const isPlaying = ref(false)
     const currentTime = ref(0)
     const duration = ref(0)
-    const isMuted = ref(false)
-    const volume = ref(1.0)
-    const playbackRate = ref(1.0)
-    const showSubtitles = ref(true)
-    const isFullscreen = ref(false)
-    const showSettings = ref(false)
+    const isFullscreenV2 = ref(false)
+    const autoPlay = ref(true)
     
-    // 学习状态
-    const activeTool = ref('exercise')
-    const progressPercentage = ref(35)
-    const masteryPercentage = ref(72)
-    const learnedTime = ref(743) // 秒
+    // 互动状态
+    const isLiked = ref(false)
+    const likeCount = ref(371)
+    const isFavorited = ref(false)
+    const favoriteCount = ref(124)
+    const isFollowing = ref(false)
+    const activeTab = ref('intro')
+    const sortBy = ref('all')
+    const newComment = ref('')
     
-    // 模态框状态
-    const showExerciseModal = ref(false)
-    const showAIModal = ref(false)
-    const showQuestionModal = ref(false)
+    // 播放列表状态
+    const currentItemId = ref(2)
+    
+    // 课程章节导航状态
+    const section1Open = ref(true)
+    const section2Open = ref(false)
+    const openSections = ref({})
+    
+    // 其他章节数据
+    const otherChapters = ref([
+      { id: 'section3', name: '第三章' },
+      { id: 'section4', name: '第四章' },
+      { id: 'section5', name: '第五章' },
+      { id: 'section6', name: '第六章' },
+      { id: 'section7', name: '第七章' },
+      { id: 'section8', name: '第八章' }
+    ])
     
     // 课程数据
     const course = ref({
       id: route.params.courseId || 1,
-      title: 'Python数据分析与可视化实战',
-      progress: 35
+      title: '王道计算机考研操作系统',
+      updateTime: '2019-10-19 14:02:39',
+      description: '自从在发表面试的2024考研《恭喜你你》、《祝你心自由》、《冲刺版》、《冲刺版》、《高数版》、《高数版》，学好就地理学对压正的，可能我在某些要多套版的教材你的动力。',
+      tags: ['操作系统', '考研', '教育', '计算机', '王道', '考研专题']
     })
     
-    const currentLesson = ref({
-      id: 2,
-      title: '1.2 Pandas数据结构详解',
-      description: '本节详细介绍Pandas的核心数据结构：Series和DataFrame。学习如何创建、访问和操作这些数据结构，为后续的数据分析打下坚实基础。我们将通过实际代码演示，展示如何从列表、字典和NumPy数组创建Series和DataFrame，并介绍常用的数据访问方法。',
-      duration: 1475, // 秒
-      hasMaterials: true
+    // 讲师数据
+    const instructor = ref({
+      name: '王道计算机',
+      fans: '123.0万',
+      description: '感谢你我是计算机专业学子...'
     })
     
-    // 字幕数据
-    const currentSubtitle = ref('Pandas是Python中最重要的数据分析库之一')
-    const subtitles = ref([
-      "Pandas是Python中最重要的数据分析库之一",
-      "它提供了两种核心数据结构：Series和DataFrame",
-      "Series是一维数组，可以存储任意数据类型",
-      "DataFrame是二维表格，可以看作多个Series的集合",
-      "我们现在来看如何创建Series对象"
-    ])
-    
-    // 课程大纲
-    const syllabus = ref([
+    // 评论数据
+    const comments = ref([
       {
         id: 1,
-        title: '第一章：Python数据分析基础',
-        expanded: true,
-        lessons: [
-          { id: 1, title: '1.1 课程介绍与环境搭建', duration: 1080, completed: true },
-          { id: 2, title: '1.2 Pandas数据结构详解', duration: 1475, completed: false },
-          { id: 3, title: '1.3 数据导入与导出', duration: 1320, completed: false }
-        ]
+        avatar: '👤',
+        author: '研究生挣M001',
+        time: '2天前',
+        content: '已经在备考二遍了，讲解寿命清晰，特别是关于电视和视频的讲评，移学谢阳月阳！感谢王道田的协作者们认认，以人为刚能高于上班课程学生们！',
+        likes: 1472
       },
       {
         id: 2,
-        title: '第二章：数据清洗与预处理',
-        expanded: false,
-        lessons: [
-          { id: 4, title: '2.1 缺失值处理', duration: 1680, completed: false },
-          { id: 5, title: '2.2 异常值检测与处理', duration: 1920, completed: false }
-        ]
-      }
-    ])
-    
-    // 讨论区问题
-    const questions = ref([
-      {
-        id: 1,
-        name: '王同学',
-        date: '2023-10-15 14:23',
-        avatar: 'https://randomuser.me/api/portraits/women/32.jpg',
-        content: 'Series和DataFrame在内存使用上有什么区别？在处理大数据集时应该如何选择？',
-        likes: 12,
-        comments: 5,
-        aiAnswered: true
+        avatar: '👤',
+        author: '计算机爱好小陈',
+        time: '3天前',
+        content: '我听的安全卸载了，操作系统成绩出迈了对考研中心以以考察专家理？我都是跟做题的，做题还发动分的问题分，重要特别理解是如果？',
+        likes: 356
       },
       {
-        id: 2,
-        name: '李同学',
-        date: '2023-10-14 09:15',
-        avatar: 'https://randomuser.me/api/portraits/men/45.jpg',
-        content: 'DataFrame的索引有什么作用？如何合理设置索引以提高查询效率？',
-        likes: 8,
-        comments: 3,
-        aiAnswered: false
+        id: 3,
+        avatar: '👤',
+        author: '程序员小王',
+        time: '1周前',
+        content: '作为已经上了的的群组，回头来看这套视频依然很感谢，真的带来量！服装上过个正能讲课的问题，对天奋业评的无的成就了我优，模式大学好好坚，不事只是教方才是便那学过。',
+        likes: 2856
       }
     ])
-    
-    // 播放速度选项
-    const playbackSpeeds = ref([
-      { value: 0.5, label: '0.5x 速度' },
-      { value: 0.75, label: '0.75x 速度' },
-      { value: 1.0, label: '正常速度' },
-      { value: 1.25, label: '1.25x 速度' },
-      { value: 1.5, label: '1.5x 速度' },
-      { value: 2.0, label: '2.0x 速度' }
-    ])
-    
-    // AI建议
-    const aiSuggestion = ref('您已掌握Series的基本操作，建议重点关注DataFrame的多维数据操作。')
-    
-    // 计算属性
-    const playPauseIcon = computed(() => 
-      isPlaying.value ? 'fas fa-pause' : 'fas fa-play'
-    )
-    
-    const volumeIcon = computed(() => {
-      if (isMuted.value || volume.value === 0) {
-        return 'fas fa-volume-mute'
-      } else if (volume.value < 0.5) {
-        return 'fas fa-volume-down'
-      } else {
-        return 'fas fa-volume-up'
-      }
-    })
-    
-    const fullscreenIcon = computed(() => 
-      isFullscreen.value ? 'fas fa-compress' : 'fas fa-expand'
-    )
     
     // DOM 引用
     const videoElement = ref(null)
     const videoContainer = ref(null)
+    
+    // 计算属性
+    const playPauseIcon = computed(() => 
+      isPlaying.value ? 'fa fa-pause' : 'fa fa-play'
+    )
+    
+    const progressPercentage = computed(() => {
+      if (duration.value > 0) {
+        return (currentTime.value / duration.value) * 100
+      }
+      return 0
+    })
+    
+    const sortedComments = computed(() => {
+      if (sortBy.value === 'hot') {
+        return [...comments.value].sort((a, b) => b.likes - a.likes)
+      }
+      return comments.value
+    })
     
     // 方法
     const togglePlay = () => {
@@ -480,44 +459,25 @@ export default {
     
     const updateProgress = () => {
       if (!videoElement.value) return
-      
       currentTime.value = videoElement.value.currentTime
-      if (duration.value > 0) {
-        progressPercentage.value = (currentTime.value / duration.value) * 100
-      }
-      
-      // 更新学习时间
-      learnedTime.value = Math.max(learnedTime.value, currentTime.value)
-      
-      // 更新字幕
-      if (showSubtitles.value && duration.value > 0) {
-        updateSubtitle()
-      }
     }
     
     const onVideoLoaded = () => {
       if (videoElement.value) {
         duration.value = videoElement.value.duration
-        showNotification('视频加载完成')
       }
     }
     
     const onVideoEnded = () => {
       isPlaying.value = false
-      markLessonAsCompleted(currentLesson.value.id)
-      showNotification('本节内容已学习完成，系统已记录您的学习进度')
+      if (autoPlay.value) {
+        nextVideo()
+      }
     }
     
-    // 视频错误处理
     const handleVideoError = (error) => {
       console.error('视频加载错误:', error)
       showNotification('视频加载失败，请检查网络连接或刷新页面')
-      
-      // 尝试使用备用视频源
-      if (videoElement.value) {
-        // 如果有多个source标签，浏览器会自动尝试下一个
-        console.log('尝试备用视频源...')
-      }
     }
     
     const seekToTime = (event) => {
@@ -530,70 +490,59 @@ export default {
       videoElement.value.currentTime = percentage * duration.value
     }
     
-    const toggleMute = () => {
-      if (!videoElement.value) return
-      
-      if (isMuted.value) {
-        videoElement.value.volume = volume.value
-        isMuted.value = false
-      } else {
-        volume.value = videoElement.value.volume
-        videoElement.value.volume = 0
-        isMuted.value = true
-      }
-    }
-    
-    const setPlaybackSpeed = (speed) => {
-      playbackRate.value = speed
-      if (videoElement.value) {
-        videoElement.value.playbackRate = speed
-      }
-      showSettings.value = false
-    }
-    
-    const toggleSubtitles = () => {
-      showSubtitles.value = !showSubtitles.value
-      showSettings.value = false
-    }
-    
-    const togglePictureInPicture = async () => {
-      try {
-        if (document.pictureInPictureElement) {
-          await document.exitPictureInPicture()
-        } else if (document.pictureInPictureEnabled && videoElement.value) {
-          await videoElement.value.requestPictureInPicture()
-        }
-      } catch (error) {
-        showNotification('您的浏览器不支持画中画模式')
-      }
-      showSettings.value = false
-    }
-    
-    const toggleFullscreen = () => {
+    // 新的全屏功能
+    const toggleFullscreenV2 = () => {
       if (!videoContainer.value) return
       
-      if (!document.fullscreenElement) {
-        videoContainer.value.requestFullscreen()
-          .then(() => {
-            isFullscreen.value = true
-          })
-          .catch(err => {
-            console.log('全屏请求失败:', err)
-          })
+      if (!isFullscreenV2.value) {
+        enterFullscreen()
       } else {
-        document.exitFullscreen()
-        isFullscreen.value = false
+        exitFullscreen()
       }
     }
     
-    const updateSubtitle = () => {
-      if (!duration.value || subtitles.value.length === 0) return
+    const enterFullscreen = () => {
+      const elem = videoContainer.value
       
-      const timeSegments = duration.value / subtitles.value.length
-      const currentSegment = Math.floor(currentTime.value / timeSegments)
+      if (elem.requestFullscreen) {
+        elem.requestFullscreen()
+      } else if (elem.webkitRequestFullscreen) {
+        elem.webkitRequestFullscreen()
+      } else if (elem.msRequestFullscreen) {
+        elem.msRequestFullscreen()
+      } else if (elem.mozRequestFullScreen) {
+        elem.mozRequestFullScreen()
+      }
       
-      if (currentSegment < subtitles.value.length) {
-        currentSubtitle.value = subtitles.value[currentSegment]
+      isFullscreenV2.value = true
+      showNotification('已进入沉浸式全屏模式')
+      
+      // 全屏时添加特殊样式
+      document.body.classList.add('video-fullscreen-active')
+    }
+    
+    const exitFullscreen = () => {
+      if (document.exitFullscreen) {
+        document.exitFullscreen()
+      } else if (document.webkitExitFullscreen) {
+        document.webkitExitFullscreen()
+      } else if (document.msExitFullscreen) {
+        document.msExitFullscreen()
+      } else if (document.mozCancelFullScreen) {
+        document.mozCancelFullScreen()
+      }
+      
+      isFullscreenV2.value = false
+      showNotification('已退出全屏模式')
+      
+      // 移除全屏样式
+      document.body.classList.remove('video-fullscreen-active')
+    }
+    
+    const handleFullscreenChange = () => {
+      isFullscreenV2.value = !!document.fullscreenElement
+      if (!isFullscreenV2.value) {
+        document.body.classList.remove('video-fullscreen-active')
       }
     }
     
@@ -603,95 +552,236 @@ export default {
       return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`
     }
     
-    const formatDuration = (seconds) => {
-      const mins = Math.floor(seconds / 60)
-      const secs = seconds % 60
-      return secs > 0 ? `${mins}分${secs}秒` : `${mins}分钟`
-    }
-    
-    const selectLesson = (lesson) => {
-      if (currentLesson.value.id === lesson.id) return
-      
-      currentLesson.value = { ...lesson }
-      isPlaying.value = false
-      currentTime.value = 0
-      progressPercentage.value = 0
-      
-      // 重置视频
-      if (videoElement.value) {
-        videoElement.value.load()
+    const prevVideo = () => {
+      if (currentItemId.value > 1) {
+        currentItemId.value -= 1
+        selectVideoById(currentItemId.value)
+        showNotification('切换到上一集')
+      } else {
+        showNotification('已经是第一集了')
       }
-      
-      showNotification(`正在加载: ${lesson.title}`)
     }
     
-    const prevLesson = () => {
-      showNotification('切换到上一节内容')
+    const nextVideo = () => {
+      if (currentItemId.value < 10) { // 假设有10个章节
+        currentItemId.value += 1
+        selectVideoById(currentItemId.value)
+        showNotification('切换到下一集')
+      } else {
+        showNotification('已经是最后一集了')
+      }
     }
     
-    const nextLesson = () => {
-      const currentChapter = syllabus.value.find(ch => 
-        ch.lessons.some(lesson => lesson.id === currentLesson.value.id)
-      )
-      
-      if (currentChapter) {
-        const currentIndex = currentChapter.lessons.findIndex(
-          lesson => lesson.id === currentLesson.value.id
-        )
-        
-        if (currentIndex < currentChapter.lessons.length - 1) {
-          const nextLesson = currentChapter.lessons[currentIndex + 1]
-          selectLesson(nextLesson)
+    const selectVideoById = (id) => {
+      currentItemId.value = id
+      showNotification(`切换到第${id}节`)
+    }
+    
+    const toggleLike = () => {
+      isLiked.value = !isLiked.value
+      likeCount.value += isLiked.value ? 1 : -1
+
+      // 保存点赞数据到localStorage
+      const likes = JSON.parse(localStorage.getItem('userLikes') || '[]')
+      const likeData = {
+        id: `like_${course.value.id}_${Date.now()}`,
+        courseId: course.value.id,
+        courseName: course.value.title,
+        teacher: instructor.value.name,
+        likedAt: new Date().toISOString().split('T')[0] + ' ' + 
+                new Date().toTimeString().split(' ')[0].substring(0, 5)
+      }
+
+      if (isLiked.value) {
+        // 添加到点赞列表
+        if (!likes.find(l => l.courseId === course.value.id)) {
+          likes.push(likeData)
+        }
+      } else {
+        // 从点赞列表中移除
+        const index = likes.findIndex(l => l.courseId === course.value.id)
+        if (index !== -1) {
+          likes.splice(index, 1)
         }
       }
+
+      localStorage.setItem('userLikes', JSON.stringify(likes))
+
+      // 触发storage事件通知收藏管理页面
+      window.dispatchEvent(new StorageEvent('storage', {
+        key: 'userLikes',
+        newValue: JSON.stringify(likes)
+      }))
+
+      showNotification(isLiked.value ? '已点赞' : '已取消点赞')
     }
     
-    const toggleChapter = (chapterId) => {
-      const chapter = syllabus.value.find(ch => ch.id === chapterId)
-      if (chapter) {
-        chapter.expanded = !chapter.expanded
+    const toggleFavorite = () => {
+      isFavorited.value = !isFavorited.value
+      favoriteCount.value += isFavorited.value ? 1 : -1
+
+      // 存储收藏数据
+      const favorites = JSON.parse(localStorage.getItem('userFavorites') || '[]')
+      const favoriteData = {
+        id: course.value.id,
+        name: course.value.title,
+        teacher: instructor.value.name,
+        status: 'ongoing',
+        collectedAt: new Date().toISOString().split('T')[0],
+        category: 'computer',
+        description: course.value.description
       }
+
+      if (isFavorited.value) {
+        // 添加到收藏
+        if (!favorites.find(f => f.id === favoriteData.id)) {
+          favorites.push(favoriteData)
+        }
+      } else {
+        // 从收藏中移除
+        const index = favorites.findIndex(f => f.id === favoriteData.id)
+        if (index !== -1) {
+          favorites.splice(index, 1)
+        }
+      }
+
+      localStorage.setItem('userFavorites', JSON.stringify(favorites))
+
+      // 触发storage事件通知收藏管理页面
+      window.dispatchEvent(new StorageEvent('storage', {
+        key: 'userFavorites',
+        newValue: JSON.stringify(favorites)
+      }))
+
+      showNotification(isFavorited.value ? '已收藏' : '已取消收藏')
     }
-    
-    const markLessonAsCompleted = (lessonId) => {
-      syllabus.value.forEach(chapter => {
-        chapter.lessons.forEach(lesson => {
-          if (lesson.id === lessonId) {
-            lesson.completed = true
+
+    const toggleFavoriteWithRedirect = () => {
+      toggleFavorite()
+
+      if (isFavorited.value) {
+        // 显示跳转提示
+        setTimeout(() => {
+          if (confirm('收藏成功！是否前往收藏管理页面查看？')) {
+            goToFavorites()
           }
-        })
-      })
+        }, 500)
+      }
     }
     
-    const activateTool = (tool) => {
-      activeTool.value = tool
-      
-      if (tool === 'exercise') {
-        showExerciseModal.value = true
+    const goToFavorites = () => {
+      router.push('/favorites-management?tab=collection')
+    }
+
+    const saveHistoryData = () => {
+      const history = JSON.parse(localStorage.getItem('userHistory') || '[]')
+      const historyData = {
+        id: `history_${course.value.id}_${Date.now()}`,
+        courseId: course.value.id,
+        courseName: course.value.title,
+        watchedAt: new Date().toISOString().split('T')[0] + ' ' + 
+                   new Date().toTimeString().split(' ')[0].substring(0, 5),
+        progress: duration.value > 0 ? Math.floor((currentTime.value / duration.value) * 100) : 0
+      }
+
+      // 检查是否已经有相同的历史记录
+      const existingIndex = history.findIndex(h => h.courseId === course.value.id)
+
+      if (existingIndex !== -1) {
+        // 更新现有的历史记录
+        history[existingIndex] = historyData
+      } else {
+        // 添加新的历史记录
+        history.push(historyData)
+      }
+
+      // 只保留最近的20条历史记录
+      const recentHistory = history.slice(-20)
+      localStorage.setItem('userHistory', JSON.stringify(recentHistory))
+
+      // 触发storage事件通知收藏管理页面
+      window.dispatchEvent(new StorageEvent('storage', {
+        key: 'userHistory',
+        newValue: JSON.stringify(recentHistory)
+      }))
+    }
+    
+    const toggleFollow = () => {
+      isFollowing.value = !isFollowing.value
+      showNotification(isFollowing.value ? '已关注讲师' : '已取消关注')
+    }
+    
+    const likeComment = (commentId) => {
+      const comment = comments.value.find(c => c.id === commentId)
+      if (comment) {
+        comment.likes += 1
+      }
+    }
+    
+    const showReplyBox = (commentId) => {
+      showNotification('回复功能开发中')
+    }
+    
+    const submitComment = () => {
+      if (!newComment.value.trim()) {
+        showNotification('请输入评论内容')
+        return
       }
       
-      showNotification(`打开${getToolName(tool)}功能`)
+      const newCommentObj = {
+        id: comments.value.length + 1,
+        avatar: '👤',
+        author: '当前用户',
+        time: '刚刚',
+        content: newComment.value,
+        likes: 0
+      }
+      
+      comments.value.unshift(newCommentObj)
+      newComment.value = ''
+      showNotification('评论发送成功')
     }
     
-    const getToolName = (tool) => {
-      const toolNames = {
-        qa: '课程问答',
-        notes: '课堂笔记',
-        exercise: '章节习题',
-        download: '资料下载'
-      }
-      return toolNames[tool] || tool
+    const loadMoreComments = () => {
+      showNotification('加载更多评论功能开发中')
     }
     
-    const likeQuestion = (questionId) => {
-      const question = questions.value.find(q => q.id === questionId)
-      if (question) {
-        question.likes += 1
+    const toggleAutoPlay = () => {
+      showNotification(`自动播放 ${autoPlay.value ? '开启' : '关闭'}`)
+    }
+    
+    const selectPlaylistItem = (item) => {
+      currentItemId.value = item.id
+      
+      if (item.type === 'exercise') {
+        // 跳转到习题集页面
+        router.push(`/course/${course.value.id}/exercise/${item.seriesId}`)
+      } else if (item.type === 'video') {
+        // 播放视频
+        if (!isPlaying.value) {
+          togglePlay()
+        }
+        showNotification(`正在播放：${item.title}`)
       }
+    }
+    
+    const goToInstructorSpace = () => {
+      showNotification('进入讲师空间功能开发中')
+    }
+    
+    const toggleSection = (section) => {
+      if (section === 'section1') {
+        section1Open.value = !section1Open.value
+      } else if (section === 'section2') {
+        section2Open.value = !section2Open.value
+      }
+    }
+    
+    const toggleOtherSection = (sectionId) => {
+      openSections.value[sectionId] = !openSections.value[sectionId]
     }
     
     const showNotification = (message) => {
-      // 移除之前可能存在的通知
       const existingNotifications = document.querySelectorAll('.custom-notification')
       existingNotifications.forEach(notification => {
         if (notification.parentNode) {
@@ -705,7 +795,7 @@ export default {
         position: fixed;
         top: 100px;
         right: 20px;
-        background-color: #165DFF;
+        background-color: #1890ff;
         color: white;
         padding: 1rem 1.5rem;
         border-radius: 8px;
@@ -718,7 +808,7 @@ export default {
       `
       
       notification.innerHTML = `
-        <i class="fas fa-info-circle"></i>
+        <i class="fa fa-info-circle"></i>
         <span>${message}</span>
       `
       
@@ -734,115 +824,80 @@ export default {
       }, 3000)
     }
     
-    // 键盘事件处理
-    const handleKeydown = (event) => {
-      if (!videoElement.value) return
-      
-      switch (event.key) {
-        case ' ':
-        case 'k':
-          event.preventDefault()
-          togglePlay()
-          break
-        case 'm':
-          event.preventDefault()
-          toggleMute()
-          break
-        case 'f':
-          event.preventDefault()
-          toggleFullscreen()
-          break
-        case 'ArrowLeft':
-          event.preventDefault()
-          videoElement.value.currentTime -= 10
-          break
-        case 'ArrowRight':
-          event.preventDefault()
-          videoElement.value.currentTime += 10
-          break
-      }
-    }
-    
-    const handleFullscreenChange = () => {
-      isFullscreen.value = !!document.fullscreenElement
-    }
-    
-    // 加载学习进度
-    const loadLearningProgress = () => {
-      const progress = localStorage.getItem(`course_${course.value.id}_progress`)
-      if (progress) {
-        const data = JSON.parse(progress)
-        progressPercentage.value = data.progressPercentage || 35
-        learnedTime.value = data.learnedTime || 743
-        
-        // 更新课程完成状态
-        if (data.completedLessons) {
-          syllabus.value.forEach(chapter => {
-            chapter.lessons.forEach(lesson => {
-              lesson.completed = data.completedLessons.includes(lesson.id)
-            })
-          })
-        }
-      }
-    }
-    
-    // 保存学习进度
-    const saveLearningProgress = () => {
-      const completedLessons = []
-      syllabus.value.forEach(chapter => {
-        chapter.lessons.forEach(lesson => {
-          if (lesson.completed) {
-            completedLessons.push(lesson.id)
-          }
-        })
-      })
-      
-      const progress = {
-        progressPercentage: progressPercentage.value,
-        learnedTime: learnedTime.value,
-        completedLessons,
-        lastPlayed: new Date().toISOString()
-      }
-      
-      localStorage.setItem(`course_${course.value.id}_progress`, JSON.stringify(progress))
-    }
-    
-    // 初始化Font Awesome
     const initFontAwesome = () => {
-      // 检查是否已经加载了Font Awesome
       if (!document.querySelector('link[href*="font-awesome"]')) {
         const link = document.createElement('link')
         link.rel = 'stylesheet'
         link.href = 'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css'
-        link.integrity = 'sha512-iecdLmaskl7CVkqkXNQ/ZH/XLlvWZOJyj7Yy7tcenmpD1ypASozpmT/E0iPtmFIB46ZmdtAc9eNBvH0H/ZpiBw=='
-        link.crossOrigin = 'anonymous'
-        link.referrerPolicy = 'no-referrer'
         document.head.appendChild(link)
+      }
+    }
+    
+    // 监听键盘快捷键
+    const handleKeyDown = (event) => {
+      // F键进入/退出全屏
+      if (event.key === 'f' || event.key === 'F') {
+        event.preventDefault()
+        toggleFullscreenV2()
+      }
+      // ESC键退出全屏
+      if (event.key === 'Escape' && isFullscreenV2.value) {
+        toggleFullscreenV2()
+      }
+      // 空格键播放/暂停
+      if (event.key === ' ' && event.target.tagName !== 'TEXTAREA' && event.target.tagName !== 'INPUT') {
+        event.preventDefault()
+        togglePlay()
       }
     }
     
     // 生命周期钩子
     onMounted(() => {
-      // 初始化Font Awesome
       initFontAwesome()
-      
-      loadLearningProgress()
-      
+
       // 添加事件监听器
       document.addEventListener('fullscreenchange', handleFullscreenChange)
-      document.addEventListener('keydown', handleKeydown)
-      
+      document.addEventListener('keydown', handleKeyDown)
+
       // 检查用户是否已登录
       const user = localStorage.getItem('bgareaCurrentUser') || sessionStorage.getItem('bgareaCurrentUser')
       if (!user) {
         router.push('/login')
       }
-      
-      // 初始化视频
-      if (videoElement.value) {
-        videoElement.value.playbackRate = playbackRate.value
+
+      // 检查当前课程是否已收藏和已点赞
+      const favorites = JSON.parse(localStorage.getItem('userFavorites') || '[]')
+      const courseId = course.value.id
+      isFavorited.value = favorites.some(f => f.id === courseId)
+
+      const likes = JSON.parse(localStorage.getItem('userLikes') || '[]')
+      isLiked.value = likes.some(l => l.courseId === courseId)
+
+      // 视频播放时定时保存历史记录
+      const historyInterval = setInterval(() => {
+        if (isPlaying.value && currentTime.value > 10) { // 观看超过10秒才记录
+          saveHistoryData()
+        }
+      }, 60000) // 每分钟保存一次
+
+      // 视频结束时保存历史记录
+      const videoEl = videoElement.value
+      if (videoEl) {
+        videoEl.addEventListener('ended', () => {
+          saveHistoryData()
+        })
       }
-      
+
+      // 在组件卸载时清理
+      onBeforeUnmount(() => {
+        clearInterval(historyInterval)
+        document.removeEventListener('fullscreenchange', handleFullscreenChange)
+        document.removeEventListener('keydown', handleKeyDown)
+        if (videoEl) {
+          videoEl.removeEventListener('ended', saveHistoryData)
+        }
+      })
+
       // 添加动画样式
       if (!document.querySelector('#notification-styles')) {
         const style = document.createElement('style')
@@ -862,11 +917,9 @@ export default {
     })
     
     onBeforeUnmount(() => {
-      saveLearningProgress()
-      
       // 移除事件监听器
       document.removeEventListener('fullscreenchange', handleFullscreenChange)
-      document.removeEventListener('keydown', handleKeydown)
+      document.removeEventListener('keydown', handleKeyDown)
     })
     
     return {
@@ -874,32 +927,31 @@ export default {
       isPlaying,
       currentTime,
       duration,
-      isMuted,
-      volume,
-      playbackRate,
-      showSubtitles,
-      isFullscreen,
-      showSettings,
-      activeTool,
-      progressPercentage,
-      masteryPercentage,
-      learnedTime,
-      showExerciseModal,
-      showAIModal,
-      showQuestionModal,
+      isFullscreenV2,
+      isLiked,
+      likeCount,
+      isFavorited,
+      favoriteCount,
+      isFollowing,
+      activeTab,
+      sortBy,
+      autoPlay,
+      newComment,
+      currentItemId,
+      section1Open,
+      section2Open,
+      openSections,
+      otherChapters,
+      
+      // 数据
       course,
-      currentLesson,
-      currentSubtitle,
-      subtitles,
-      syllabus,
-      questions,
-      playbackSpeeds,
-      aiSuggestion,
+      instructor,
+      comments,
       
       // 计算属性
       playPauseIcon,
-      volumeIcon,
-      fullscreenIcon,
+      progressPercentage,
+      sortedComments,
       
       // DOM 引用
       videoElement,
@@ -912,100 +964,99 @@ export default {
       onVideoEnded,
       handleVideoError,
       seekToTime,
-      toggleMute,
-      setPlaybackSpeed,
-      toggleSubtitles,
-      togglePictureInPicture,
-      toggleFullscreen,
-      updateSubtitle,
+      toggleFullscreenV2,
       formatTime,
-      formatDuration,
-      selectLesson,
-      prevLesson,
-      nextLesson,
-      toggleChapter,
-      markLessonAsCompleted,
-      activateTool,
-      getToolName,
-      likeQuestion,
-      showNotification
+      prevVideo,
+      nextVideo,
+      toggleLike,
+      toggleFavorite,
+      toggleFavoriteWithRedirect,
+      goToFavorites,
+      toggleFollow,
+      likeComment,
+      showReplyBox,
+      submitComment,
+      loadMoreComments,
+      toggleAutoPlay,
+      selectPlaylistItem,
+      goToInstructorSpace,
+      toggleSection,
+      toggleOtherSection
     }
   }
 }
 </script>
 
-
 <style scoped>
-/* 从原H5页面复制关键样式，确保Tailwind不覆盖自定义样式 */
-
-.page-header {
+/* 视频播放器样式 */
+.container {
   max-width: 1400px;
-  margin: 1rem auto 0;
-  padding: 0 1.5rem;
+  margin: 0 auto;
+  padding: 0 20px;
 }
 
+.min-h-screen {
+  min-height: 100vh;
+}
+
+.bg-gray-100 {
+  background-color: #f5f5f5;
+}
+
+/* 面包屑导航 */
 .breadcrumb {
-  display: flex;
-  gap: 0.5rem;
-  color: #4E5969;
-  font-size: 0.9rem;
-  margin-bottom: 1rem;
+  padding: 15px 0;
+  font-size: 14px;
+  color: #666;
 }
 
 .breadcrumb a {
-  color: #165DFF;
+  color: #666;
   text-decoration: none;
 }
 
 .breadcrumb a:hover {
-  text-decoration: underline;
+  color: #1890ff;
 }
 
-.main-content {
-  max-width: 1400px;
-  margin: 0 auto;
-  padding: 0 1.5rem 3rem;
+/* 主布局 */
+.main-layout {
   display: grid;
-  grid-template-columns: 2fr 1fr;
-  gap: 2rem;
+  grid-template-columns: 1fr 350px;
+  gap: 20px;
+  margin-bottom: 40px;
 }
 
-@media (max-width: 1200px) {
-  .main-content {
-    grid-template-columns: 1fr;
-  }
-}
-
-.video-section {
-  display: flex;
-  flex-direction: column;
-  gap: 1.5rem;
-}
-
+/* 视频容器 */
 .video-container {
-  background-color: #000;
-  border-radius: 8px;
+  background: white;
+  border-radius: 12px;
   overflow: hidden;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  position: relative;
+  transition: all 0.3s ease;
+}
+
+/* 全屏模式下的样式 */
+:fullscreen .video-container {
+  border-radius: 0;
+  box-shadow: none;
+  background: #000;
+}
+
+:fullscreen body {
+  background: #000;
 }
 
 .video-player {
+  position: relative;
   width: 100%;
   height: 500px;
-  background-color: #111;
+  background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+  cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: white;
-  position: relative;
-  overflow: hidden;
-  cursor: pointer;
-}
-
-@media (max-width: 1200px) {
-  .video-player {
-    height: 400px;
-  }
 }
 
 @media (max-width: 768px) {
@@ -1020,18 +1071,28 @@ export default {
   z-index: 1;
 }
 
+.video-placeholder i {
+  cursor: pointer;
+  transition: opacity 0.3s ease;
+}
+
+.video-placeholder i:hover {
+  opacity: 1;
+}
+
+/* 视频控制栏 */
 .video-controls {
   background-color: rgba(0, 0, 0, 0.8);
   padding: 1rem;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
+  position: relative;
 }
 
 .control-group {
   display: flex;
   align-items: center;
   gap: 1rem;
+  width: 100%;
+  position: relative;
 }
 
 .control-btn {
@@ -1054,11 +1115,42 @@ export default {
   color: #FF9F43;
 }
 
+/* 新全屏按钮样式 */
+.fullscreen-btn {
+  position: relative;
+  overflow: hidden;
+  transition: transform 0.2s;
+}
+
+.fullscreen-btn:hover {
+  transform: scale(1.1);
+}
+
+.fullscreen-icon-wrapper {
+  position: relative;
+  width: 20px;
+  height: 20px;
+}
+
+.fullscreen-icon-wrapper i {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+.fullscreen-icon-wrapper i.hidden {
+  opacity: 0;
+  transform: translate(-50%, -50%) scale(0.8);
+}
+
+/* 进度条 */
 .progress-container {
   flex-grow: 1;
-  margin: 0 1rem;
   position: relative;
   cursor: pointer;
+  padding: 10px 0;
 }
 
 .progress-bar {
@@ -1085,11 +1177,12 @@ export default {
   height: 12px;
   background-color: #FF9F43;
   border-radius: 50%;
-  display: none;
+  opacity: 0;
+  transition: opacity 0.2s;
 }
 
 .progress-container:hover .progress-handle {
-  display: block;
+  opacity: 1;
 }
 
 .time-display {
@@ -1097,483 +1190,614 @@ export default {
   font-size: 0.9rem;
   min-width: 100px;
   text-align: center;
+  font-family: monospace;
 }
 
-.video-settings {
+/* 视频详情 */
+.video-details {
+  background: white;
+  padding: 20px;
+  border-radius: 12px;
+  margin-top: 15px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+.video-title {
+  font-size: 24px;
+  margin-bottom: 15px;
+  color: #333;
+  font-weight: 600;
+}
+
+.author-section {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
   position: relative;
 }
 
-.settings-menu {
-  position: absolute;
-  bottom: 100%;
-  right: 0;
-  background-color: rgba(0, 0, 0, 0.9);
-  border-radius: 8px;
-  padding: 0.8rem;
-  min-width: 150px;
-  z-index: 10;
-}
-
-.settings-item {
-  color: white;
-  padding: 0.5rem;
-  cursor: pointer;
-  border-radius: 4px;
-  transition: background-color 0.3s;
-  font-size: 0.9rem;
-}
-
-.settings-item:hover {
-  background-color: rgba(255, 255, 255, 0.1);
-}
-
-.settings-item.active {
-  background-color: rgba(255, 255, 255, 0.15);
-  color: #FF9F43;
-}
-
-.subtitle-container {
-  position: absolute;
-  bottom: 80px;
-  left: 0;
-  right: 0;
-  text-align: center;
-  z-index: 5;
-  padding: 0 2rem;
-}
-
-.subtitle-text {
-  background-color: rgba(0, 0, 0, 0.7);
-  color: white;
-  padding: 0.5rem 1rem;
-  border-radius: 8px;
-  display: inline-block;
-  font-size: 1.1rem;
-  max-width: 80%;
-}
-
-.video-info {
-  background-color: white;
-  border-radius: 8px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-  padding: 1.5rem;
-}
-
-.current-video-title {
-  font-size: 1.5rem;
-  margin-bottom: 0.8rem;
-  color: #1F2937;
-}
-
-.video-description {
-  color: #4E5969;
-  margin-bottom: 1.2rem;
-  line-height: 1.6;
-}
-
-.video-meta {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 1.5rem;
-  margin-top: 1.5rem;
-  padding-top: 1.5rem;
-  border-top: 1px solid #F7F8FA;
-}
-
-.meta-item {
+.author-info {
   display: flex;
   align-items: center;
-  gap: 8px;
-  color: #4E5969;
-  font-size: 0.9rem;
+  gap: 12px;
 }
 
-.learning-tools {
-  background-color: white;
-  border-radius: 8px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-  padding: 1.5rem;
-}
-
-.tools-title {
-  font-size: 1.2rem;
-  margin-bottom: 1.2rem;
-  color: #1F2937;
-}
-
-.tool-buttons {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 1rem;
-  margin-bottom: 1.5rem;
-}
-
-@media (max-width: 768px) {
-  .tool-buttons {
-    grid-template-columns: 1fr;
-  }
-}
-
-.tool-btn {
-  padding: 0.8rem;
-  border-radius: 8px;
-  border: 1px solid #F7F8FA;
-  background-color: white;
-  color: #1F2937;
-  cursor: pointer;
-  transition: all 0.3s;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 8px;
-  font-weight: 500;
-}
-
-.tool-btn:hover,
-.tool-btn.active {
-  background-color: #f8fdff;
-  border-color: #165DFF;
-}
-
-.ai-assistant {
-  background-color: #f0f9ff;
-  border: 1px solid #c2e7ff;
-  border-radius: 8px;
-  padding: 1rem;
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-  cursor: pointer;
-  transition: all 0.3s;
-}
-
-.ai-assistant:hover {
-  background-color: #e1f5ff;
-}
-
-.ai-icon {
-  width: 50px;
-  height: 50px;
-  background-color: #165DFF;
+.author-avatar {
+  width: 48px;
+  height: 48px;
   border-radius: 50%;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   display: flex;
   align-items: center;
   justify-content: center;
-  color: white;
-  font-size: 1.5rem;
+  font-size: 24px;
 }
 
-.ai-text h4 {
-  font-size: 1rem;
-  margin-bottom: 0.3rem;
-  color: #1F2937;
+.author-name {
+  font-weight: 600;
+  font-size: 15px;
 }
 
-.ai-text p {
-  color: #4E5969;
-  font-size: 0.9rem;
+.author-date {
+  font-size: 12px;
+  color: #999;
 }
 
-.discussion-section {
-  background-color: white;
-  border-radius: 8px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-  padding: 1.5rem;
-}
-
-.discussion-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 1.5rem;
-}
-
-.discussion-title {
-  font-size: 1.2rem;
-  color: #1F2937;
-}
-
-.new-question-btn {
-  background-color: #165DFF;
+.follow-btn {
+  padding: 8px 20px;
+  background: #1890ff;
   color: white;
   border: none;
-  padding: 0.5rem 1rem;
-  border-radius: 8px;
-  font-weight: 500;
+  border-radius: 20px;
   cursor: pointer;
+  font-size: 14px;
+  transition: all 0.3s ease;
+}
+
+.follow-btn:hover {
+  background: #40a9ff;
+  transform: translateY(-1px);
+}
+
+.video-stats {
+  display: flex;
+  gap: 20px;
+  align-items: center;
+  font-size: 14px;
+}
+
+.stat-item {
   display: flex;
   align-items: center;
-  gap: 8px;
-  transition: background-color 0.3s;
+  gap: 4px;
+  cursor: pointer;
+  transition: color 0.2s;
+  padding: 8px 12px;
+  border-radius: 6px;
 }
 
-.new-question-btn:hover {
-  background-color: #6B7280;
+.stat-item:hover {
+  background: #f5f5f5;
+  color: #1890ff;
 }
 
-.question-list {
-  list-style: none;
+.stat-item .fa-heart:hover {
+  color: #f5222d;
 }
 
-.question-item {
-  padding: 1.2rem;
-  border: 1px solid #F7F8FA;
-  border-radius: 8px;
-  margin-bottom: 1rem;
+.stat-item .fa-star:hover {
+  color: #faad14;
 }
 
-.question-header {
+.stat-item .fa-bookmark:hover {
+  color: #1890ff;
+}
+
+/* 标签页 */
+.tabs {
   display: flex;
-  justify-content: space-between;
-  margin-bottom: 0.8rem;
+  gap: 30px;
+  background: white;
+  padding: 0 20px;
+  margin-top: 15px;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
 }
 
-.questioner {
+.tab {
+  padding: 15px 0;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  font-size: 15px;
+  color: #666;
+  position: relative;
+  transition: color 0.3s ease;
+}
+
+.tab:hover {
+  color: #1890ff;
+}
+
+.tab.active {
+  color: #1890ff;
+  font-weight: 500;
+}
+
+.tab.active::after {
+  content: "";
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: #1890ff;
+}
+
+/* 课程简介 */
+.course-intro {
+  background: white;
+  padding: 20px;
+  border-radius: 12px;
+  margin-top: 15px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+.course-intro h3 {
+  font-size: 18px;
+  margin-bottom: 12px;
+  color: #333;
+  font-weight: 600;
+}
+
+.course-intro p {
+  font-size: 14px;
+  line-height: 1.8;
+  color: #666;
+  margin-bottom: 15px;
+}
+
+.tags {
   display: flex;
-  align-items: center;
+  flex-wrap: wrap;
   gap: 10px;
 }
 
-.questioner-avatar {
+.tag {
+  padding: 6px 12px;
+  background: #f0f0f0;
+  border-radius: 20px;
+  font-size: 13px;
+  color: #666;
+  transition: all 0.3s ease;
+}
+
+.tag:hover {
+  background: #1890ff;
+  color: white;
+}
+
+/* 评论区 */
+.comments-section {
+  background: white;
+  padding: 20px;
+  border-radius: 12px;
+  margin-top: 15px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+.comments-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.comments-header h3 {
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.comment-sort {
+  display: flex;
+  gap: 15px;
+  font-size: 14px;
+}
+
+.comment-sort span {
+  cursor: pointer;
+  color: #666;
+  position: relative;
+  padding: 4px 0;
+  transition: color 0.3s ease;
+}
+
+.comment-sort span:hover {
+  color: #1890ff;
+}
+
+.comment-sort span.active {
+  color: #1890ff;
+  font-weight: 500;
+}
+
+.comment-sort span.active::after {
+  content: "";
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: #1890ff;
+}
+
+.comment-input-box {
+  margin-bottom: 25px;
+}
+
+.comment-input {
+  width: 100%;
+  padding: 12px;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  font-size: 14px;
+  resize: vertical;
+  min-height: 80px;
+  font-family: inherit;
+  transition: border-color 0.3s ease;
+}
+
+.comment-input:focus {
+  outline: none;
+  border-color: #1890ff;
+}
+
+.comment-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 10px;
+}
+
+.submit-comment-btn {
+  padding: 8px 24px;
+  background: #1890ff;
+  color: white;
+  border: none;
+  border-radius: 20px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  transition: all 0.3s ease;
+}
+
+.submit-comment-btn:hover {
+  background: #40a9ff;
+  transform: translateY(-1px);
+}
+
+.comments-list {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.comment {
+  display: flex;
+  gap: 12px;
+}
+
+.comment-avatar {
   width: 40px;
   height: 40px;
   border-radius: 50%;
-  overflow: hidden;
-  background-color: #F7F8FA;
-}
-
-.questioner-avatar img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-
-.questioner-info h4 {
-  font-size: 1rem;
-  margin-bottom: 0.2rem;
-  color: #1F2937;
-}
-
-.question-date {
-  color: #E5E6EB;
-  font-size: 0.9rem;
-}
-
-.ai-tag {
-  background-color: #f0f9ff;
-  color: #165DFF;
-  padding: 0.2rem 0.5rem;
-  border-radius: 12px;
-  font-size: 0.8rem;
-}
-
-.question-content {
-  color: #1F2937;
-  line-height: 1.7;
-  margin-bottom: 1rem;
-}
-
-.question-actions {
-  display: flex;
-  gap: 1rem;
-  font-size: 0.9rem;
-  color: #4E5969;
-}
-
-.action-btn {
-  display: flex;
-  align-items: center;
-  gap: 5px;
-  cursor: pointer;
-  transition: color 0.3s;
-}
-
-.action-btn:hover {
-  color: #165DFF;
-}
-
-.course-directory {
-  background-color: white;
-  border-radius: 8px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-  padding: 1.5rem;
-}
-
-.directory-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 1.5rem;
-}
-
-.directory-title {
-  font-size: 1.2rem;
-  color: #1F2937;
-}
-
-.course-progress {
-  background-color: #f0f9ff;
-  padding: 0.5rem 1rem;
-  border-radius: 20px;
-  font-size: 0.9rem;
-  color: #165DFF;
-  font-weight: 500;
-}
-
-.directory-list {
-  list-style: none;
-  max-height: 600px;
-  overflow-y: auto;
-}
-
-.directory-section {
-  margin-bottom: 1rem;
-}
-
-.section-header {
-  padding: 0.8rem 1rem;
-  background-color: #f8f9fa;
-  border-radius: 8px;
-  font-weight: 600;
-  color: #1F2937;
-  cursor: pointer;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  transition: background-color 0.3s;
-}
-
-.section-header:hover {
-  background-color: #f0f9ff;
-}
-
-.section-header i {
-  transition: transform 0.3s;
-}
-
-.section-header i.rotated {
-  transform: rotate(-90deg);
-}
-
-.lesson-list {
-  padding-left: 1rem;
-  margin-top: 0.5rem;
-  overflow: hidden;
-}
-
-.lesson-item {
-  padding: 0.8rem 1rem;
-  border-radius: 8px;
-  margin-bottom: 0.5rem;
-  cursor: pointer;
-  transition: all 0.3s;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.lesson-item:hover {
-  background-color: #f8fdff;
-}
-
-.lesson-item.active {
-  background-color: #f0f9ff;
-  border-left: 3px solid #165DFF;
-}
-
-.lesson-item.completed .lesson-title {
-  color: #10B981;
-}
-
-.lesson-info {
-  display: flex;
-  align-items: center;
-  gap: 0.8rem;
-}
-
-.lesson-icon {
-  width: 30px;
-  height: 30px;
-  border-radius: 50%;
-  background-color: #f0f9ff;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #165DFF;
-  font-size: 0.9rem;
+  flex-shrink: 0;
+  font-size: 18px;
 }
 
-.lesson-title {
-  font-weight: 500;
+.comment-content {
+  flex: 1;
 }
 
-.lesson-duration {
-  color: #4E5969;
-  font-size: 0.85rem;
-}
-
-.lesson-status {
+.comment-header {
   display: flex;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+.comment-author {
+  font-weight: 500;
+  font-size: 14px;
+  color: #333;
+}
+
+.comment-time {
+  font-size: 13px;
+  color: #999;
+}
+
+.comment-content p {
+  font-size: 14px;
+  line-height: 1.6;
+  color: #333;
+  margin-bottom: 10px;
+}
+
+.comment-stats {
+  display: flex;
+  gap: 20px;
+  font-size: 13px;
+  color: #666;
+}
+
+.comment-stats span {
+  cursor: pointer;
+  transition: color 0.2s;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.comment-stats span:hover {
+  color: #1890ff;
+}
+
+.load-more {
+  text-align: center;
+  margin-top: 30px;
+}
+
+.load-more-btn {
+  padding: 10px 30px;
+  border: 1px solid #e0e0e0;
+  background: white;
+  border-radius: 20px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: all 0.3s ease;
+}
+
+.load-more-btn:hover {
+  background: #f9f9f9;
+  border-color: #1890ff;
+  color: #1890ff;
+}
+
+/* 右侧课程导航栏 */
+.right-column-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+/* 课程信息卡片 */
+.course-card {
+  background: white;
+  padding: 20px;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+.course-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.course-author {
+  display: flex;
+  gap: 10px;
   align-items: center;
 }
 
-/* 动画 */
-@keyframes slideIn {
-  from { transform: translateX(100%); opacity: 0; }
-  to { transform: translateX(0); opacity: 1; }
+.course-author-avatar {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
 }
 
-@keyframes slideOut {
-  from { transform: translateX(0); opacity: 1; }
-  to { transform: translateX(100%); opacity: 0; }
+.course-author-name {
+  font-weight: 600;
+  font-size: 15px;
 }
 
-@media (max-width: 576px) {
-  .main-content {
-    padding: 0 1rem 2rem;
+.course-author-fans {
+  font-size: 12px;
+  color: #999;
+}
+
+.follow-btn-small {
+  padding: 6px 16px;
+  background: #f0f0f0;
+  color: #666;
+  border: none;
+  border-radius: 16px;
+  cursor: pointer;
+  font-size: 12px;
+  transition: all 0.3s ease;
+}
+
+.follow-btn-small.following {
+  background: #1890ff;
+  color: white;
+}
+
+.follow-btn-small:hover {
+  transform: translateY(-1px);
+}
+
+.course-description {
+  font-size: 13px;
+  color: #666;
+  line-height: 1.6;
+  margin-bottom: 15px;
+}
+
+.enter-space-btn {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid #1890ff;
+  background: white;
+  color: #1890ff;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  transition: all 0.2s;
+}
+
+.enter-space-btn:hover {
+  background: #1890ff;
+  color: white;
+}
+
+/* 课程章节导航 */
+.course-navigation {
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  overflow: hidden;
+}
+
+/* 课程样式 */
+.course-section-title {
+  @apply font-medium text-gray-600 py-3 px-4 border-b border-gray-200;
+}
+
+.course-item {
+  @apply flex items-center gap-3 px-4 py-2.5 hover:bg-primary/5 cursor-pointer transition-colors text-sm;
+}
+
+.course-item.active {
+  @apply bg-primary/10 text-primary font-medium;
+}
+
+.course-item-icon {
+  @apply w-5 h-5 flex items-center justify-center rounded;
+}
+
+.course-item-video {
+  @apply bg-primary/10 text-primary;
+}
+
+.course-item-exercise {
+  @apply bg-success/10 text-success;
+}
+
+/* 响应式设计 */
+@media (max-width: 1024px) {
+  .main-layout {
+    grid-template-columns: 1fr;
   }
   
-  .video-info,
-  .learning-tools,
-  .course-directory,
-  .discussion-section {
-    padding: 1.2rem;
+  .right-column-nav {
+    display: none;
+  }
+}
+
+@media (max-width: 768px) {
+  .container {
+    padding: 0 15px;
   }
   
-  .current-video-title {
-    font-size: 1.3rem;
+  .video-player {
+    height: 300px;
   }
   
-  .video-meta {
-    gap: 1rem;
+  .author-section {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 15px;
+  }
+  
+  .video-stats {
+    width: 100%;
+    justify-content: space-between;
+  }
+  
+  .tabs {
+    gap: 15px;
+    padding: 0 15px;
+  }
+  
+  .tab {
+    font-size: 14px;
+    padding: 12px 0;
   }
   
   .control-group {
-    gap: 0.5rem;
+    flex-wrap: wrap;
+    gap: 8px;
   }
   
-  .progress-container {
-    margin: 0 0.5rem;
+  .control-btn {
+    width: 32px;
+    height: 32px;
+    font-size: 1rem;
+  }
+  
+  .time-display {
+    min-width: 80px;
+    font-size: 12px;
+  }
+  
+  .video-title {
+    font-size: 20px;
+  }
+  
+  .comment-sort {
+    gap: 10px;
   }
 }
 
-/* 确保Font Awesome图标正常显示 */
-.fas {
-  font-family: 'Font Awesome 6 Free' !important;
-  font-weight: 900 !important;
+/* 全屏模式下的特殊样式 */
+body.video-fullscreen-active {
+  overflow: hidden;
 }
 
-/* 模态框定位 */
-.modal {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background-color: rgba(0, 0, 0, 0.7);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 10000;
+:fullscreen .video-controls {
+  background-color: rgba(0, 0, 0, 0.95);
+}
+
+:fullscreen .video-player {
+  height: calc(100vh - 60px);
+}
+
+:fullscreen .control-btn:hover {
+  background-color: rgba(255, 255, 255, 0.15);
+  transform: scale(1.1);
+}
+
+/* 全屏按钮动画效果 */
+.fullscreen-btn:active {
+  transform: scale(0.95);
+}
+
+.fullscreen-btn::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 100%;
+  height: 100%;
+  background: radial-gradient(circle, rgba(255, 159, 67, 0.3) 0%, transparent 70%);
+  transform: translate(-50%, -50%) scale(0);
+  border-radius: 50%;
+  opacity: 0;
+  transition: transform 0.3s, opacity 0.3s;
+}
+
+.fullscreen-btn:active::after {
+  transform: translate(-50%, -50%) scale(1.5);
+  opacity: 1;
 }
 </style>

@@ -20,6 +20,10 @@
                 <i class="fa fa-circle-o text-xs sidebar-icon"></i>
                 <span class="sidebar-child-text">工作台</span>
               </div>
+              <div class="sidebar-child" @click="goToPage('/article-management')">
+                <i class="fa fa-file-text-o text-xs sidebar-icon"></i>
+                <span class="sidebar-child-text">稿件管理</span>
+              </div>
             </div>
           </div>
 
@@ -464,10 +468,18 @@ export default {
   mounted() {
     this.initChart()
   },
+  // TeacherDashboard.vue
   beforeUnmount() {
-    if (this.chartInstance) {
-      this.chartInstance.destroy()
+    // 使用 try-catch 包装销毁逻辑
+    try {
+      if (this.chartInstance && this.chartInstance.destroy) {
+        this.chartInstance.destroy()
+      }
+    } catch (error) {
+      // 静默处理错误，避免影响页面切换
+      console.warn('图表销毁时出错:', error.message)
     }
+    this.chartInstance = null
   },
   methods: {
     toggleSubmenu(submenu) {
