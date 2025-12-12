@@ -1,97 +1,68 @@
-<!-- FavoritesManagement.vue -->
 <template>
-  <div class="font-inter bg-gray-50 min-h-screen flex flex-col">
+  <div class="font-sans bg-gray-50 min-h-screen flex flex-col">
     <!-- 使用Header组件 -->
     <Header />
     
     <div class="flex flex-1">
       <!-- 侧边栏导航 -->
-      <aside class="w-64 bg-white border-r border-gray-200 flex-shrink-0 h-[calc(100vh-5rem)] sticky top-[5rem] overflow-y-auto z-30">
-        <nav class="py-4 space-y-1">
-          <!-- 教师管理 -->
+      <aside class="w-64 bg-white border-r border-gray-200 flex-shrink-0 fixed top-[5rem] left-0 h-[calc(100vh-5rem)] overflow-y-auto z-30">
+        <nav class="py-4 space-y-1 px-4">
+          <!-- 工作台 -->
           <div class="sidebar-group">
-            <div class="sidebar-parent" @click="toggleSubmenu('teacher')">
+            <div class="sidebar-parent" :class="{ 'active': activeSidebar === 'dashboard' }" @click="goToTeacherDashboard">
               <div class="sidebar-parent-content">
                 <i class="fa fa-tachometer sidebar-icon"></i>
-                <span>教师管理</span>
-              </div>
-              <i class="fa fa-angle-right text-xs transition-transform duration-200" :class="{'rotate-icon': activeSubmenu === 'teacher'}"></i>
-            </div>
-            <div id="submenu-teacher" class="bg-gray-50" :class="{'hidden': activeSubmenu !== 'teacher'}">
-              <div class="sidebar-child" @click="goToWorkEngine">
-                <i class="fa fa-circle-o text-xs sidebar-icon"></i>
-                <span class="sidebar-child-text">工作台</span>
-              </div>
-              <!-- <div class="sidebar-child" @click="goToPage('/article-management')">
-                <i class="fa fa-file-text-o text-xs sidebar-icon"></i>
-                <span class="sidebar-child-text">稿件管理</span>
-              </div> -->
-            </div>
-          </div>
-
-          <!-- 管理员管理
-          <div class="sidebar-group">
-            <div class="sidebar-parent" @click="toggleSubmenu('admin')">
-              <div class="sidebar-parent-content">
-                <i class="fa fa-user-secret sidebar-icon"></i>
-                <span>管理员管理</span>
-              </div>
-              <i class="fa fa-angle-right text-xs transition-transform duration-200" :class="{'rotate-icon': activeSubmenu === 'admin'}"></i>
-            </div>
-            <div id="submenu-admin" class="bg-gray-50" :class="{'hidden': activeSubmenu !== 'admin'}">
-              <div class="sidebar-child" @click="goToCourseManagement">
-                <i class="fa fa-circle-o text-xs sidebar-icon"></i>
-                <span class="sidebar-child-text">课程管理</span>
-              </div>
-              <div class="sidebar-child" @click="goToUserManagement">
-                <i class="fa fa-circle-o text-xs sidebar-icon"></i>
-                <span class="sidebar-child-text">用户管理</span>
-              </div>
-            </div>
-          </div> -->
-          
-          <!-- 收藏管理（当前激活） -->
-          <div class="sidebar-group">
-            <div class="sidebar-parent active" @click="toggleSubmenu('favorites')">
-              <div class="sidebar-parent-content">
-                <i class="fa fa-heart sidebar-icon"></i>
-                <span>收藏管理</span>
-              </div>
-              <i class="fa fa-angle-right text-xs transition-transform duration-200 rotate-icon"></i>
-            </div>
-            <div id="submenu-favorites" class="bg-gray-50" :class="{'hidden': activeSubmenu !== 'favorites'}">
-              <div class="sidebar-child active" @click="switchTab('collection')">
-                <i class="fa fa-book text-xs sidebar-icon"></i>
-                <span class="sidebar-child-text">我的收藏</span>
-              </div>
-              <div class="sidebar-child" @click="switchTab('likes')">
-                <i class="fa fa-thumbs-up text-xs sidebar-icon"></i>
-                <span class="sidebar-child-text">点赞</span>
-              </div>
-              <div class="sidebar-child" @click="switchTab('history')">
-                <i class="fa fa-history text-xs sidebar-icon"></i>
-                <span class="sidebar-child-text">历史记录</span>
+                <span>工作台</span>
               </div>
             </div>
           </div>
           
-          <!-- 个人中心 -->
+          <!-- 我的收藏 -->
           <div class="sidebar-group">
-            <div class="sidebar-parent" @click="toggleSubmenu('user-center')">
+            <div class="sidebar-parent" :class="{ 'active': activeSidebar === 'collection' }" @click="switchTabAndSidebar('collection')">
               <div class="sidebar-parent-content">
-                <i class="fa fa-user-circle-o sidebar-icon"></i>
-                <span>个人中心</span>
+                <i class="fa fa-book sidebar-icon"></i>
+                <span>我的收藏</span>
               </div>
-              <i class="fa fa-angle-right text-xs transition-transform duration-200" :class="{'rotate-icon': activeSubmenu === 'user-center'}"></i>
             </div>
-            <div id="submenu-user-center" class="bg-gray-50" :class="{'hidden': activeSubmenu !== 'user-center'}">
-              <div class="sidebar-child" @click="goToPersonalInfo">
-                <i class="fa fa-id-card-o text-xs sidebar-icon"></i>
-                <span class="sidebar-child-text">用户信息</span>
+          </div>
+          
+          <!-- 点赞 -->
+          <div class="sidebar-group">
+            <div class="sidebar-parent" :class="{ 'active': activeSidebar === 'likes' }" @click="switchTabAndSidebar('likes')">
+              <div class="sidebar-parent-content">
+                <i class="fa fa-thumbs-up sidebar-icon"></i>
+                <span>点赞</span>
               </div>
-              <div class="sidebar-child" @click="goToUserSettings">
-                <i class="fa fa-cog text-xs sidebar-icon"></i>
-                <span class="sidebar-child-text">用户设置</span>
+            </div>
+          </div>
+          
+          <!-- 历史记录 -->
+          <div class="sidebar-group">
+            <div class="sidebar-parent" :class="{ 'active': activeSidebar === 'history' }" @click="switchTabAndSidebar('history')">
+              <div class="sidebar-parent-content">
+                <i class="fa fa-history sidebar-icon"></i>
+                <span>历史记录</span>
+              </div>
+            </div>
+          </div>
+          
+          <!-- 用户信息 -->
+          <div class="sidebar-group">
+            <div class="sidebar-parent" :class="{ 'active': activeSidebar === 'user-info' }" @click="goToPersonalInfo">
+              <div class="sidebar-parent-content">
+                <i class="fa fa-id-card-o sidebar-icon"></i>
+                <span>用户信息</span>
+              </div>
+            </div>
+          </div>
+          
+          <!-- 用户设置 -->
+          <div class="sidebar-group">
+            <div class="sidebar-parent" :class="{ 'active': activeSidebar === 'user-settings' }" @click="goToPersonalSettings">
+              <div class="sidebar-parent-content">
+                <i class="fa fa-cog sidebar-icon"></i>
+                <span>用户设置</span>
               </div>
             </div>
           </div>
@@ -99,24 +70,24 @@
       </aside>
 
       <!-- 主内容区域 -->
-      <main class="flex-1 overflow-y-auto p-6">
+      <main class="flex-1 overflow-y-auto p-6 ml-64">
         <div class="p-6">
-          <!-- 面包屑导航 -->
-          <div class="text-sm text-secondary mb-6">
+          <!-- 面包屑导航
+          <div class="text-sm text-gray-600 mb-6">
             <span>用户中心</span>
             <i class="fa fa-angle-right mx-1 text-gray-400"></i>
             <span>收藏管理</span>
             <i class="fa fa-angle-right mx-1 text-gray-400"></i>
-            <span class="text-dark font-medium">{{ breadcrumbCurrent }}</span>
-          </div>
+            <span class="text-gray-900 font-medium">{{ breadcrumbCurrent }}</span>
+          </div> -->
 
           <!-- 收藏管理页面 -->
           <div class="card p-6 card-shadow">
             <!-- 页面标题和批量操作 -->
             <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
               <div>
-                <h3 class="text-lg font-semibold text-dark">{{ pageTitle }}</h3>
-                <p class="text-sm text-secondary mt-1">{{ pageDescription }}</p>
+                <h3 class="text-lg font-semibold text-gray-900">{{ pageTitle }}</h3>
+                <p class="text-sm text-gray-600 mt-1">{{ pageDescription }}</p>
               </div>
               <div class="flex items-center gap-3">
                 <button class="btn border border-gray-300 hover:bg-gray-50 transition-all duration-200 flex items-center gap-1 px-4" 
@@ -132,15 +103,15 @@
             <div class="border-b border-gray-200 mb-6">
               <div class="flex">
                 <div class="favorite-tab" :class="{ 'active': currentTab === 'collection' }" 
-                     @click="switchTab('collection')">
+                     @click="switchTabAndSidebar('collection')">
                   我的收藏
                 </div>
                 <div class="favorite-tab" :class="{ 'active': currentTab === 'likes' }" 
-                     @click="switchTab('likes')">
+                     @click="switchTabAndSidebar('likes')">
                   点赞
                 </div>
                 <div class="favorite-tab" :class="{ 'active': currentTab === 'history' }" 
-                     @click="switchTab('history')">
+                     @click="switchTabAndSidebar('history')">
                   历史记录
                 </div>
               </div>
@@ -153,14 +124,14 @@
                 <div class="text-sm font-medium text-gray-500 mb-2">课程分类</div>
                 <div class="flex flex-wrap gap-2">
                   <button class="px-3 py-1 rounded text-sm"
-                          :class="selectedCategory === 'all' ? 'bg-primary/10 text-primary' : 'hover:bg-gray-100 text-gray-500'"
+                          :class="selectedCategory === 'all' ? 'bg-blue-100 text-blue-600' : 'hover:bg-gray-100 text-gray-500'"
                           @click="filterCategory('all')">
                     全部课程
                   </button>
                   <button v-for="category in courseCategories" 
                           :key="category.value"
                           class="px-3 py-1 rounded text-sm"
-                          :class="selectedCategory === category.value ? 'bg-primary/10 text-primary' : 'hover:bg-gray-100 text-gray-500'"
+                          :class="selectedCategory === category.value ? 'bg-blue-100 text-blue-600' : 'hover:bg-gray-100 text-gray-500'"
                           @click="filterCategory(category.value)">
                     {{ category.label }}
                   </button>
@@ -185,8 +156,8 @@
                         :key="course.id"
                         class="border-b border-gray-200 table-row-hover">
                       <td class="py-3 px-2 text-gray-500">{{ course.id }}</td>
-                      <td class="py-3 px-2">{{ course.name }}</td>
-                      <td class="py-3 px-2">{{ course.teacher }}</td>
+                      <td class="py-3 px-2 text-gray-900">{{ course.name }}</td>
+                      <td class="py-3 px-2 text-gray-900">{{ course.teacher }}</td>
                       <td class="py-3 px-2">
                         <span :class="getStatusClass(course.status)" class="text-xs">
                           {{ getStatusText(course.status) }}
@@ -194,7 +165,7 @@
                       </td>
                       <td class="py-3 px-2 text-gray-500">{{ course.collectedAt }}</td>
                       <td class="py-3 px-2">
-                        <button class="text-primary hover:text-primary/80 text-sm" 
+                        <button class="text-blue-600 hover:text-blue-800 text-sm" 
                                 @click="removeFavorite(course.id)">
                           取消收藏
                         </button>
@@ -207,8 +178,8 @@
               <!-- 空状态 -->
               <div v-else class="text-center py-12">
                 <i class="fa fa-heart text-4xl text-gray-300 mb-4"></i>
-                <h4 class="text-lg font-medium text-dark mb-2">暂无收藏内容</h4>
-                <p class="text-secondary mb-6">您还没有收藏任何内容，快去发现您感兴趣的课程吧！</p>
+                <h4 class="text-lg font-medium text-gray-900 mb-2">暂无收藏内容</h4>
+                <p class="text-gray-600 mb-6">您还没有收藏任何内容，快去发现您感兴趣的课程吧！</p>
                 <button class="btn-primary max-w-xs mx-auto" @click="goToHomepage">
                   <i class="fa fa-compass mr-2"></i>去首页看看
                 </button>
@@ -234,11 +205,11 @@
                         :key="like.id"
                         class="border-b border-gray-200 table-row-hover">
                       <td class="py-3 px-2 text-gray-500">{{ like.courseId }}</td>
-                      <td class="py-3 px-2">{{ like.courseName }}</td>
-                      <td class="py-3 px-2">{{ like.teacher }}</td>
+                      <td class="py-3 px-2 text-gray-900">{{ like.courseName }}</td>
+                      <td class="py-3 px-2 text-gray-900">{{ like.teacher }}</td>
                       <td class="py-3 px-2 text-gray-500">{{ like.likedAt }}</td>
                       <td class="py-3 px-2">
-                        <button class="text-danger hover:text-danger/80 text-sm" 
+                        <button class="text-red-600 hover:text-red-800 text-sm" 
                                 @click="removeLike(like.id)">
                           取消点赞
                         </button>
@@ -251,8 +222,8 @@
               <!-- 空状态 -->
               <div v-else class="text-center py-12">
                 <i class="fa fa-thumbs-up text-4xl text-gray-300 mb-4"></i>
-                <h4 class="text-lg font-medium text-dark mb-2">您还没有点赞内容</h4>
-                <p class="text-secondary mb-6">去浏览课程，给喜欢的内容点赞吧！</p>
+                <h4 class="text-lg font-medium text-gray-900 mb-2">您还没有点赞内容</h4>
+                <p class="text-gray-600 mb-6">去浏览课程，给喜欢的内容点赞吧！</p>
                 <button class="btn-primary max-w-xs mx-auto" @click="goToHomepage">
                   <i class="fa fa-compass mr-2"></i>去首页看看
                 </button>
@@ -268,11 +239,11 @@
                      class="bg-white border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
                   <div class="flex items-start justify-between">
                     <div class="flex items-start gap-3">
-                      <div class="w-10 h-10 flex items-center justify-center rounded-lg bg-primary/10">
-                        <i class="fa fa-play-circle text-primary"></i>
+                      <div class="w-10 h-10 flex items-center justify-center rounded-lg bg-blue-100">
+                        <i class="fa fa-play-circle text-blue-600"></i>
                       </div>
                       <div>
-                        <h4 class="font-medium text-dark mb-1">{{ record.courseName }}</h4>
+                        <h4 class="font-medium text-gray-900 mb-1">{{ record.courseName }}</h4>
                         <p class="text-sm text-gray-500">观看时间: {{ record.watchedAt }}</p>
                         <p class="text-sm text-gray-500 mt-1">
                           观看进度: <span class="font-medium">{{ record.progress }}%</span>
@@ -280,11 +251,11 @@
                       </div>
                     </div>
                     <div class="flex gap-2">
-                      <button class="text-xs text-primary hover:text-primary/80 px-3 py-1 border border-primary rounded"
+                      <button class="text-xs text-blue-600 hover:text-blue-800 px-3 py-1 border border-blue-600 rounded"
                               @click="continueWatching(record.courseId)">
                         继续观看
                       </button>
-                      <button class="text-xs text-danger hover:text-danger/80" 
+                      <button class="text-xs text-red-600 hover:text-red-800" 
                               @click="removeHistory(record.id)">
                         删除
                       </button>
@@ -296,8 +267,8 @@
               <!-- 空状态 -->
               <div v-else class="text-center py-12">
                 <i class="fa fa-history text-4xl text-gray-300 mb-4"></i>
-                <h4 class="text-lg font-medium text-dark mb-2">您还没有浏览历史</h4>
-                <p class="text-secondary mb-6">浏览课程后，这里会显示您的观看记录</p>
+                <h4 class="text-lg font-medium text-gray-900 mb-2">您还没有浏览历史</h4>
+                <p class="text-gray-600 mb-6">浏览课程后，这里会显示您的观看记录</p>
                 <button class="btn-primary max-w-xs mx-auto" @click="goToHomepage">
                   <i class="fa fa-compass mr-2"></i>去首页看看
                 </button>
@@ -312,14 +283,13 @@
     <Footer />
 
     <!-- 提示信息 -->
-    <div v-if="toastMessage" class="toast-message fixed top-6 right-6 bg-dark text-white px-4 py-2 rounded-md shadow-lg z-50 animate-fade-in">
+    <div v-if="toastMessage" class="toast-message fixed top-6 right-6 bg-gray-800 text-white px-4 py-2 rounded-md shadow-lg z-50 animate-fade-in">
       {{ toastMessage }}
     </div>
   </div>
 </template>
 
 <script>
-// 引入Header和Footer组件
 import Header from '@/components/Header.vue'
 import Footer from '@/components/Footer.vue'
 
@@ -331,8 +301,8 @@ export default {
   },
   data() {
     return {
-      // 侧边栏状态
-      activeSubmenu: 'favorites',
+      // 侧边栏活动状态
+      activeSidebar: 'collection',
       
       // 收藏管理相关
       currentTab: 'collection', // collection, likes, history
@@ -373,7 +343,9 @@ export default {
           batchBtn: '清空历史记录',
           breadcrumb: '历史记录'
         }
-      }
+      },
+      
+      refreshInterval: null
     }
   },
   computed: {
@@ -423,7 +395,7 @@ export default {
     // 如果URL参数指定了标签，则切换到对应标签
     if (targetTab && ['collection', 'likes', 'history'].includes(targetTab)) {
       this.currentTab = targetTab
-      this.updateSidebarActive()
+      this.activeSidebar = targetTab
     }
     
     // 加载用户数据
@@ -443,6 +415,42 @@ export default {
     }
   },
   methods: {
+    // 跳转到工作台
+    goToTeacherDashboard() {
+      this.activeSidebar = 'dashboard'
+      this.$router.push('/teacher-dashboard')
+    },
+
+    // 跳转到用户信息
+    goToPersonalInfo() {
+      this.activeSidebar = 'user-info'
+      this.$router.push({
+        path: '/personal-information',
+        query: { page: 'user-info' }
+      })
+    },
+
+    // 跳转到用户设置
+    goToPersonalSettings() {
+      this.activeSidebar = 'user-settings'
+      this.$router.push({
+        path: '/personal-information',
+        query: { page: 'user-settings' }
+      })
+    },
+
+    // 切换标签页并更新侧边栏高亮
+    switchTabAndSidebar(tab) {
+      this.currentTab = tab
+      this.activeSidebar = tab
+      this.selectedCategory = 'all' // 重置筛选
+      
+      // 更新URL参数
+      const url = new URL(window.location)
+      url.searchParams.set('tab', tab)
+      window.history.replaceState({}, '', url)
+    },
+    
     // 加载用户数据
     loadUserData() {
       try {
@@ -498,44 +506,6 @@ export default {
       }
     },
     
-    // 侧边栏切换
-    toggleSubmenu(submenu) {
-      this.activeSubmenu = this.activeSubmenu === submenu ? null : submenu
-    },
-    
-    // 更新侧边栏激活状态
-    updateSidebarActive() {
-      // 更新侧边栏子菜单激活状态
-      const sidebarChildren = document.querySelectorAll('#submenu-favorites .sidebar-child')
-      sidebarChildren.forEach(child => {
-        child.classList.remove('active')
-      })
-      
-      // 根据当前标签激活对应侧边栏项
-      if (this.currentTab === 'collection') {
-        const collectionItem = document.querySelector('#submenu-favorites .sidebar-child:nth-child(1)')
-        if (collectionItem) collectionItem.classList.add('active')
-      } else if (this.currentTab === 'likes') {
-        const likesItem = document.querySelector('#submenu-favorites .sidebar-child:nth-child(2)')
-        if (likesItem) likesItem.classList.add('active')
-      } else if (this.currentTab === 'history') {
-        const historyItem = document.querySelector('#submenu-favorites .sidebar-child:nth-child(3)')
-        if (historyItem) historyItem.classList.add('active')
-      }
-    },
-    
-    // 切换标签页
-    switchTab(tab) {
-      this.currentTab = tab
-      this.selectedCategory = 'all' // 重置筛选
-      this.updateSidebarActive()
-      
-      // 更新URL参数
-      const url = new URL(window.location)
-      url.searchParams.set('tab', tab)
-      window.history.replaceState({}, '', url)
-    },
-    
     // 过滤课程分类
     filterCategory(category) {
       this.selectedCategory = category
@@ -544,10 +514,10 @@ export default {
     // 获取状态样式
     getStatusClass(status) {
       const classes = {
-        'ongoing': 'text-success',
-        'ended': 'text-warning'
+        'ongoing': 'text-green-600',
+        'ended': 'text-yellow-600'
       }
-      return classes[status] || 'text-secondary'
+      return classes[status] || 'text-gray-600'
     },
     
     // 获取状态文本
@@ -639,33 +609,12 @@ export default {
     // 导航方法
     goToHomepage() {
       this.$router.push('/')
-    },
-    
-    goToPersonalInfo() {
-      this.$router.push('/personal-info')
-    },
-    
-    goToUserSettings() {
-      this.$router.push('/personal-info#settings')
-    },
-    
-    goToWorkEngine() {
-      this.$router.push('/work-engine')
-    },
-    
-    goToCourseManagement() {
-      this.$router.push('/course-management')
-    },
-    
-    goToUserManagement() {
-      this.$router.push('/user-management')
     }
   }
 }
 </script>
 
 <style scoped>
-/* 原有样式保持不变 */
 /* 侧边栏样式 */
 .sidebar-parent {
   @apply flex items-center justify-between px-4 py-3 text-gray-500 hover:bg-primary/5 hover:text-primary transition-all duration-200 cursor-pointer;
@@ -691,8 +640,10 @@ export default {
 .rotate-icon {
   @apply transform transition-transform duration-200 rotate-90;
 }
-.sidebar-group {
-  @apply mb-2;
+
+/* 导航容器 */
+nav {
+  @apply py-4 space-y-1 px-4;
 }
 
 /* 卡片样式 */
@@ -708,20 +659,12 @@ export default {
   @apply px-3 py-1 text-sm rounded transition-all duration-200;
 }
 .btn-primary {
-  @apply w-full bg-primary hover:bg-primary/90 text-white font-medium py-2.5 rounded-md transition-all duration-200 transform hover:scale-[1.01] active:scale-[0.99] focus:outline-none focus:ring-2 focus:ring-primary/50;
-}
-.btn-text {
-  @apply text-primary hover:bg-primary/10 transition-all duration-200;
+  @apply w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2.5 rounded-md transition-all duration-200 transform hover:scale-[1.01] active:scale-[0.99] focus:outline-none focus:ring-2 focus:ring-blue-500/50;
 }
 
 /* 输入框样式 */
 .input-field {
-  @apply w-full px-4 py-2.5 rounded-md border border-gray-300 focus:border-primary focus:ring-1 focus:ring-primary focus:outline-none transition-all duration-200;
-}
-
-/* 链接样式 */
-.text-link {
-  @apply text-primary hover:text-primary/80 transition-colors duration-200 cursor-pointer;
+  @apply w-full px-4 py-2.5 rounded-md border border-gray-300 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none transition-all duration-200;
 }
 
 /* 收藏标签页样式 */
@@ -729,7 +672,7 @@ export default {
   @apply px-4 py-2 text-sm font-medium transition-all duration-200 cursor-pointer;
 }
 .favorite-tab.active {
-  @apply text-primary border-b-2 border-primary;
+  @apply text-blue-600 border-b-2 border-blue-600;
 }
 
 /* 表格行悬停效果 */

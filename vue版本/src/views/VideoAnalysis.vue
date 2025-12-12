@@ -4,7 +4,7 @@
     
     <div class="flex flex-1">
       <!-- 左侧课程列表导航 -->
-      <aside class="w-64 bg-white border-r border-gray-200 flex-shrink-0 h-[calc(100vh-5rem)] sticky top-[5rem] overflow-y-auto z-30">
+<aside class="w-64 bg-white border-r border-gray-200 flex-shrink-0 fixed top-[5rem] left-0 h-[calc(100vh-5rem)] overflow-y-auto z-30">
         <!-- 课程章节标题 -->
         <div class="course-section-title">
           操作系统课程
@@ -82,7 +82,7 @@
       </aside>
 
       <!-- 主内容区域：视频详情分析 -->
-      <main class="flex-1 overflow-y-auto p-6">
+      <main class="flex-1 overflow-y-auto p-6 ml-64" style="height: calc(100vh - 5rem);">
         <!-- 面包屑导航 -->
         <div class="text-sm text-secondary mb-6">
           <span @click="goToDashboard()" class="cursor-pointer hover:text-primary">用户中心</span>
@@ -177,39 +177,7 @@
                   <canvas :ref="el => chartRefs.contentChart = el" class="w-full h-full"></canvas>
                 </div>
               </div>
-
-              <!-- 底部分析区域 -->
-              <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <!-- 完成率分析 -->
-                <div class="bg-white rounded-lg border border-gray-200 p-4 shadow-sm">
-                  <h3 class="font-medium text-dark mb-4 text-sm">完成率分析</h3>
-                  <div class="h-40 bg-gray-50 rounded-lg relative w-full">
-                    <canvas :ref="el => chartRefs.completionChart = el" class="w-full h-full"></canvas>
-                  </div>
-                </div>
-                
-                <!-- 热门时段分析 -->
-                <div class="bg-white rounded-lg border border-gray-200 p-4 shadow-sm">
-                  <h3 class="font-medium text-dark mb-4 text-sm">热门时段分析</h3>
-                  <div class="h-40 bg-gray-50 rounded-lg relative w-full">
-                    <canvas :ref="el => chartRefs.hotTimeChart = el" class="w-full h-full"></canvas>
-                  </div>
-                </div>
-                
-                <!-- 今日互动统计 -->
-                <div class="bg-white rounded-lg border border-gray-200 p-4 shadow-sm">
-                  <h3 class="font-medium text-dark mb-4 text-sm">今日互动统计</h3>
-                  <div class="h-40 bg-gray-50 rounded-lg relative w-full">
-                    <canvas :ref="el => chartRefs.todayInteractionChart = el" class="w-full h-full"></canvas>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <!-- 右侧区域（已清空） -->
-            <div class="w-full lg:w-80 space-y-6">
-              <!-- 这里的内容已被删除 -->
-            </div>
+            </div> 
           </div>
         </div>
       </main>

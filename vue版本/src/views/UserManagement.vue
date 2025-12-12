@@ -5,90 +5,74 @@
     
     <div class="flex flex-1">
       <!-- 侧边栏导航 -->
-      <aside class="w-64 bg-white border-r border-gray-200 flex-shrink-0 h-[calc(100vh-5rem)] sticky top-[5rem] overflow-y-auto z-30">
-        <nav class="py-4 space-y-1">
-          <!-- 教师管理 -->
-          <div class="sidebar-group">
-            <div class="sidebar-parent" @click="goToPage('/work-engine')">
-              <div class="sidebar-parent-content">
-                <i class="fa fa-tachometer sidebar-icon"></i>
-                <span>教师管理</span>
-              </div>
-              <i class="fa fa-angle-right text-xs transition-transform duration-200"></i>
-            </div>
-          </div>
-
-          <!-- 管理员管理
-          <div class="sidebar-group">
-            <div class="sidebar-parent active" @click="toggleSubmenu('admin')">
-              <div class="sidebar-parent-content">
-                <i class="fa fa-user-secret sidebar-icon"></i>
-                <span>管理员管理</span>
-              </div>
-              <i class="fa fa-angle-right text-xs transition-transform duration-200" :class="{'rotate-icon': activeSubmenu === 'admin'}"></i>
-            </div>
-            <div id="submenu-admin" class="bg-gray-50" :class="{'hidden': activeSubmenu !== 'admin'}">
-              <div class="sidebar-child" @click="goToPage('/course-management')">
-                <i class="fa fa-circle-o text-xs sidebar-icon"></i>
-                <span class="sidebar-child-text">课程管理</span>
-              </div>
-              <div class="sidebar-child active" @click="goToPage('/user-management')">
-                <i class="fa fa-circle-o text-xs sidebar-icon"></i>
-                <span class="sidebar-child-text">用户管理</span>
+      <aside class="w-64 bg-white border-r border-gray-200 flex-shrink-0 fixed top-[5rem] left-0 h-[calc(100vh-5rem)] overflow-y-auto z-30">
+        <nav class="py-4 space-y-1 px-4">
+            <nav class="py-4 space-y-1 px-4">
+            <!-- 工作台 -->
+            <div class="sidebar-group">
+              <div class="sidebar-parent" @click="goToPage('/work-engine')">
+                <div class="sidebar-parent-content">
+                  <i class="fa fa-tachometer sidebar-icon"></i>
+                  <span>工作台</span>
+                </div>
               </div>
             </div>
-          </div> -->
-
-          <!-- 收藏管理 -->
-          <div class="sidebar-group">
-            <div class="sidebar-parent" @click="toggleSubmenu('favorites')">
-              <div class="sidebar-parent-content">
-                <i class="fa fa-heart sidebar-icon"></i>
-                <span>收藏管理</span>
-              </div>
-              <i class="fa fa-angle-right text-xs transition-transform duration-200" :class="{'rotate-icon': activeSubmenu === 'favorites'}"></i>
-            </div>
-            <div id="submenu-favorites" class="bg-gray-50" :class="{'hidden': activeSubmenu !== 'favorites'}">
-              <div class="sidebar-child" @click="goToFavorites('my-collection')">
-                <i class="fa fa-book text-xs sidebar-icon"></i>
-                <span class="sidebar-child-text">我的收藏</span>
-              </div>
-              <div class="sidebar-child" @click="goToFavorites('likes')">
-                <i class="fa fa-thumbs-up text-xs sidebar-icon"></i>
-                <span class="sidebar-child-text">点赞</span>
-              </div>
-              <div class="sidebar-child" @click="goToFavorites('history')">
-                <i class="fa fa-history text-xs sidebar-icon"></i>
-                <span class="sidebar-child-text">历史记录</span>
+            
+            <!-- 我的收藏 -->
+            <div class="sidebar-group">
+              <div class="sidebar-parent" @click="goToFavorites('my-collection')">
+                <div class="sidebar-parent-content">
+                  <i class="fa fa-book sidebar-icon"></i>
+                  <span>我的收藏</span>
+                </div>
               </div>
             </div>
-          </div>
-
-          <!-- 个人中心 -->
-          <div class="sidebar-group">
-            <div class="sidebar-parent" @click="toggleSubmenu('user-center')">
-              <div class="sidebar-parent-content">
-                <i class="fa fa-user-circle-o sidebar-icon"></i>
-                <span>个人中心</span>
-              </div>
-              <i class="fa fa-angle-right text-xs transition-transform duration-200" :class="{'rotate-icon': activeSubmenu === 'user-center'}"></i>
-            </div>
-            <div id="submenu-user-center" class="bg-gray-50" :class="{'hidden': activeSubmenu !== 'user-center'}">
-              <div class="sidebar-child" @click="goToPage('/personal-information')">
-                <i class="fa fa-id-card-o text-xs sidebar-icon"></i>
-                <span class="sidebar-child-text">用户信息</span>
-              </div>
-              <div class="sidebar-child" @click="goToPage('/personal-information?tab=settings')">
-                <i class="fa fa-cog text-xs sidebar-icon"></i>
-                <span class="sidebar-child-text">用户设置</span>
+            
+            <!-- 点赞 -->
+            <div class="sidebar-group">
+              <div class="sidebar-parent" @click="goToFavorites('likes')">
+                <div class="sidebar-parent-content">
+                  <i class="fa fa-thumbs-up sidebar-icon"></i>
+                  <span>点赞</span>
+                </div>
               </div>
             </div>
-          </div>
+            
+            <!-- 历史记录 -->
+            <div class="sidebar-group">
+              <div class="sidebar-parent" @click="goToFavorites('history')">
+                <div class="sidebar-parent-content">
+                  <i class="fa fa-history sidebar-icon"></i>
+                  <span>历史记录</span>
+                </div>
+              </div>
+            </div>
+            
+            <!-- 用户信息 -->
+            <div class="sidebar-group">
+              <div class="sidebar-parent" @click="goToPage('/personal-information')">
+                <div class="sidebar-parent-content">
+                  <i class="fa fa-id-card-o sidebar-icon"></i>
+                  <span>用户信息</span>
+                </div>
+              </div>
+            </div>
+            
+            <!-- 用户设置 -->
+            <div class="sidebar-group">
+              <div class="sidebar-parent" @click="goToPage('/personal-information?tab=settings')">
+                <div class="sidebar-parent-content">
+                  <i class="fa fa-cog sidebar-icon"></i>
+                  <span>用户设置</span>
+                </div>
+              </div>
+            </div>
+          </nav>
         </nav>
       </aside>
 
       <!-- 主内容区域（用户管理UI） -->
-      <main class="flex-1 overflow-y-auto p-6">
+      <main class="flex-1 overflow-y-auto p-6 ml-64">
         <div class="p-6">
           <!-- 面包屑导航 -->
           <div class="text-sm text-secondary mb-6">

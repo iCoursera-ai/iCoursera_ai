@@ -3,95 +3,73 @@
     <Header />
     
     <div class="flex flex-1">
-      <!-- 侧边栏导航 -->
-      <aside class="w-64 bg-white border-r border-gray-200 flex-shrink-0 h-[calc(100vh-5rem)] sticky top-[5rem] overflow-y-auto z-30">
-        <nav class="py-4 space-y-1">
-          <!-- 教师管理 -->
+      <!-- 侧边栏导航 - 已改为固定定位 -->
+      <aside class="w-64 bg-white border-r border-gray-200 flex-shrink-0 fixed top-[5rem] left-0 h-[calc(100vh-5rem)] overflow-y-auto z-30">
+        <nav class="py-4 space-y-1 px-4">
+          <!-- 工作台 -->
           <div class="sidebar-group">
-            <div class="sidebar-parent active" @click="toggleSubmenu('dashboard')">
+            <div class="sidebar-parent" :class="{ 'active': activePage === 'dashboard' }" @click="goToTeacherDashboard">
               <div class="sidebar-parent-content">
                 <i class="fa fa-tachometer sidebar-icon"></i>
-                <span>教师管理</span>
-              </div>
-              <i class="fa fa-angle-right text-xs transition-transform duration-200" :class="{'rotate-icon': activeSubmenu === 'dashboard'}"></i>
-            </div>
-            <div id="submenu-dashboard" class="bg-gray-50" :class="{'hidden': activeSubmenu !== 'dashboard'}">
-              <div class="sidebar-child active">
-                <i class="fa fa-circle-o text-xs sidebar-icon"></i>
-                <span class="sidebar-child-text">工作台</span>
-              </div>
-              <!-- <div class="sidebar-child" @click="goToPage('/article-management')">
-                <i class="fa fa-file-text-o text-xs sidebar-icon"></i>
-                <span class="sidebar-child-text">稿件管理</span>
-              </div> -->
-            </div>
-          </div>
-
-          <!-- 收藏管理 -->
-          <div class="sidebar-group">
-            <div class="sidebar-parent" @click="toggleSubmenu('favorites')">
-              <div class="sidebar-parent-content">
-                <i class="fa fa-heart sidebar-icon"></i>
-                <span>收藏管理</span>
-              </div>
-              <i class="fa fa-angle-right text-xs transition-transform duration-200" :class="{'rotate-icon': activeSubmenu === 'favorites'}"></i>
-            </div>
-            <div id="submenu-favorites" class="bg-gray-50" :class="{'hidden': activeSubmenu !== 'favorites'}">
-              <div class="sidebar-child" @click="goToFavorites('my-collection')">
-                <i class="fa fa-book text-xs sidebar-icon"></i>
-                <span class="sidebar-child-text">我的收藏</span>
-              </div>
-              <div class="sidebar-child" @click="goToFavorites('likes')">
-                <i class="fa fa-thumbs-up text-xs sidebar-icon"></i>
-                <span class="sidebar-child-text">点赞</span>
-              </div>
-              <div class="sidebar-child" @click="goToFavorites('history')">
-                <i class="fa fa-history text-xs sidebar-icon"></i>
-                <span class="sidebar-child-text">历史记录</span>
+                <span>工作台</span>
               </div>
             </div>
           </div>
-
-          <!-- 个人中心 -->
+          
+          <!-- 我的收藏 -->
           <div class="sidebar-group">
-            <div class="sidebar-parent" @click="toggleSubmenu('user-center')">
+            <div class="sidebar-parent" :class="{ 'active': activePage === 'favorites' }" @click="goToFavorites('collection')">
               <div class="sidebar-parent-content">
-                <i class="fa fa-user-circle-o sidebar-icon"></i>
-                <span>个人中心</span>
+                <i class="fa fa-book sidebar-icon"></i>
+                <span>我的收藏</span>
               </div>
-              <i class="fa fa-angle-right text-xs transition-transform duration-200" :class="{'rotate-icon': activeSubmenu === 'user-center'}"></i>
             </div>
-            <div id="submenu-user-center" class="bg-gray-50" :class="{'hidden': activeSubmenu !== 'user-center'}">
-              <div 
-                class="sidebar-child" 
-                @click="goToPersonalCenter('user-info')"
-              >
-                <i class="fa fa-id-card-o text-xs sidebar-icon"></i>
-                <span class="sidebar-child-text">用户信息</span>
+          </div>
+          
+          <!-- 点赞 -->
+          <div class="sidebar-group">
+            <div class="sidebar-parent" :class="{ 'active': activePage === 'likes' }" @click="goToFavorites('likes')">
+              <div class="sidebar-parent-content">
+                <i class="fa fa-thumbs-up sidebar-icon"></i>
+                <span>点赞</span>
               </div>
-              <div 
-                class="sidebar-child" 
-                @click="goToPersonalCenter('user-settings')"
-              >
-                <i class="fa fa-cog text-xs sidebar-icon"></i>
-                <span class="sidebar-child-text">用户设置</span>
+            </div>
+          </div>
+          
+          <!-- 历史记录 -->
+          <div class="sidebar-group">
+            <div class="sidebar-parent" :class="{ 'active': activePage === 'history' }" @click="goToFavorites('history')">
+              <div class="sidebar-parent-content">
+                <i class="fa fa-history sidebar-icon"></i>
+                <span>历史记录</span>
+              </div>
+            </div>
+          </div>
+          
+          <!-- 用户信息 -->
+          <div class="sidebar-group">
+            <div class="sidebar-parent" :class="{ 'active': activePage === 'user-info' }" @click="goToPersonalInfo">
+              <div class="sidebar-parent-content">
+                <i class="fa fa-id-card-o sidebar-icon"></i>
+                <span>用户信息</span>
+              </div>
+            </div>
+          </div>
+          
+          <!-- 用户设置 -->
+          <div class="sidebar-group">
+            <div class="sidebar-parent" :class="{ 'active': activePage === 'user-settings' }" @click="goToPersonalSettings">
+              <div class="sidebar-parent-content">
+                <i class="fa fa-cog sidebar-icon"></i>
+                <span>用户设置</span>
               </div>
             </div>
           </div>
         </nav>
       </aside>
 
-      <!-- 主内容区域 -->
-      <main class="flex-1 overflow-y-auto p-6" style="max-height: calc(100vh - 5rem);">
-        <!-- 面包屑导航 -->
-        <div class="text-sm text-secondary mb-6">
-          <span>用户中心</span>
-          <i class="fa fa-angle-right mx-1 text-gray-400"></i>
-          <span>教师管理</span>
-          <i class="fa fa-angle-right mx-1 text-gray-400"></i>
-          <span class="text-dark font-medium">工作台</span>
-        </div>
-
+      <!-- 主内容区域 - 添加左边距以避开固定侧边栏 -->
+      <main class="flex-1 overflow-y-auto p-6 ml-64" style="height: calc(100vh - 5rem);">
         <!-- 页面内容容器 -->
         <div class="space-y-6">
           <!-- 工作台头部 -->
@@ -315,7 +293,7 @@ export default {
   },
   data() {
     return {
-      activeSubmenu: 'dashboard',
+      activePage: 'dashboard', // 当前激活页面
       showFullAnnouncement: false,
       selectedVideoType: 'all',
       startDate: '2023-11-01',
@@ -396,6 +374,7 @@ export default {
   mounted() {
     this.initChart()
     this.generateAllCourses() // 生成所有课程数据
+    this.setActivePage() // 设置当前激活页面
   },
   beforeUnmount() {
     try {
@@ -408,25 +387,51 @@ export default {
     this.chartInstance = null
   },
   methods: {
-    toggleSubmenu(submenu) {
-      this.activeSubmenu = this.activeSubmenu === submenu ? null : submenu
+    // 设置当前激活页面
+    setActivePage() {
+      const currentPath = this.$route.path
+      if (currentPath === '/teacher-dashboard') {
+        this.activePage = 'dashboard'
+      } else if (currentPath === '/personal-information') {
+        const page = this.$route.query.page
+        if (page === 'user-settings') {
+          this.activePage = 'user-settings'
+        } else {
+          this.activePage = 'user-info'
+        }
+      }
     },
 
-    goToPage(path) {
-      this.$router.push(path)
+    // 跳转到工作台（当前页面，刷新）
+    goToTeacherDashboard() {
+      this.activePage = 'dashboard'
+      this.syncData()
     },
-    
+
+    // 跳转到收藏管理
     goToFavorites(tab) {
+      this.activePage = tab === 'collection' ? 'favorites' : tab === 'likes' ? 'likes' : 'history'
       this.$router.push({
         path: '/favorites-management',
         query: { tab }
       })
     },
 
-    goToPersonalCenter(page = 'user-info') {
+    // 跳转到用户信息
+    goToPersonalInfo() {
+      this.activePage = 'user-info'
       this.$router.push({ 
         path: '/personal-information',
-        query: { page }
+        query: { page: 'user-info' }
+      })
+    },
+
+    // 跳转到用户设置
+    goToPersonalSettings() {
+      this.activePage = 'user-settings'
+      this.$router.push({ 
+        path: '/personal-information',
+        query: { page: 'user-settings' }
       })
     },
 
@@ -435,10 +440,6 @@ export default {
         path: '/video-analysis',
         query: { videoId }
       })
-    },
-
-    goToCourseList() {
-      this.$router.push('/course-list')
     },
 
     toggleAnnouncementExpand() {
@@ -675,7 +676,7 @@ export default {
 </script>
 
 <style scoped>
-/* 侧边栏样式 */
+/* 侧边栏样式保持不变，只添加必要的固定定位样式 */
 .sidebar-parent {
   @apply flex items-center justify-between px-4 py-3 text-gray-500 hover:bg-primary/5 hover:text-primary transition-all duration-200 cursor-pointer;
 }

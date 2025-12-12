@@ -4,7 +4,7 @@
     
     <div class="flex flex-1">
       <!-- 左侧课程列表导航 -->
-      <aside class="w-64 bg-white border-r border-gray-200 flex-shrink-0 h-[calc(100vh-5rem)] sticky top-[5rem] overflow-y-auto z-30">
+      <aside class="w-64 bg-white border-r border-gray-200 flex-shrink-0 fixed top-[5rem] left-0 h-[calc(100vh-5rem)] overflow-y-auto z-30">
         <!-- 课程章节标题 -->
         <div class="course-section-title">
           操作系统课程
@@ -82,7 +82,7 @@
       </aside>
 
       <!-- 主内容区域：习题详情分析 -->
-      <main class="flex-1 overflow-y-auto p-6">
+      <main class="flex-1 overflow-y-auto p-6 ml-64" style="height: calc(100vh - 5rem);">
         <!-- 面包屑导航 -->
         <div class="text-sm text-secondary mb-6">
           <span @click="goToDashboard()" class="cursor-pointer hover:text-primary">用户中心</span>
@@ -153,99 +153,117 @@
             </div>
           </div>
 
-          <!-- 习题分析 + 题目列表 -->
-          <div class="flex flex-col lg:flex-row gap-6">
-            <!-- 左侧：习题分析 -->
-            <div class="flex-1 space-y-6">
-              <!-- 答题情况分析 -->
-              <div class="bg-white rounded-lg border border-gray-200 p-4 shadow-sm">
-                <div class="flex justify-between items-center mb-4">
-                  <h3 class="font-medium text-dark">习题数据分析</h3>
-                  <button class="text-primary text-sm hover:bg-primary/10 px-3 py-1 rounded transition-colors">查看历史数据</button>
-                </div>
-                
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <!-- 内容分析饼图 -->
-                  <div>
-                    <h4 class="text-sm font-medium text-gray-600 mb-3">内容分析</h4>
-                    <div class="h-48 flex items-center justify-center">
-                      <canvas :ref="el => chartRefs.contentAnalysisChart = el"></canvas>
+          <!-- 习题分析、习题内容和习题建议并排显示 -->
+          <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <!-- 习题数据分析 -->
+            <div class="lg:col-span-2 bg-white rounded-lg border border-gray-200 p-4 shadow-sm">
+              <div class="flex justify-between items-center mb-4">
+                <h3 class="font-medium text-dark">习题数据分析</h3>
+                <!-- <button class="text-primary text-sm hover:bg-primary/10 px-3 py-1 rounded transition-colors">查看历史数据</button> -->
+              </div>
+              
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <!-- 内容分析饼图 -->
+                <div>
+                  <h4 class="text-sm font-medium text-gray-600 mb-3">内容分析</h4>
+                  <div class="h-48 flex items-center justify-center">
+                    <canvas :ref="el => chartRefs.contentAnalysisChart = el"></canvas>
+                  </div>
+                  <div class="flex justify-center gap-4 mt-2 text-xs text-gray-500">
+                    <div class="flex items-center gap-1">
+                      <span class="w-3 h-3 rounded-full bg-primary"></span>
+                      <span>正确 74%</span>
                     </div>
-                    <div class="flex justify-center gap-4 mt-2 text-xs text-gray-500">
-                      <div class="flex items-center gap-1">
-                        <span class="w-3 h-3 rounded-full bg-primary"></span>
-                        <span>正确 74%</span>
-                      </div>
-                      <div class="flex items-center gap-1">
-                        <span class="w-3 h-3 rounded-full bg-gray-300"></span>
-                        <span>错误 24%</span>
-                      </div>
-                      <div class="flex items-center gap-1">
-                        <span class="w-3 h-3 rounded-full bg-warning"></span>
-                        <span>未答 2%</span>
-                      </div>
+                    <div class="flex items-center gap-1">
+                      <span class="w-3 h-3 rounded-full bg-gray-300"></span>
+                      <span>错误 24%</span>
+                    </div>
+                    <div class="flex items-center gap-1">
+                      <span class="w-3 h-3 rounded-full bg-warning"></span>
+                      <span>未答 2%</span>
                     </div>
                   </div>
-                  
-                  <!-- 用时分析柱状图 -->
-                  <div>
-                    <h4 class="text-sm font-medium text-gray-600 mb-3">习题用时分析</h4>
-                    <div class="h-48">
-                      <canvas :ref="el => chartRefs.timeAnalysisChart = el"></canvas>
-                    </div>
+                </div>
+                
+                <!-- 用时分析柱状图 -->
+                <div>
+                  <h4 class="text-sm font-medium text-gray-600 mb-3">习题用时分析</h4>
+                  <div class="h-48">
+                    <canvas :ref="el => chartRefs.timeAnalysisChart = el"></canvas>
                   </div>
                 </div>
               </div>
+            </div>
 
-              <!-- 习题内容 -->
-              <div class="bg-white rounded-lg border border-gray-200 p-4 shadow-sm">
-                <div class="flex justify-between items-center mb-6">
-                  <h3 class="font-medium text-dark">习题内容</h3>
-                  <button class="bg-primary/10 text-primary text-sm px-3 py-1 rounded hover:bg-primary/20 transition-colors">
-                    修改题目
-                  </button>
+            <!-- 习题建议 -->
+            <div class="bg-white rounded-lg border border-gray-200 p-4 shadow-sm">
+              <h3 class="font-medium text-dark mb-4">习题建议</h3>
+              <div class="text-sm text-gray-600 space-y-3">
+                <div class="p-3 bg-primary/5 rounded-lg">
+                  <p class="font-medium text-primary mb-1">正确率分析</p>
+                  <p class="text-xs">所有习题正确率偏低，题目内容难度较高且题目数量不足</p>
                 </div>
-                
-                <div class="mb-4">
-                  <h4 class="text-base font-medium text-dark mb-4">01. 单元测验 <span class="text-xs text-primary bg-primary/10 px-2 py-0.5 rounded ml-2">查看帮助</span></h4>
-                  
-                  <!-- 题目列表 -->
-                  <div v-for="question in questions" :key="question.id" class="question-item">
-                    <div class="question-header">
-                      <span class="w-5 h-5 rounded-full bg-primary/10 text-primary flex items-center justify-center text-xs">{{ question.id }}</span>
-                      <span>{{ question.title }}</span>
-                    </div>
-                    <div class="space-y-1">
-                      <div v-for="option in question.options" :key="option.id" 
-                           class="option-item" 
-                           :class="{ 'correct': option.correct }">
-                        <div class="flex items-start gap-2">
-                          <span class="w-5 h-5 rounded-full flex items-center justify-center text-xs mt-0.5"
-                                :class="option.correct ? 'bg-success/10 text-success' : 'bg-gray-100 text-gray-500'">
-                            {{ option.letter }}
-                          </span>
-                          <div class="flex-1">
-                            <div class="flex justify-between items-start">
-                              <div>
-                                <span>{{ option.text }}</span>
-                                <span v-if="option.correct" class="ml-2 text-xs text-success bg-success/10 px-1.5 py-0.25 rounded">正确答案</span>
-                              </div>
-                              <span class="text-xs font-medium ml-2"
-                                    :class="option.correct ? 'text-success' : 'text-secondary'">
-                                {{ option.percentage }}
-                              </span>
+                <div class="p-3 bg-warning/5 rounded-lg">
+                  <p class="font-medium text-warning mb-1">题目问题</p>
+                  <p class="text-xs">题目2的正确率偏低，可能题目本身存在问题</p>
+                </div>
+                <div class="p-3 bg-success/5 rounded-lg">
+                  <p class="font-medium text-success mb-1">改进建议</p>
+                  <p class="text-xs">建议增加同类题型练习，提高学生对知识点的掌握程度</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 习题内容 - 占满宽度 -->
+          <div class="bg-white rounded-lg border border-gray-200 p-4 shadow-sm">
+            <div class="flex justify-between items-center mb-6">
+              <h3 class="font-medium text-dark">习题内容</h3>
+              <!-- <button class="bg-primary/10 text-primary text-sm px-3 py-1 rounded hover:bg-primary/20 transition-colors">
+                修改题目
+              </button> -->
+            </div>
+            
+            <div class="mb-4">
+              <h4 class="text-base font-medium text-dark mb-4">01. 单元测验 <span class="text-xs text-primary bg-primary/10 px-2 py-0.5 rounded ml-2">查看帮助</span></h4>
+              
+              <!-- 题目列表 -->
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div v-for="question in questions" :key="question.id" class="question-item">
+                  <div class="question-header">
+                    <span class="w-5 h-5 rounded-full bg-primary/10 text-primary flex items-center justify-center text-xs">{{ question.id }}</span>
+                    <span class="text-sm">{{ question.title }}</span>
+                  </div>
+                  <div class="space-y-1 mt-3">
+                    <div v-for="option in question.options" :key="option.id" 
+                         class="option-item" 
+                         :class="{ 'correct': option.correct }">
+                      <div class="flex items-start gap-2">
+                        <span class="w-5 h-5 rounded-full flex items-center justify-center text-xs mt-0.5"
+                              :class="option.correct ? 'bg-success/10 text-success' : 'bg-gray-100 text-gray-500'">
+                          {{ option.letter }}
+                        </span>
+                        <div class="flex-1">
+                          <div class="flex justify-between items-start">
+                            <div>
+                              <span class="text-sm">{{ option.text }}</span>
+                              <span v-if="option.correct" class="ml-2 text-xs text-success bg-success/10 px-1.5 py-0.25 rounded">正确答案</span>
                             </div>
-                            <!-- 人数比例进度条 -->
-                            <div class="mt-1 w-full bg-gray-200 rounded-full h-1.5">
-                              <div class="h-1.5 rounded-full"
-                                   :class="option.correct ? 'bg-success' : 'bg-primary'"
-                                   :style="`width: ${option.percentageValue}%`"></div>
-                            </div>
-                            <!-- 详细人数信息 -->
-                            <div class="flex justify-between mt-1">
-                              <span class="text-xs text-gray-500">选择人数: {{ option.peopleCount }}</span>
-                              <span class="text-xs text-gray-500">占总人数: {{ option.percentage }}</span>
-                            </div>
+                            <span class="text-xs font-medium ml-2"
+                                  :class="option.correct ? 'text-success' : 'text-secondary'">
+                              {{ option.percentage }}
+                            </span>
+                          </div>
+                          <!-- 人数比例进度条 -->
+                          <div class="mt-1 w-full bg-gray-200 rounded-full h-1.5">
+                            <div class="h-1.5 rounded-full"
+                                 :class="option.correct ? 'bg-success' : 'bg-primary'"
+                                 :style="`width: ${option.percentageValue}%`"></div>
+                          </div>
+                          <!-- 详细人数信息 -->
+                          <div class="flex justify-between mt-1">
+                            <span class="text-xs text-gray-500">选择人数: {{ option.peopleCount }}</span>
+                            <span class="text-xs text-gray-500">占总人数: {{ option.percentage }}</span>
                           </div>
                         </div>
                       </div>
@@ -253,21 +271,6 @@
                   </div>
                 </div>
               </div>
-
-              <!-- 习题建议 -->
-              <div class="bg-white rounded-lg border border-gray-200 p-4 shadow-sm">
-                <h3 class="font-medium text-dark mb-4">习题建议</h3>
-                <div class="text-sm text-gray-600 space-y-2">
-                  <p>1. 所有习题正确率偏低，题目内容难度较高且题目数量不足</p>
-                  <p>2. 题目2的正确率偏低，可能题目本身存在问题</p>
-                  <p>3. 建议增加同类题型练习，提高学生对知识点的掌握程度</p>
-                </div>
-              </div>
-            </div>
-
-            <!-- 右侧区域（已清空） -->
-            <div class="w-full lg:w-80 space-y-6">
-              <!-- 这里的内容已被删除 -->
             </div>
           </div>
         </div>
@@ -547,7 +550,7 @@ export default {
 
 /* 习题样式 */
 .question-item {
-  @apply border border-gray-200 rounded-lg p-4 mb-6 bg-white;
+  @apply border border-gray-200 rounded-lg p-4 bg-white;
 }
 .question-header {
   @apply font-medium text-dark mb-3 flex items-center gap-2;
@@ -557,5 +560,16 @@ export default {
 }
 .option-item.correct {
   @apply bg-success/5 border-l-4 border-success pl-4;
+}
+
+/* 响应式调整 */
+@media (max-width: 768px) {
+  .question-header {
+    @apply flex-col items-start;
+  }
+  
+  .question-header span:last-child {
+    @apply mt-1 ml-7;
+  }
 }
 </style>

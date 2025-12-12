@@ -30,7 +30,7 @@
               </div>
               <div class="flex items-center gap-1">
                 <i class="fa fa-book text-primary"></i>
-                <span>发布课程: <span>{{ teacherCourses.length }}</span></span>
+                <span>发布课程: <span>{{ totalCourses }}</span></span>
               </div>
             </div>
           </div>
@@ -44,12 +44,14 @@
         <!-- 课程区域 -->
         <div class="mt-8">
           <div class="flex justify-between items-center mb-6">
-            <h3 class="text-lg font-semibold text-dark">教师的课程</h3>
+            <h3 class="text-lg font-semibold text-dark">教师的课程 ({{ totalCourses }})</h3>
+            <!-- 只有一个查看更多/收起按钮 -->
             <button 
-              class="text-link text-sm hover:underline flex items-center gap-1"
+              v-if="teacherCourses.length > initialCourseCount"
+              class="text-link text-sm hover:underline flex items-center gap-1 px-3 py-1.5 rounded-md hover:bg-blue-50 transition-colors"
               @click="toggleExpandCourses"
             >
-              {{ showAllCourses ? '收起' : '查看更多' }}
+              {{ showAllCourses ? '收起课程' : `查看更多 (${totalCourses - initialCourseCount}个课程)` }}
               <i class="fa" :class="showAllCourses ? 'fa-angle-up' : 'fa-angle-down'"></i>
             </button>
           </div>
@@ -57,16 +59,16 @@
           <!-- 课程网格 -->
           <div 
             class="grid gap-4 transition-all duration-300"
-            :class="showAllCourses ? 'grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4' : 'grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 max-h-[500px] overflow-hidden'"
+            :class="gridColsClass"
           >
-            <!-- 课程卡片 - 使用主页视频样式 -->
+            <!-- 课程卡片 -->
             <div 
               v-for="course in displayedCourses" 
               :key="course.id"
               class="bg-white rounded-lg overflow-hidden cursor-pointer hover:shadow-lg transition-all duration-300 group video-card"
               @click="goToCourse(course)"
             >
-              <!-- 视频封面 - 16:9比例 -->
+              <!-- 视频封面 -->
               <div class="relative" style="aspect-ratio: 16/9;">
                 <img 
                   :src="course.image" 
@@ -86,6 +88,7 @@
                   {{ course.title }}
                 </h4>
                 <div class="text-xs text-gray-500">{{ course.subject }}</div>
+                <div class="text-xs text-gray-400 mt-1">{{ course.createdAt }}</div>
               </div>
             </div>
           </div>
@@ -139,61 +142,175 @@ export default {
   data() {
     return {
       showAllCourses: false,
+      initialCourseCount: 8, // 初始显示的课程数量
       teacherCourses: [
         { 
           id: 1, 
           title: '操作系统', 
           image: 'https://picsum.photos/400/225?random=100',
-          subject: '计算机基础'
+          subject: '计算机基础',
+          createdAt: '2024-01-15'
         },
         { 
           id: 2, 
           title: '互联网原理与应用', 
           image: 'https://picsum.photos/400/225?random=101',
-          subject: '网络技术'
+          subject: '网络技术',
+          createdAt: '2024-01-20'
         },
         { 
           id: 3, 
           title: '数据结构与算法', 
           image: 'https://picsum.photos/400/225?random=102',
-          subject: '编程基础'
+          subject: '编程基础',
+          createdAt: '2024-01-25'
         },
         { 
           id: 4, 
           title: '数据库系统原理', 
           image: 'https://picsum.photos/400/225?random=103',
-          subject: '数据管理'
+          subject: '数据管理',
+          createdAt: '2024-02-01'
         },
         { 
           id: 5, 
           title: '计算机网络', 
           image: 'https://picsum.photos/400/225?random=104',
-          subject: '网络工程'
+          subject: '网络工程',
+          createdAt: '2024-02-10'
         },
         { 
           id: 6, 
           title: '软件工程', 
           image: 'https://picsum.photos/400/225?random=105',
-          subject: '软件开发'
+          subject: '软件开发',
+          createdAt: '2024-02-15'
         },
         { 
           id: 7, 
           title: '人工智能基础', 
           image: 'https://picsum.photos/400/225?random=106',
-          subject: '人工智能'
+          subject: '人工智能',
+          createdAt: '2024-02-20'
         },
         { 
           id: 8, 
           title: '机器学习入门', 
           image: 'https://picsum.photos/400/225?random=107',
-          subject: '机器学习'
+          subject: '机器学习',
+          createdAt: '2024-02-25'
+        },
+        // 更多课程数据（点击查看更多才会出现）
+        { 
+          id: 9, 
+          title: '深度学习应用', 
+          image: 'https://picsum.photos/400/225?random=108',
+          subject: '人工智能',
+          createdAt: '2024-03-01'
+        },
+        { 
+          id: 10, 
+          title: '计算机图形学', 
+          image: 'https://picsum.photos/400/225?random=109',
+          subject: '计算机科学',
+          createdAt: '2024-03-05'
+        },
+        { 
+          id: 11, 
+          title: '编译原理', 
+          image: 'https://picsum.photos/400/225?random=110',
+          subject: '编程语言',
+          createdAt: '2024-03-10'
+        },
+        { 
+          id: 12, 
+          title: '计算机体系结构', 
+          image: 'https://picsum.photos/400/225?random=111',
+          subject: '硬件基础',
+          createdAt: '2024-03-15'
+        },
+        { 
+          id: 13, 
+          title: '嵌入式系统设计', 
+          image: 'https://picsum.photos/400/225?random=112',
+          subject: '嵌入式开发',
+          createdAt: '2024-03-20'
+        },
+        { 
+          id: 14, 
+          title: '移动应用开发', 
+          image: 'https://picsum.photos/400/225?random=113',
+          subject: '移动开发',
+          createdAt: '2024-03-25'
+        },
+        { 
+          id: 15, 
+          title: 'Web前端技术', 
+          image: 'https://picsum.photos/400/225?random=114',
+          subject: '前端开发',
+          createdAt: '2024-04-01'
+        },
+        { 
+          id: 16, 
+          title: '后端开发实践', 
+          image: 'https://picsum.photos/400/225?random=115',
+          subject: '后端开发',
+          createdAt: '2024-04-05'
+        },
+        { 
+          id: 17, 
+          title: '云计算基础', 
+          image: 'https://picsum.photos/400/225?random=116',
+          subject: '云计算',
+          createdAt: '2024-04-10'
+        },
+        { 
+          id: 18, 
+          title: '大数据技术', 
+          image: 'https://picsum.photos/400/225?random=117',
+          subject: '大数据',
+          createdAt: '2024-04-15'
+        },
+        { 
+          id: 19, 
+          title: '网络安全基础', 
+          image: 'https://picsum.photos/400/225?random=118',
+          subject: '网络安全',
+          createdAt: '2024-04-20'
+        },
+        { 
+          id: 20, 
+          title: '软件测试与质量保证', 
+          image: 'https://picsum.photos/400/225?random=119',
+          subject: '软件测试',
+          createdAt: '2024-04-25'
         }
       ]
     }
   },
   computed: {
     displayedCourses() {
-      return this.showAllCourses ? this.teacherCourses : this.teacherCourses.slice(0, 8)
+      if (this.showAllCourses) {
+        // 点击"查看更多"后显示全部课程
+        return this.teacherCourses
+      }
+      // 默认只显示前8个课程
+      return this.teacherCourses.slice(0, this.initialCourseCount)
+    },
+    
+    totalCourses() {
+      return this.teacherCourses.length
+    },
+    
+    gridColsClass() {
+      // 基础网格布局
+      const baseClass = 'grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4'
+      if (this.showAllCourses) {
+        // 展开时显示完整网格
+        return baseClass
+      }
+      // 收起时限制高度并隐藏溢出
+      return `${baseClass} max-h-[500px] overflow-hidden`
     }
   },
   mounted() {
@@ -217,7 +334,6 @@ export default {
     
     loadTeacherCourses(teacherId) {
       // 这里可以根据teacherId从API加载对应老师的课程
-      // 暂时使用模拟数据
       console.log('加载老师课程:', teacherId)
     }
   }
@@ -225,7 +341,7 @@ export default {
 </script>
 
 <style scoped>
-/* 视频卡片样式（与主页一致） */
+/* 视频卡片样式 */
 .video-card {
   transition: all 0.3s ease;
   box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
@@ -243,8 +359,8 @@ export default {
   -webkit-line-clamp: 2;
 }
 
-/* 链接样式 */
+/* 查看更多按钮样式 */
 .text-link {
-  @apply text-primary hover:text-primary/80 transition-colors duration-200 cursor-pointer;
+  @apply text-blue-600 hover:text-blue-800 transition-colors duration-200;
 }
 </style>

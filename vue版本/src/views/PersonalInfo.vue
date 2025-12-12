@@ -4,75 +4,64 @@
     
     <div class="flex flex-1">
       <!-- 侧边栏导航 -->
-      <aside class="w-64 bg-white border-r border-gray-200 flex-shrink-0 h-[calc(100vh-5rem)] sticky top-[5rem] overflow-y-auto z-30">
-        <nav class="py-4 space-y-1">
-          <!-- 教师管理 -->
+      <aside class="w-64 bg-white border-r border-gray-200 flex-shrink-0 fixed top-[5rem] left-0 h-[calc(100vh-5rem)] overflow-y-auto z-30">
+        <nav class="py-4 space-y-1 px-4">
+          <!-- 工作台 -->
           <div class="sidebar-group">
-            <div class="sidebar-parent" @click="goToTeacherDashboard">
+            <div class="sidebar-parent" :class="{ 'active': activePage === 'dashboard' }" @click="goToTeacherDashboard">
               <div class="sidebar-parent-content">
                 <i class="fa fa-tachometer sidebar-icon"></i>
-                <span>教师管理</span>
-              </div>
-              <i class="fa fa-angle-right text-xs transition-transform duration-200"></i>
-            </div>
-            <div id="submenu-dashboard" class="bg-gray-50" :class="{'hidden': activeSubmenu !== 'dashboard'}">
-              <div class="sidebar-child">
-                <i class="fa fa-circle-o text-xs sidebar-icon"></i>
-                <span class="sidebar-child-text">工作台</span>
+                <span>工作台</span>
               </div>
             </div>
           </div>
-             
-          <!-- 收藏管理 -->
+          
+          <!-- 我的收藏 -->
           <div class="sidebar-group">
-            <div class="sidebar-parent" @click="toggleSubmenu('favorites')">
+            <div class="sidebar-parent" :class="{ 'active': activePage === 'favorites' }" @click="goToFavorites('collection')">
               <div class="sidebar-parent-content">
-                <i class="fa fa-heart sidebar-icon"></i>
-                <span>收藏管理</span>
-              </div>
-              <i class="fa fa-angle-right text-xs transition-transform duration-200" :class="{'rotate-icon': activeSubmenu === 'favorites'}"></i>
-            </div>
-            <div id="submenu-favorites" class="bg-gray-50" :class="{'hidden': activeSubmenu !== 'favorites'}">
-              <div class="sidebar-child" @click="goToFavorites('my-collection')">
-                <i class="fa fa-book text-xs sidebar-icon"></i>
-                <span class="sidebar-child-text">我的收藏</span>
-              </div>
-              <div class="sidebar-child" @click="goToFavorites('likes')">
-                <i class="fa fa-thumbs-up text-xs sidebar-icon"></i>
-                <span class="sidebar-child-text">点赞</span>
-              </div>
-              <div class="sidebar-child" @click="goToFavorites('history')">
-                <i class="fa fa-history text-xs sidebar-icon"></i>
-                <span class="sidebar-child-text">历史记录</span>
+                <i class="fa fa-book sidebar-icon"></i>
+                <span>我的收藏</span>
               </div>
             </div>
           </div>
-
-          <!-- 个人中心 -->
+          
+          <!-- 点赞 -->
           <div class="sidebar-group">
-            <div class="sidebar-parent active" @click="toggleSubmenu('user-center')">
+            <div class="sidebar-parent" :class="{ 'active': activePage === 'likes' }" @click="goToFavorites('likes')">
               <div class="sidebar-parent-content">
-                <i class="fa fa-user-circle-o sidebar-icon"></i>
-                <span>个人中心</span>
+                <i class="fa fa-thumbs-up sidebar-icon"></i>
+                <span>点赞</span>
               </div>
-              <i class="fa fa-angle-right text-xs transition-transform duration-200" :class="{'rotate-icon': activeSubmenu === 'user-center'}"></i>
             </div>
-            <div id="submenu-user-center" class="bg-gray-50" :class="{'hidden': activeSubmenu !== 'user-center'}">
-              <div 
-                class="sidebar-child" 
-                :class="{ 'active': activePage === 'user-info' }"
-                @click="switchPage('user-info')"
-              >
-                <i class="fa fa-id-card-o text-xs sidebar-icon"></i>
-                <span class="sidebar-child-text">用户信息</span>
+          </div>
+          
+          <!-- 历史记录 -->
+          <div class="sidebar-group">
+            <div class="sidebar-parent" :class="{ 'active': activePage === 'history' }" @click="goToFavorites('history')">
+              <div class="sidebar-parent-content">
+                <i class="fa fa-history sidebar-icon"></i>
+                <span>历史记录</span>
               </div>
-              <div 
-                class="sidebar-child" 
-                :class="{ 'active': activePage === 'user-settings' }"
-                @click="switchPage('user-settings')"
-              >
-                <i class="fa fa-cog text-xs sidebar-icon"></i>
-                <span class="sidebar-child-text">用户设置</span>
+            </div>
+          </div>
+          
+          <!-- 用户信息 -->
+          <div class="sidebar-group">
+            <div class="sidebar-parent" :class="{ 'active': activePage === 'user-info' }" @click="switchPage('user-info')">
+              <div class="sidebar-parent-content">
+                <i class="fa fa-id-card-o sidebar-icon"></i>
+                <span>用户信息</span>
+              </div>
+            </div>
+          </div>
+          
+          <!-- 用户设置 -->
+          <div class="sidebar-group">
+            <div class="sidebar-parent" :class="{ 'active': activePage === 'user-settings' }" @click="switchPage('user-settings')">
+              <div class="sidebar-parent-content">
+                <i class="fa fa-cog sidebar-icon"></i>
+                <span>用户设置</span>
               </div>
             </div>
           </div>
@@ -80,16 +69,16 @@
       </aside>
 
       <!-- 主内容区域 -->
-      <main class="flex-1 overflow-y-auto" style="max-height: calc(100vh - 5rem);">
+      <main class="flex-1 overflow-y-auto p-6 ml-64" style="max-height: calc(100vh - 5rem);">
         <div class="p-6">
-          <!-- 面包屑导航 -->
+          <!-- 面包屑导航
           <div class="text-sm text-secondary mb-6">
             <span>用户中心</span>
             <i class="fa fa-angle-right mx-1 text-gray-400"></i>
             <span>个人中心</span>
             <i class="fa fa-angle-right mx-1 text-gray-400"></i>
             <span class="text-dark font-medium">{{ breadcrumbCurrent }}</span>
-          </div>
+          </div> -->
 
           <!-- 页面内容容器 -->
           <div class="space-y-6">
@@ -332,13 +321,13 @@
                     >
                       教师认证
                     </button>
-                    <button 
+                    <!-- <button 
                       class="px-4 py-2 border-b-2 font-medium" 
                       :class="activeTab === 'preferences' ? 'text-primary border-primary' : 'text-secondary hover:text-primary'"
                       @click="activeTab = 'preferences'; loadPreferences()"
                     >
                       偏好设置
-                    </button>
+                    </button> -->
                   </div>
                 </div>
                 
@@ -631,8 +620,7 @@ export default {
   },
   data() {
     return {
-      activeSubmenu: 'user-center',
-      activePage: 'user-info',
+      activePage: 'user-info', // 默认显示用户信息
       activeTab: 'security',
       showModal: false,
       showAllCourses: false,
@@ -844,6 +832,13 @@ export default {
     }
   },
   mounted() {
+    // 检查URL参数，确定显示哪个页面
+    const urlParams = new URLSearchParams(window.location.search)
+    const page = urlParams.get('page')
+    if (page && (page === 'user-info' || page === 'user-settings')) {
+      this.activePage = page
+    }
+    
     this.loadUserData()
     this.loadPreferences()
     this.loadFollowedTeachers()
@@ -859,39 +854,58 @@ export default {
     window.removeEventListener('followUpdated', this.loadFollowedTeachers)
   },
   methods: {
-    toggleSubmenu(submenu) {
-      this.activeSubmenu = this.activeSubmenu === submenu ? null : submenu
-    },
-
-    switchPage(page) {
-      this.activePage = page
-      this.activeSubmenu = 'user-center'
-    },
-
+    // 跳转到工作台
     goToTeacherDashboard() {
       this.$router.push('/teacher-dashboard')
     },
 
-    goToFavorites() {
-      this.$router.push('/favorites-management')
-    },
-    
-    goToWorkEngine() {
-      this.$router.push('/work-engine')
-    },
-    
-    goToCourseManagement() {
-      this.$router.push('/course-management')
-    },
-    
-    goToUserManagement() {
-      this.$router.push('/user-management')
+    // 跳转到收藏管理
+    goToFavorites(tab) {
+      this.$router.push({
+        path: '/favorites-management',
+        query: { tab }
+      })
     },
 
-    goToPage(path) {
-      this.$router.push(path)
+    // 切换页面（用户信息/用户设置）
+    switchPage(page) {
+      this.activePage = page
+      // 更新URL参数
+      const url = new URL(window.location)
+      url.searchParams.set('page', page)
+      window.history.replaceState({}, '', url)
     },
 
+    // 跳转到课程详情页
+    goToCourse(course) {
+      this.$router.push({
+        name: 'VideoPlayer',
+        params: { courseId: course.id }
+      })
+    },
+    
+    // 切换课程展开/收起
+    toggleExpandCourses() {
+      this.showAllCourses = !this.showAllCourses
+    },
+    
+    // 跳转到老师空间
+    goToTeacherSpace(teacher) {
+      this.$router.push({
+        path: '/teacher-space',
+        query: { teacherId: teacher.userId, teacherName: teacher.name }
+      })
+    },
+    
+    // 取消关注老师
+    unfollowTeacher(teacherId) {
+      if (confirm('确定要取消关注这位老师吗？')) {
+        this.followedTeachers = this.followedTeachers.filter(teacher => teacher.id !== teacherId)
+        localStorage.setItem('userFollowedTeachers', JSON.stringify(this.followedTeachers))
+        alert('已取消关注')
+      }
+    },
+    
     // 加载用户数据
     loadUserData() {
       const storedUserData = localStorage.getItem('bgareaUserData')
@@ -968,37 +982,6 @@ export default {
     handleStorageEvent(event) {
       if (event.key === 'userFollowedTeachers') {
         this.loadFollowedTeachers()
-      }
-    },
-    
-    // 跳转到课程详情页
-    goToCourse(course) {
-      this.$router.push({
-        name: 'VideoPlayer',
-        params: { courseId: course.id }
-      })
-    },
-    
-    // 切换课程展开/收起
-    toggleExpandCourses() {
-      this.showAllCourses = !this.showAllCourses
-    },
-    
-    // 跳转到老师空间
-    goToTeacherSpace(teacher) {
-      // 这里先实现跳转，但暂不做老师空间页面
-      this.$router.push({
-        path: '/teacher-space',
-        query: { teacherId: teacher.userId, teacherName: teacher.name }
-      })
-    },
-    
-    // 取消关注老师
-    unfollowTeacher(teacherId) {
-      if (confirm('确定要取消关注这位老师吗？')) {
-        this.followedTeachers = this.followedTeachers.filter(teacher => teacher.id !== teacherId)
-        localStorage.setItem('userFollowedTeachers', JSON.stringify(this.followedTeachers))
-        alert('已取消关注')
       }
     },
     
