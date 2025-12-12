@@ -12,58 +12,64 @@
         
         <!-- 第一章 -->
         <div class="border-b border-gray-200">
-          <div class="course-section-title flex justify-between items-center cursor-pointer" @click="toggleSection('section1')">
+          <div class="course-section-title flex justify-between items-center cursor-pointer" @click="toggleSection('section1', true)">
             <span>第一章</span>
             <i class="fa" :class="section1Open ? 'fa-angle-down' : 'fa-angle-right'"></i>
           </div>
           <div class="pl-2" v-show="section1Open">
-            <div class="course-item active" @click="goToVideoAnalysis()">
+            <div class="course-item" :class="{ 'active': currentItem === 'video1.1' }" @click="selectItem('video1.1', 'video', 'section1')">
               <div class="course-item-icon course-item-video">
                 <i class="fa fa-play text-xs"></i>
               </div>
               <span>视频1.1</span>
             </div>
-            <div class="course-item" @click="goToVideoAnalysis()">
+            <div class="course-item" :class="{ 'active': currentItem === 'video1.2' }" @click="selectItem('video1.2', 'video', 'section1')">
               <div class="course-item-icon course-item-video">
                 <i class="fa fa-play text-xs"></i>
               </div>
               <span>视频1.2</span>
             </div>
-            <div class="course-item" @click="goToExerciseAnalysis()">
+            <div class="course-item" :class="{ 'active': currentItem === 'exercise1.1' }" @click="selectItem('exercise1.1', 'exercise', 'section1')">
               <div class="course-item-icon course-item-exercise">
                 <i class="fa fa-pencil text-xs"></i>
               </div>
               <span>习题1.1</span>
+            </div>
+            <div class="course-item" :class="{ 'active': currentItem === 'exercise1.2' }" @click="selectItem('exercise1.2', 'exercise', 'section1')">
+              <div class="course-item-icon course-item-exercise">
+                <i class="fa fa-pencil text-xs"></i>
+              </div>
+              <span>习题1.2</span>
             </div>
           </div>
         </div>
         
         <!-- 第二章 -->
         <div class="border-b border-gray-200">
-          <div class="course-section-title flex justify-between items-center cursor-pointer" @click="toggleSection('section2')">
+          <div class="course-section-title flex justify-between items-center cursor-pointer" @click="toggleSection('section2', true)">
             <span>第二章</span>
             <i class="fa" :class="section2Open ? 'fa-angle-down' : 'fa-angle-right'"></i>
           </div>
           <div class="pl-2" v-show="section2Open">
-            <div class="course-item" @click="goToVideoAnalysis()">
+            <div class="course-item" :class="{ 'active': currentItem === 'video2.1' }" @click="selectItem('video2.1', 'video', 'section2')">
               <div class="course-item-icon course-item-video">
                 <i class="fa fa-play text-xs"></i>
               </div>
               <span>视频2.1</span>
             </div>
-            <div class="course-item" @click="goToVideoAnalysis()">
+            <div class="course-item" :class="{ 'active': currentItem === 'video2.2' }" @click="selectItem('video2.2', 'video', 'section2')">
               <div class="course-item-icon course-item-video">
                 <i class="fa fa-play text-xs"></i>
               </div>
               <span>视频2.2</span>
             </div>
-            <div class="course-item" @click="goToExerciseAnalysis()">
+            <div class="course-item" :class="{ 'active': currentItem === 'exercise2.1' }" @click="selectItem('exercise2.1', 'exercise', 'section2')">
               <div class="course-item-icon course-item-exercise">
                 <i class="fa fa-pencil text-xs"></i>
               </div>
               <span>习题2.1</span>
             </div>
-            <div class="course-item" @click="goToExerciseAnalysis()">
+            <div class="course-item" :class="{ 'active': currentItem === 'exercise2.2' }" @click="selectItem('exercise2.2', 'exercise', 'section2')">
               <div class="course-item-icon course-item-exercise">
                 <i class="fa fa-pencil text-xs"></i>
               </div>
@@ -74,9 +80,35 @@
         
         <!-- 其他章节 -->
         <div v-for="chapter in otherChapters" :key="chapter.id" class="border-b border-gray-200">
-          <div class="course-section-title flex justify-between items-center cursor-pointer" @click="toggleOtherSection(chapter.id)">
+          <div class="course-section-title flex justify-between items-center cursor-pointer" @click="toggleOtherSection(chapter.id, true)">
             <span>{{ chapter.name }}</span>
             <i class="fa" :class="openSections[chapter.id] ? 'fa-angle-down' : 'fa-angle-right'"></i>
+          </div>
+          <div class="pl-2" v-show="openSections[chapter.id]">
+            <div class="course-item" :class="{ 'active': currentItem === `video${chapter.id.replace('section', '')}.1` }" @click="selectItem(`video${chapter.id.replace('section', '')}.1`, 'video', chapter.id)">
+              <div class="course-item-icon course-item-video">
+                <i class="fa fa-play text-xs"></i>
+              </div>
+              <span>视频{{ chapter.id.replace('section', '') }}.1</span>
+            </div>
+            <div class="course-item" :class="{ 'active': currentItem === `video${chapter.id.replace('section', '')}.2` }" @click="selectItem(`video${chapter.id.replace('section', '')}.2`, 'video', chapter.id)">
+              <div class="course-item-icon course-item-video">
+                <i class="fa fa-play text-xs"></i>
+              </div>
+              <span>视频{{ chapter.id.replace('section', '') }}.2</span>
+            </div>
+            <div class="course-item" :class="{ 'active': currentItem === `exercise${chapter.id.replace('section', '')}.1` }" @click="selectItem(`exercise${chapter.id.replace('section', '')}.1`, 'exercise', chapter.id)">
+              <div class="course-item-icon course-item-exercise">
+                <i class="fa fa-pencil text-xs"></i>
+              </div>
+              <span>习题{{ chapter.id.replace('section', '') }}.1</span>
+            </div>
+            <div class="course-item" :class="{ 'active': currentItem === `exercise${chapter.id.replace('section', '')}.2` }" @click="selectItem(`exercise${chapter.id.replace('section', '')}.2`, 'exercise', chapter.id)">
+              <div class="course-item-icon course-item-exercise">
+                <i class="fa fa-pencil text-xs"></i>
+              </div>
+              <span>习题{{ chapter.id.replace('section', '') }}.2</span>
+            </div>
           </div>
         </div>
       </aside>
@@ -93,7 +125,7 @@
           <i class="fa fa-angle-right mx-1 text-gray-400"></i>
           <span>操作系统课程</span>
           <i class="fa fa-angle-right mx-1 text-gray-400"></i>
-          <span class="text-dark font-medium">视频1.1 - 数据分析</span>
+          <span class="text-dark font-medium">{{ currentItemDisplay }} - 数据分析</span>
         </div>
 
         <!-- 页面内容容器 -->
@@ -103,9 +135,9 @@
             <div class="bg-white rounded-lg border border-gray-200 p-4 shadow-sm">
               <div class="text-xs text-secondary mb-1">观看总人数</div>
               <div class="flex items-center justify-between">
-                <div class="text-xl font-bold text-dark">12,256</div>
+                <div class="text-xl font-bold text-dark">{{ currentStats.viewers }}</div>
                 <div class="text-success text-xs flex items-center">
-                  <i class="fa fa-caret-up mr-1"></i> 206
+                  <i class="fa fa-caret-up mr-1"></i> {{ currentStats.viewersIncrease }}
                 </div>
               </div>
               <div class="mt-2 h-10">
@@ -116,9 +148,9 @@
             <div class="bg-white rounded-lg border border-gray-200 p-4 shadow-sm">
               <div class="text-xs text-secondary mb-1">平均观看时长</div>
               <div class="flex items-center justify-between">
-                <div class="text-xl font-bold text-dark">8分12秒</div>
+                <div class="text-xl font-bold text-dark">{{ currentStats.avgDuration }}</div>
                 <div class="text-success text-xs flex items-center">
-                  <i class="fa fa-caret-up mr-1"></i> 14秒
+                  <i class="fa fa-caret-up mr-1"></i> {{ currentStats.durationIncrease }}
                 </div>
               </div>
               <div class="mt-2 h-10">
@@ -129,9 +161,9 @@
             <div class="bg-white rounded-lg border border-gray-200 p-4 shadow-sm">
               <div class="text-xs text-secondary mb-1">评论总量</div>
               <div class="flex items-center justify-between">
-                <div class="text-xl font-bold text-dark">4,592</div>
+                <div class="text-xl font-bold text-dark">{{ currentStats.comments }}</div>
                 <div class="text-success text-xs flex items-center">
-                  <i class="fa fa-caret-up mr-1"></i> 112
+                  <i class="fa fa-caret-up mr-1"></i> {{ currentStats.commentsIncrease }}
                 </div>
               </div>
               <div class="mt-2 h-10">
@@ -142,9 +174,9 @@
             <div class="bg-white rounded-lg border border-gray-200 p-4 shadow-sm">
               <div class="text-xs text-secondary mb-1">点赞总量</div>
               <div class="flex items-center justify-between">
-                <div class="text-xl font-bold text-dark">3,256</div>
+                <div class="text-xl font-bold text-dark">{{ currentStats.likes }}</div>
                 <div class="text-success text-xs flex items-center">
-                  <i class="fa fa-caret-up mr-1"></i> 366
+                  <i class="fa fa-caret-up mr-1"></i> {{ currentStats.likesIncrease }}
                 </div>
               </div>
               <div class="mt-2 h-10">
@@ -160,7 +192,7 @@
               <!-- 视频播放 -->
               <div class="bg-white rounded-lg border border-gray-200 p-4 shadow-sm">
                 <div class="flex justify-between items-center mb-4">
-                  <h3 class="font-medium text-dark">视频播放</h3>
+                  <h3 class="font-medium text-dark">{{ currentItemDisplay }} 播放</h3>
                   <button class="text-primary text-sm hover:bg-primary/10 px-3 py-1 rounded transition-colors">更换视频</button>
                 </div>
                 <div class="aspect-video bg-gray-100 rounded-lg flex items-center justify-center">
@@ -172,7 +204,7 @@
 
               <!-- 内容时段分析 -->
               <div class="bg-white rounded-lg border border-gray-200 p-4 shadow-sm">
-                <h3 class="font-medium text-dark mb-4">内容时段分析</h3>
+                <h3 class="font-medium text-dark mb-4">{{ currentItemDisplay }} 内容时段分析</h3>
                 <div class="h-64 bg-gray-50 rounded-lg relative w-full">
                   <canvas :ref="el => chartRefs.contentChart = el" class="w-full h-full"></canvas>
                 </div>
@@ -200,9 +232,11 @@ export default {
   },
   data() {
     return {
-      section1Open: true,
-      section2Open: true,
+      section1Open: true, // 初始状态：第一章展开
+      section2Open: false, // 初始状态：第二章闭合
       openSections: {},
+      currentItem: 'video1.1', // 默认选中视频1.1
+      lastOpenedSection: 'section1', // 记录上次打开的章节
       otherChapters: [
         { id: 'section3', name: '第三章' },
         { id: 'section4', name: '第四章' },
@@ -212,7 +246,111 @@ export default {
         { id: 'section8', name: '第八章' }
       ],
       chartRefs: {},
-      chartInstances: {}
+      chartInstances: {},
+      // 不同视频的统计数据
+      videoStats: {
+        'video1.1': {
+          viewers: '12,256',
+          viewersIncrease: '206',
+          avgDuration: '8分12秒',
+          durationIncrease: '14秒',
+          comments: '4,592',
+          commentsIncrease: '112',
+          likes: '3,256',
+          likesIncrease: '366'
+        },
+        'video1.2': {
+          viewers: '10,856',
+          viewersIncrease: '156',
+          avgDuration: '7分45秒',
+          durationIncrease: '8秒',
+          comments: '3,245',
+          commentsIncrease: '89',
+          likes: '2,856',
+          likesIncrease: '245'
+        },
+        'video2.1': {
+          viewers: '11,500',
+          viewersIncrease: '180',
+          avgDuration: '9分05秒',
+          durationIncrease: '20秒',
+          comments: '3,800',
+          commentsIncrease: '95',
+          likes: '3,100',
+          likesIncrease: '300'
+        },
+        'video2.2': {
+          viewers: '9,800',
+          viewersIncrease: '120',
+          avgDuration: '8分30秒',
+          durationIncrease: '15秒',
+          comments: '2,950',
+          commentsIncrease: '75',
+          likes: '2,600',
+          likesIncrease: '200'
+        },
+        // 其他章节视频的数据
+        'video3.1': {
+          viewers: '8,200',
+          viewersIncrease: '90',
+          avgDuration: '7分50秒',
+          durationIncrease: '10秒',
+          comments: '2,400',
+          commentsIncrease: '60',
+          likes: '2,100',
+          likesIncrease: '150'
+        },
+        'video3.2': {
+          viewers: '7,500',
+          viewersIncrease: '80',
+          avgDuration: '8分15秒',
+          durationIncrease: '12秒',
+          comments: '2,100',
+          commentsIncrease: '50',
+          likes: '1,900',
+          likesIncrease: '120'
+        },
+        'video4.1': {
+          viewers: '6,800',
+          viewersIncrease: '70',
+          avgDuration: '7分30秒',
+          durationIncrease: '8秒',
+          comments: '1,800',
+          commentsIncrease: '40',
+          likes: '1,600',
+          likesIncrease: '100'
+        }
+      }
+    }
+  },
+  computed: {
+    currentItemDisplay() {
+      // 将 video1.1 转换为 "视频1.1"
+      if (this.currentItem.startsWith('video')) {
+        const num = this.currentItem.replace('video', '')
+        return `视频${num}`
+      } else if (this.currentItem.startsWith('exercise')) {
+        const num = this.currentItem.replace('exercise', '')
+        return `习题${num}`
+      }
+      return this.currentItem
+    },
+    currentStats() {
+      // 返回当前选中项目的统计数据
+      return this.videoStats[this.currentItem] || this.videoStats['video1.1']
+    }
+  },
+  created() {
+    // 从路由参数中获取要选中的项目
+    if (this.$route.params.item) {
+      this.currentItem = this.$route.params.item
+      // 根据选中的项目自动展开对应的章节
+      this.autoOpenSection(this.currentItem)
+      
+      // 如果有传递的展开章节信息，关闭其他章节
+      if (this.$route.params.openedSection) {
+        this.closeOtherSections(this.$route.params.openedSection)
+      }
     }
   },
   mounted() {
@@ -225,13 +363,109 @@ export default {
     })
   },
   methods: {
-    toggleSection(section) {
+    toggleSection(section, closeOthers = false) {
+      if (closeOthers) {
+        // 关闭其他章节
+        this.closeOtherSections(section)
+      }
       this[section + 'Open'] = !this[section + 'Open']
+      if (this[section + 'Open']) {
+        this.lastOpenedSection = section
+      }
     },
     
-    toggleOtherSection(sectionId) {
+    toggleOtherSection(sectionId, closeOthers = false) {
+      if (closeOthers) {
+        // 关闭其他章节
+        this.closeOtherSections(sectionId)
+      }
       this.openSections[sectionId] = !this.openSections[sectionId]
-      this.$set(this.openSections, sectionId, this.openSections[sectionId])
+      if (this.openSections[sectionId]) {
+        this.lastOpenedSection = sectionId
+      }
+    },
+    
+    closeOtherSections(currentSection) {
+      // 关闭除了当前章节之外的所有章节
+      if (currentSection !== 'section1') {
+        this.section1Open = false
+      }
+      if (currentSection !== 'section2') {
+        this.section2Open = false
+      }
+      
+      // 关闭其他章节
+      for (const sectionId in this.openSections) {
+        if (sectionId !== currentSection) {
+          this.openSections[sectionId] = false
+        }
+      }
+    },
+    
+    autoOpenSection(item) {
+      // 根据项目ID自动展开对应的章节
+      if (item.includes('1.')) {
+        this.section1Open = true
+        this.lastOpenedSection = 'section1'
+      } else if (item.includes('2.')) {
+        this.section2Open = true
+        this.lastOpenedSection = 'section2'
+      } else if (item.includes('3.')) {
+        this.openSections['section3'] = true
+        this.lastOpenedSection = 'section3'
+      } else if (item.includes('4.')) {
+        this.openSections['section4'] = true
+        this.lastOpenedSection = 'section4'
+      } else if (item.includes('5.')) {
+        this.openSections['section5'] = true
+        this.lastOpenedSection = 'section5'
+      } else if (item.includes('6.')) {
+        this.openSections['section6'] = true
+        this.lastOpenedSection = 'section6'
+      } else if (item.includes('7.')) {
+        this.openSections['section7'] = true
+        this.lastOpenedSection = 'section7'
+      } else if (item.includes('8.')) {
+        this.openSections['section8'] = true
+        this.lastOpenedSection = 'section8'
+      }
+    },
+    
+    selectItem(item, type, sectionId) {
+      if (type === 'exercise') {
+        // 跳转到习题分析页面，并传递当前选中的项目和当前展开的章节
+        this.$router.push({ 
+          name: 'ExerciseAnalysis', 
+          params: { 
+            item: item,
+            openedSection: sectionId
+          } 
+        })
+      } else {
+        // 在当前页面更新选中的视频
+        this.currentItem = item
+        
+        // 自动展开对应的章节
+        this.autoOpenSection(item)
+        
+        this.updateVideoData(item)
+      }
+    },
+    
+    updateVideoData(item) {
+      // 这里可以添加根据item更新视频数据的逻辑
+      // 例如从API获取不同视频的数据
+      console.log(`更新视频数据: ${item}`)
+      
+      // 销毁旧图表
+      Object.values(this.chartInstances).forEach(chart => {
+        if (chart) chart.destroy()
+      })
+      
+      // 重新初始化图表
+      this.$nextTick(() => {
+        this.initCharts()
+      })
     },
     
     goToDashboard() {
@@ -251,9 +485,6 @@ export default {
       this.$nextTick(() => {
         this.initSmallCharts()
         this.initContentChart()
-        this.initCompletionChart()
-        this.initHotTimeChart()
-        this.initInteractionChart()
       })
     },
     
@@ -324,121 +555,6 @@ export default {
             y: { beginAtZero: true },
             x: { title: { display: true, text: '时间/分' } }
           }
-        }
-      })
-    },
-    
-    initCompletionChart() {
-      if (!this.chartRefs.completionChart) return
-      
-      this.chartInstances.completionChart = new Chart(this.chartRefs.completionChart, {
-        type: 'line',
-        data: {
-          labels: ['0%', '20%', '40%', '60%', '80%', '100%'],
-          datasets: [{ 
-            label: '完成率', 
-            data: [90, 85, 70, 50, 30, 20], 
-            borderColor: '#165DFF', 
-            fill: true, 
-            backgroundColor: 'rgba(22, 93, 255, 0.1)' 
-          }]
-        },
-        options: { 
-          responsive: true, 
-          maintainAspectRatio: false, 
-          plugins: { 
-            legend: { display: false },
-            title: { display: false }
-          },
-          scales: { 
-            x: { 
-              ticks: { callback: v => v },
-              title: { 
-                display: true, 
-                text: '视频播放进度',
-                font: { size: 10 },
-                color: '#4E5969'
-              }
-            },
-            y: { 
-              ticks: { callback: v => v + '%' },
-              title: { 
-                display: true, 
-                text: '剩余用户百分比',
-                font: { size: 10 },
-                color: '#4E5969'
-              }
-            }
-          }
-        }
-      })
-    },
-    
-    initHotTimeChart() {
-      if (!this.chartRefs.hotTimeChart) return
-      
-      this.chartInstances.hotTimeChart = new Chart(this.chartRefs.hotTimeChart, {
-        type: 'bar',
-        data: {
-          labels: ['00:00', '04:00', '08:00', '12:00', '16:00', '20:00'],
-          datasets: [{ 
-            label: '观看量', 
-            data: [120, 80, 200, 350, 280, 420], 
-            backgroundColor: '#165DFF' 
-          }]
-        },
-        options: { 
-          responsive: true, 
-          maintainAspectRatio: false, 
-          plugins: { legend: { display: false } },
-          indexAxis: 'y'
-        }
-      })
-    },
-    
-    initInteractionChart() {
-      if (!this.chartRefs.todayInteractionChart) return
-      
-      this.chartInstances.todayInteractionChart = new Chart(this.chartRefs.todayInteractionChart, {
-        type: 'bar',
-        data: {
-          labels: ['转发', '评论', '点赞'],
-          datasets: [{
-            label: '今日统计',
-            data: [326, 542, 896],
-            backgroundColor: [
-              '#FF9F43',
-              '#165DFF',
-              '#10B981'
-            ],
-            borderRadius: 4
-          }]
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          plugins: {
-            legend: { display: false },
-            tooltip: {
-              callbacks: {
-                label: function(context) {
-                  return ` ${context.raw} 次`
-                }
-              }
-            }
-          },
-          scales: {
-            x: {
-              beginAtZero: true,
-              grid: { display: false },
-              ticks: { font: { size: 10 }, color: '#4E5969' }
-            },
-            y: {
-              grid: { display: false },
-              ticks: { font: { size: 11 }, color: '#4E5969' }
-            }
-          },
-          indexAxis: 'y'
         }
       })
     }

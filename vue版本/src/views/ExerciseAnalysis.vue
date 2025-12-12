@@ -12,58 +12,64 @@
         
         <!-- 第一章 -->
         <div class="border-b border-gray-200">
-          <div class="course-section-title flex justify-between items-center cursor-pointer" @click="toggleSection('section1')">
+          <div class="course-section-title flex justify-between items-center cursor-pointer" @click="toggleSection('section1', true)">
             <span>第一章</span>
             <i class="fa" :class="section1Open ? 'fa-angle-down' : 'fa-angle-right'"></i>
           </div>
           <div class="pl-2" v-show="section1Open">
-            <div class="course-item" @click="goToVideoAnalysis()">
+            <div class="course-item" :class="{ 'active': currentItem === 'video1.1' }" @click="selectItem('video1.1', 'video', 'section1')">
               <div class="course-item-icon course-item-video">
                 <i class="fa fa-play text-xs"></i>
               </div>
               <span>视频1.1</span>
             </div>
-            <div class="course-item" @click="goToVideoAnalysis()">
+            <div class="course-item" :class="{ 'active': currentItem === 'video1.2' }" @click="selectItem('video1.2', 'video', 'section1')">
               <div class="course-item-icon course-item-video">
                 <i class="fa fa-play text-xs"></i>
               </div>
               <span>视频1.2</span>
             </div>
-            <div class="course-item active" @click="goToExerciseAnalysis()">
+            <div class="course-item" :class="{ 'active': currentItem === 'exercise1.1' }" @click="selectItem('exercise1.1', 'exercise', 'section1')">
               <div class="course-item-icon course-item-exercise">
                 <i class="fa fa-pencil text-xs"></i>
               </div>
               <span>习题1.1</span>
+            </div>
+            <div class="course-item" :class="{ 'active': currentItem === 'exercise1.2' }" @click="selectItem('exercise1.2', 'exercise', 'section1')">
+              <div class="course-item-icon course-item-exercise">
+                <i class="fa fa-pencil text-xs"></i>
+              </div>
+              <span>习题1.2</span>
             </div>
           </div>
         </div>
         
         <!-- 第二章 -->
         <div class="border-b border-gray-200">
-          <div class="course-section-title flex justify-between items-center cursor-pointer" @click="toggleSection('section2')">
+          <div class="course-section-title flex justify-between items-center cursor-pointer" @click="toggleSection('section2', true)">
             <span>第二章</span>
             <i class="fa" :class="section2Open ? 'fa-angle-down' : 'fa-angle-right'"></i>
           </div>
           <div class="pl-2" v-show="section2Open">
-            <div class="course-item" @click="goToVideoAnalysis()">
+            <div class="course-item" :class="{ 'active': currentItem === 'video2.1' }" @click="selectItem('video2.1', 'video', 'section2')">
               <div class="course-item-icon course-item-video">
                 <i class="fa fa-play text-xs"></i>
               </div>
               <span>视频2.1</span>
             </div>
-            <div class="course-item" @click="goToVideoAnalysis()">
+            <div class="course-item" :class="{ 'active': currentItem === 'video2.2' }" @click="selectItem('video2.2', 'video', 'section2')">
               <div class="course-item-icon course-item-video">
                 <i class="fa fa-play text-xs"></i>
               </div>
               <span>视频2.2</span>
             </div>
-            <div class="course-item" @click="goToExerciseAnalysis()">
+            <div class="course-item" :class="{ 'active': currentItem === 'exercise2.1' }" @click="selectItem('exercise2.1', 'exercise', 'section2')">
               <div class="course-item-icon course-item-exercise">
                 <i class="fa fa-pencil text-xs"></i>
               </div>
               <span>习题2.1</span>
             </div>
-            <div class="course-item" @click="goToExerciseAnalysis()">
+            <div class="course-item" :class="{ 'active': currentItem === 'exercise2.2' }" @click="selectItem('exercise2.2', 'exercise', 'section2')">
               <div class="course-item-icon course-item-exercise">
                 <i class="fa fa-pencil text-xs"></i>
               </div>
@@ -74,9 +80,35 @@
         
         <!-- 其他章节 -->
         <div v-for="chapter in otherChapters" :key="chapter.id" class="border-b border-gray-200">
-          <div class="course-section-title flex justify-between items-center cursor-pointer" @click="toggleOtherSection(chapter.id)">
+          <div class="course-section-title flex justify-between items-center cursor-pointer" @click="toggleOtherSection(chapter.id, true)">
             <span>{{ chapter.name }}</span>
             <i class="fa" :class="openSections[chapter.id] ? 'fa-angle-down' : 'fa-angle-right'"></i>
+          </div>
+          <div class="pl-2" v-show="openSections[chapter.id]">
+            <div class="course-item" :class="{ 'active': currentItem === `video${chapter.id.replace('section', '')}.1` }" @click="selectItem(`video${chapter.id.replace('section', '')}.1`, 'video', chapter.id)">
+              <div class="course-item-icon course-item-video">
+                <i class="fa fa-play text-xs"></i>
+              </div>
+              <span>视频{{ chapter.id.replace('section', '') }}.1</span>
+            </div>
+            <div class="course-item" :class="{ 'active': currentItem === `video${chapter.id.replace('section', '')}.2` }" @click="selectItem(`video${chapter.id.replace('section', '')}.2`, 'video', chapter.id)">
+              <div class="course-item-icon course-item-video">
+                <i class="fa fa-play text-xs"></i>
+              </div>
+              <span>视频{{ chapter.id.replace('section', '') }}.2</span>
+            </div>
+            <div class="course-item" :class="{ 'active': currentItem === `exercise${chapter.id.replace('section', '')}.1` }" @click="selectItem(`exercise${chapter.id.replace('section', '')}.1`, 'exercise', chapter.id)">
+              <div class="course-item-icon course-item-exercise">
+                <i class="fa fa-pencil text-xs"></i>
+              </div>
+              <span>习题{{ chapter.id.replace('section', '') }}.1</span>
+            </div>
+            <div class="course-item" :class="{ 'active': currentItem === `exercise${chapter.id.replace('section', '')}.2` }" @click="selectItem(`exercise${chapter.id.replace('section', '')}.2`, 'exercise', chapter.id)">
+              <div class="course-item-icon course-item-exercise">
+                <i class="fa fa-pencil text-xs"></i>
+              </div>
+              <span>习题{{ chapter.id.replace('section', '') }}.2</span>
+            </div>
           </div>
         </div>
       </aside>
@@ -93,7 +125,7 @@
           <i class="fa fa-angle-right mx-1 text-gray-400"></i>
           <span>操作系统课程</span>
           <i class="fa fa-angle-right mx-1 text-gray-400"></i>
-          <span class="text-dark font-medium">习题1.1 - 数据分析</span>
+          <span class="text-dark font-medium">{{ currentItemDisplay }} - 数据分析</span>
         </div>
 
         <!-- 页面内容容器 -->
@@ -103,9 +135,9 @@
             <div class="bg-white rounded-lg border border-gray-200 p-4 shadow-sm">
               <div class="text-xs text-secondary mb-1">参与人数</div>
               <div class="flex items-center justify-between">
-                <div class="text-xl font-bold text-dark">12,568</div>
+                <div class="text-xl font-bold text-dark">{{ currentStats.participants }}</div>
                 <div class="text-success text-xs flex items-center">
-                  <i class="fa fa-caret-up mr-1"></i> 156
+                  <i class="fa fa-caret-up mr-1"></i> {{ currentStats.participantsIncrease }}
                 </div>
               </div>
               <div class="mt-2 h-10">
@@ -116,9 +148,9 @@
             <div class="bg-white rounded-lg border border-gray-200 p-4 shadow-sm">
               <div class="text-xs text-secondary mb-1">平均正确率</div>
               <div class="flex items-center justify-between">
-                <div class="text-xl font-bold text-dark">68%</div>
-                <div class="text-danger text-xs flex items-center">
-                  <i class="fa fa-caret-down mr-1"></i> 4%
+                <div class="text-xl font-bold text-dark">{{ currentStats.accuracy }}</div>
+                <div :class="currentStats.accuracyTrend === 'up' ? 'text-success' : 'text-danger' + ' text-xs flex items-center'">
+                  <i class="fa" :class="currentStats.accuracyTrend === 'up' ? 'fa-caret-up' : 'fa-caret-down' + ' mr-1'"></i> {{ currentStats.accuracyChange }}
                 </div>
               </div>
               <div class="mt-2 h-10">
@@ -129,9 +161,9 @@
             <div class="bg-white rounded-lg border border-gray-200 p-4 shadow-sm">
               <div class="text-xs text-secondary mb-1">平均用时</div>
               <div class="flex items-center justify-between">
-                <div class="text-xl font-bold text-dark">8分25秒</div>
+                <div class="text-xl font-bold text-dark">{{ currentStats.avgTime }}</div>
                 <div class="text-success text-xs flex items-center">
-                  <i class="fa fa-caret-up mr-1"></i> 12秒
+                  <i class="fa fa-caret-up mr-1"></i> {{ currentStats.timeIncrease }}
                 </div>
               </div>
               <div class="mt-2 h-10">
@@ -142,9 +174,9 @@
             <div class="bg-white rounded-lg border border-gray-200 p-4 shadow-sm">
               <div class="text-xs text-secondary mb-1">错题提交率</div>
               <div class="flex items-center justify-between">
-                <div class="text-xl font-bold text-dark">32%</div>
+                <div class="text-xl font-bold text-dark">{{ currentStats.errorRate }}</div>
                 <div class="text-success text-xs flex items-center">
-                  <i class="fa fa-caret-up mr-1"></i> 2%
+                  <i class="fa fa-caret-up mr-1"></i> {{ currentStats.errorRateChange }}
                 </div>
               </div>
               <div class="mt-2 h-10">
@@ -158,8 +190,7 @@
             <!-- 习题数据分析 -->
             <div class="lg:col-span-2 bg-white rounded-lg border border-gray-200 p-4 shadow-sm">
               <div class="flex justify-between items-center mb-4">
-                <h3 class="font-medium text-dark">习题数据分析</h3>
-                <!-- <button class="text-primary text-sm hover:bg-primary/10 px-3 py-1 rounded transition-colors">查看历史数据</button> -->
+                <h3 class="font-medium text-dark">{{ currentItemDisplay }} 数据分析</h3>
               </div>
               
               <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -172,15 +203,15 @@
                   <div class="flex justify-center gap-4 mt-2 text-xs text-gray-500">
                     <div class="flex items-center gap-1">
                       <span class="w-3 h-3 rounded-full bg-primary"></span>
-                      <span>正确 74%</span>
+                      <span>正确 {{ currentStats.correctPercentage }}%</span>
                     </div>
                     <div class="flex items-center gap-1">
                       <span class="w-3 h-3 rounded-full bg-gray-300"></span>
-                      <span>错误 24%</span>
+                      <span>错误 {{ currentStats.wrongPercentage }}%</span>
                     </div>
                     <div class="flex items-center gap-1">
                       <span class="w-3 h-3 rounded-full bg-warning"></span>
-                      <span>未答 2%</span>
+                      <span>未答 {{ currentStats.unansweredPercentage }}%</span>
                     </div>
                   </div>
                 </div>
@@ -197,19 +228,19 @@
 
             <!-- 习题建议 -->
             <div class="bg-white rounded-lg border border-gray-200 p-4 shadow-sm">
-              <h3 class="font-medium text-dark mb-4">习题建议</h3>
+              <h3 class="font-medium text-dark mb-4">{{ currentItemDisplay }} 建议</h3>
               <div class="text-sm text-gray-600 space-y-3">
                 <div class="p-3 bg-primary/5 rounded-lg">
                   <p class="font-medium text-primary mb-1">正确率分析</p>
-                  <p class="text-xs">所有习题正确率偏低，题目内容难度较高且题目数量不足</p>
+                  <p class="text-xs">{{ currentStats.suggestions.correctness }}</p>
                 </div>
                 <div class="p-3 bg-warning/5 rounded-lg">
                   <p class="font-medium text-warning mb-1">题目问题</p>
-                  <p class="text-xs">题目2的正确率偏低，可能题目本身存在问题</p>
+                  <p class="text-xs">{{ currentStats.suggestions.issues }}</p>
                 </div>
                 <div class="p-3 bg-success/5 rounded-lg">
                   <p class="font-medium text-success mb-1">改进建议</p>
-                  <p class="text-xs">建议增加同类题型练习，提高学生对知识点的掌握程度</p>
+                  <p class="text-xs">{{ currentStats.suggestions.improvements }}</p>
                 </div>
               </div>
             </div>
@@ -218,10 +249,7 @@
           <!-- 习题内容 - 占满宽度 -->
           <div class="bg-white rounded-lg border border-gray-200 p-4 shadow-sm">
             <div class="flex justify-between items-center mb-6">
-              <h3 class="font-medium text-dark">习题内容</h3>
-              <!-- <button class="bg-primary/10 text-primary text-sm px-3 py-1 rounded hover:bg-primary/20 transition-colors">
-                修改题目
-              </button> -->
+              <h3 class="font-medium text-dark">{{ currentItemDisplay }} 内容</h3>
             </div>
             
             <div class="mb-4">
@@ -294,9 +322,11 @@ export default {
   },
   data() {
     return {
-      section1Open: true,
-      section2Open: true,
+      section1Open: false, // 初始状态：第一章闭合
+      section2Open: false, // 初始状态：第二章闭合
       openSections: {},
+      currentItem: 'exercise1.1', // 默认选中习题1.1
+      lastOpenedSection: null, // 记录上次打开的章节
       otherChapters: [
         { id: 'section3', name: '第三章' },
         { id: 'section4', name: '第四章' },
@@ -392,7 +422,169 @@ export default {
         }
       ],
       chartRefs: {},
-      chartInstances: {}
+      chartInstances: {},
+      // 不同习题的统计数据
+      exerciseStats: {
+        'exercise1.1': {
+          participants: '12,568',
+          participantsIncrease: '156',
+          accuracy: '68%',
+          accuracyChange: '4%',
+          accuracyTrend: 'down',
+          avgTime: '8分25秒',
+          timeIncrease: '12秒',
+          errorRate: '32%',
+          errorRateChange: '2%',
+          correctPercentage: 74,
+          wrongPercentage: 24,
+          unansweredPercentage: 2,
+          suggestions: {
+            correctness: '所有习题正确率偏低，题目内容难度较高且题目数量不足',
+            issues: '题目2的正确率偏低，可能题目本身存在问题',
+            improvements: '建议增加同类题型练习，提高学生对知识点的掌握程度'
+          }
+        },
+        'exercise1.2': {
+          participants: '11,200',
+          participantsIncrease: '120',
+          accuracy: '72%',
+          accuracyChange: '3%',
+          accuracyTrend: 'up',
+          avgTime: '7分15秒',
+          timeIncrease: '8秒',
+          errorRate: '28%',
+          errorRateChange: '1%',
+          correctPercentage: 78,
+          wrongPercentage: 20,
+          unansweredPercentage: 2,
+          suggestions: {
+            correctness: '正确率有所提升，但仍有改进空间',
+            issues: '选择题第3题错误率较高',
+            improvements: '建议对难点进行针对性讲解'
+          }
+        },
+        'exercise2.1': {
+          participants: '10,245',
+          participantsIncrease: '89',
+          accuracy: '72%',
+          accuracyChange: '3%',
+          accuracyTrend: 'up',
+          avgTime: '7分15秒',
+          timeIncrease: '8秒',
+          errorRate: '28%',
+          errorRateChange: '1%',
+          correctPercentage: 78,
+          wrongPercentage: 20,
+          unansweredPercentage: 2,
+          suggestions: {
+            correctness: '正确率有所提升，但仍有改进空间',
+            issues: '选择题第3题错误率较高',
+            improvements: '建议对难点进行针对性讲解'
+          }
+        },
+        'exercise2.2': {
+          participants: '9,856',
+          participantsIncrease: '102',
+          accuracy: '65%',
+          accuracyChange: '2%',
+          accuracyTrend: 'down',
+          avgTime: '9分30秒',
+          timeIncrease: '25秒',
+          errorRate: '35%',
+          errorRateChange: '3%',
+          correctPercentage: 70,
+          wrongPercentage: 28,
+          unansweredPercentage: 2,
+          suggestions: {
+            correctness: '正确率明显下降，题目难度可能过高',
+            issues: '综合题理解困难',
+            improvements: '建议分步骤讲解，降低题目难度'
+          }
+        },
+        // 其他章节习题的数据
+        'exercise3.1': {
+          participants: '8,500',
+          participantsIncrease: '75',
+          accuracy: '70%',
+          accuracyChange: '2%',
+          accuracyTrend: 'up',
+          avgTime: '8分00秒',
+          timeIncrease: '10秒',
+          errorRate: '30%',
+          errorRateChange: '1%',
+          correctPercentage: 75,
+          wrongPercentage: 23,
+          unansweredPercentage: 2,
+          suggestions: {
+            correctness: '第三章习题正确率保持稳定',
+            issues: '概念题理解不够深入',
+            improvements: '建议增加概念辨析练习'
+          }
+        },
+        'exercise3.2': {
+          participants: '7,800',
+          participantsIncrease: '65',
+          accuracy: '68%',
+          accuracyChange: '1%',
+          accuracyTrend: 'down',
+          avgTime: '8分30秒',
+          timeIncrease: '15秒',
+          errorRate: '32%',
+          errorRateChange: '2%',
+          correctPercentage: 72,
+          wrongPercentage: 26,
+          unansweredPercentage: 2,
+          suggestions: {
+            correctness: '正确率略有下降',
+            issues: '应用题解题思路不清晰',
+            improvements: '建议加强解题步骤训练'
+          }
+        },
+        'exercise4.1': {
+          participants: '7,200',
+          participantsIncrease: '60',
+          accuracy: '75%',
+          accuracyChange: '4%',
+          accuracyTrend: 'up',
+          avgTime: '7分45秒',
+          timeIncrease: '5秒',
+          errorRate: '25%',
+          errorRateChange: '1%',
+          correctPercentage: 80,
+          wrongPercentage: 18,
+          unansweredPercentage: 2,
+          suggestions: {
+            correctness: '正确率显著提升',
+            issues: '个别概念混淆',
+            improvements: '建议加强概念对比教学'
+          }
+        }
+      }
+    }
+  },
+  computed: {
+    currentItemDisplay() {
+      // 将 exercise1.1 转换为 "习题1.1"
+      if (this.currentItem.startsWith('exercise')) {
+        const num = this.currentItem.replace('exercise', '')
+        return `习题${num}`
+      } else if (this.currentItem.startsWith('video')) {
+        const num = this.currentItem.replace('video', '')
+        return `视频${num}`
+      }
+      return this.currentItem
+    },
+    currentStats() {
+      // 返回当前选中项目的统计数据
+      return this.exerciseStats[this.currentItem] || this.exerciseStats['exercise1.1']
+    }
+  },
+  created() {
+    // 从路由参数中获取要选中的项目
+    if (this.$route.params.item) {
+      this.currentItem = this.$route.params.item
+      // 根据选中的项目自动展开对应的章节
+      this.autoOpenSection(this.currentItem)
     }
   },
   mounted() {
@@ -404,12 +596,109 @@ export default {
     })
   },
   methods: {
-    toggleSection(section) {
+    toggleSection(section, closeOthers = false) {
+      if (closeOthers) {
+        // 关闭其他章节
+        this.closeOtherSections(section)
+      }
       this[section + 'Open'] = !this[section + 'Open']
+      if (this[section + 'Open']) {
+        this.lastOpenedSection = section
+      }
     },
     
-    toggleOtherSection(sectionId) {
+    toggleOtherSection(sectionId, closeOthers = false) {
+      if (closeOthers) {
+        // 关闭其他章节
+        this.closeOtherSections(sectionId)
+      }
       this.openSections[sectionId] = !this.openSections[sectionId]
+      if (this.openSections[sectionId]) {
+        this.lastOpenedSection = sectionId
+      }
+    },
+    
+    closeOtherSections(currentSection) {
+      // 关闭除了当前章节之外的所有章节
+      if (currentSection !== 'section1') {
+        this.section1Open = false
+      }
+      if (currentSection !== 'section2') {
+        this.section2Open = false
+      }
+      
+      // 关闭其他章节
+      for (const sectionId in this.openSections) {
+        if (sectionId !== currentSection) {
+          this.openSections[sectionId] = false
+        }
+      }
+    },
+    
+    autoOpenSection(item) {
+      // 根据项目ID自动展开对应的章节
+      if (item.includes('1.')) {
+        this.section1Open = true
+        this.lastOpenedSection = 'section1'
+      } else if (item.includes('2.')) {
+        this.section2Open = true
+        this.lastOpenedSection = 'section2'
+      } else if (item.includes('3.')) {
+        this.openSections['section3'] = true
+        this.lastOpenedSection = 'section3'
+      } else if (item.includes('4.')) {
+        this.openSections['section4'] = true
+        this.lastOpenedSection = 'section4'
+      } else if (item.includes('5.')) {
+        this.openSections['section5'] = true
+        this.lastOpenedSection = 'section5'
+      } else if (item.includes('6.')) {
+        this.openSections['section6'] = true
+        this.lastOpenedSection = 'section6'
+      } else if (item.includes('7.')) {
+        this.openSections['section7'] = true
+        this.lastOpenedSection = 'section7'
+      } else if (item.includes('8.')) {
+        this.openSections['section8'] = true
+        this.lastOpenedSection = 'section8'
+      }
+    },
+    
+    selectItem(item, type, sectionId) {
+      if (type === 'video') {
+        // 跳转到视频分析页面，并传递当前选中的项目和当前展开的章节
+        this.$router.push({ 
+          name: 'VideoAnalysis', 
+          params: { 
+            item: item,
+            openedSection: sectionId
+          } 
+        })
+      } else {
+        // 在当前页面更新选中的习题
+        this.currentItem = item
+        
+        // 自动展开对应的章节
+        this.autoOpenSection(item)
+        
+        this.updateExerciseData(item)
+      }
+    },
+    
+    updateExerciseData(item) {
+      // 这里可以添加根据item更新习题数据的逻辑
+      // 例如从API获取不同习题的数据
+      console.log(`更新习题数据: ${item}`)
+      
+      // 销毁旧图表
+      Object.values(this.chartInstances).forEach(chart => {
+        if (chart) chart.destroy()
+      })
+      
+      // 重新初始化图表
+      this.$nextTick(() => {
+        this.initCharts()
+      })
     },
     
     goToDashboard() {
@@ -485,7 +774,11 @@ export default {
           data: { 
             labels: ['正确', '错误', '未答'], 
             datasets: [{ 
-              data: [74,24,2], 
+              data: [
+                this.currentStats.correctPercentage,
+                this.currentStats.wrongPercentage,
+                this.currentStats.unansweredPercentage
+              ], 
               backgroundColor: ['#165DFF', '#E5E6EB', '#FF9F43'],
               borderWidth: 0
             }] 
