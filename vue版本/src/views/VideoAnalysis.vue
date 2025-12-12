@@ -206,63 +206,9 @@
               </div>
             </div>
 
-            <!-- 右侧辅助数据 -->
+            <!-- 右侧区域（已清空） -->
             <div class="w-full lg:w-80 space-y-6">
-              <!-- 课程视频列表 -->
-              <div class="bg-white rounded-lg border border-gray-200 p-4 shadow-sm">
-                <div class="flex justify-between items-center mb-4">
-                  <h3 class="font-medium text-dark">课程视频榜单</h3>
-                  <span class="text-xs text-primary cursor-pointer" @click="goToDashboard()">查看全部</span>
-                </div>
-                <div class="overflow-x-auto">
-                  <table class="w-full text-sm">
-                    <thead>
-                      <tr class="border-b border-gray-200">
-                        <th class="text-left py-2 text-secondary text-xs">排名</th>
-                        <th class="text-left py-2 text-secondary text-xs">视频名</th>
-                        <th class="text-left py-2 text-secondary text-xs">时长/min</th>
-                        <th class="text-left py-2 text-secondary text-xs">点击量</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      <tr v-for="video in videoRanking" :key="video.id" class="border-b border-gray-100">
-                        <td class="py-2 text-xs">{{ video.rank }}</td>
-                        <td class="py-2 text-xs">{{ video.name }}</td>
-                        <td class="py-2 text-xs">{{ video.duration }}</td>
-                        <td class="py-2 text-xs">{{ video.clicks }}</td>
-                      </tr>
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-
-              <!-- 关键时间节点分析 -->
-              <div class="bg-white rounded-lg border border-gray-200 p-4 shadow-sm">
-                <h3 class="font-medium text-dark mb-4">关键时间节点分析</h3>
-                <div class="space-y-4">
-                  <div v-for="node in keyTimeNodes" :key="node.time">
-                    <div class="flex justify-between items-center mb-1">
-                      <span class="text-xs font-medium">{{ node.time }}</span>
-                      <span class="text-xs px-1.5 py-0.5 rounded" :class="node.colorClass">
-                        {{ node.count }}
-                      </span>
-                    </div>
-                    <div class="w-full bg-gray-200 rounded-full h-2 mb-1">
-                      <div class="h-2 rounded-full" :style="`width: ${node.percentage}%`" :class="node.bgColorClass"></div>
-                    </div>
-                    <p class="text-xs" :class="node.textColorClass">{{ node.description }}</p>
-                  </div>
-                </div>
-              </div>
-
-              <!-- 课程建议 -->
-              <div class="bg-white rounded-lg border border-gray-200 p-4 shadow-sm">
-                <h3 class="font-medium text-dark mb-4">课程建议</h3>
-                <div class="text-sm text-secondary space-y-2">
-                  <p>1. 视频时间3分30秒前内容时长较长，视频内容较为困难，可以适当延长</p>
-                  <p>2. 23分30秒后，多方面描述，视频内容较为简单</p>
-                </div>
-              </div>
+              <!-- 这里的内容已被删除 -->
             </div>
           </div>
         </div>
@@ -296,51 +242,6 @@ export default {
         { id: 'section6', name: '第六章' },
         { id: 'section7', name: '第七章' },
         { id: 'section8', name: '第八章' }
-      ],
-      videoRanking: [
-        { id: 1, rank: 1, name: '视频1.1', duration: 15, clicks: '32,214' },
-        { id: 2, rank: 2, name: '视频1.2', duration: 21, clicks: '22,145' },
-        { id: 3, rank: 3, name: '视频2.1', duration: 18, clicks: '21,567' },
-        { id: 4, rank: 4, name: '视频2.2', duration: 17, clicks: '12,356' },
-        { id: 5, rank: 5, name: '视频3.1', duration: 21, clicks: '12,356' }
-      ],
-      keyTimeNodes: [
-        { 
-          time: '9:00', 
-          count: '115条', 
-          percentage: 80,
-          colorClass: 'text-warning bg-warning/10',
-          bgColorClass: 'bg-warning',
-          textColorClass: 'text-warning',
-          description: '在9:00有115条评论，可能是难点内容'
-        },
-        { 
-          time: '4:00', 
-          count: '110个', 
-          percentage: 75,
-          colorClass: 'text-danger bg-danger/10',
-          bgColorClass: 'bg-danger',
-          textColorClass: 'text-danger',
-          description: '在4:00有110个点赞，内容受欢迎'
-        },
-        { 
-          time: '0:30', 
-          count: '33条', 
-          percentage: 30,
-          colorClass: 'text-success bg-success/10',
-          bgColorClass: 'bg-success',
-          textColorClass: 'text-success',
-          description: '在0:30有33条评论，引发讨论'
-        },
-        { 
-          time: '23:00', 
-          count: '52条', 
-          percentage: 45,
-          colorClass: 'text-primary bg-primary/10',
-          bgColorClass: 'bg-primary',
-          textColorClass: 'text-primary',
-          description: '在23:00有52条变速调整'
-        }
       ],
       chartRefs: {},
       chartInstances: {}

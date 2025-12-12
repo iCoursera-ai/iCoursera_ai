@@ -20,33 +20,8 @@
                 <i class="fa fa-circle-o text-xs sidebar-icon"></i>
                 <span class="sidebar-child-text">工作台</span>
               </div>
-              <!-- <div class="sidebar-child" @click="goToPage('/article-management')">
-                <i class="fa fa-file-text-o text-xs sidebar-icon"></i>
-                <span class="sidebar-child-text">稿件管理</span>
-              </div> -->
             </div>
           </div>
-
-          <!-- 管理员管理
-          <div class="sidebar-group">
-            <div class="sidebar-parent" @click="toggleSubmenu('admin')">
-              <div class="sidebar-parent-content">
-                <i class="fa fa-user-secret sidebar-icon"></i>
-                <span>管理员管理</span>
-              </div>
-              <i class="fa fa-angle-right text-xs transition-transform duration-200" :class="{'rotate-icon': activeSubmenu === 'admin'}"></i>
-            </div>
-            <div id="submenu-admin" class="bg-gray-50" :class="{'hidden': activeSubmenu !== 'admin'}">
-              <div class="sidebar-child" @click="goToCourseManagement">
-                <i class="fa fa-circle-o text-xs sidebar-icon"></i>
-                <span class="sidebar-child-text">课程管理</span>
-              </div>
-              <div class="sidebar-child" @click="goToUserManagement">
-                <i class="fa fa-circle-o text-xs sidebar-icon"></i>
-                <span class="sidebar-child-text">用户管理</span>
-              </div>
-            </div>
-          </div> -->
              
           <!-- 收藏管理 -->
           <div class="sidebar-group">
@@ -82,7 +57,6 @@
               </div>
               <i class="fa fa-angle-right text-xs transition-transform duration-200" :class="{'rotate-icon': activeSubmenu === 'user-center'}"></i>
             </div>
-            <!-- 修改这部分代码 -->
             <div id="submenu-user-center" class="bg-gray-50" :class="{'hidden': activeSubmenu !== 'user-center'}">
               <div 
                 class="sidebar-child" 
@@ -160,17 +134,46 @@
                 <div class="lg:col-span-2 card p-6 card-shadow">
                   <div class="flex justify-between items-center mb-6">
                     <h3 class="text-lg font-semibold text-dark">我的课程</h3>
-                    <a href="#" class="text-link text-sm hover:underline">查看更多</a>
+                    <button 
+                      class="text-link text-sm hover:underline flex items-center gap-1"
+                      @click="toggleExpandCourses"
+                    >
+                      {{ showAllCourses ? '收起' : '查看更多' }}
+                      <i class="fa" :class="showAllCourses ? 'fa-angle-up' : 'fa-angle-down'"></i>
+                    </button>
                   </div>
                   
-                  <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-                    <!-- 课程卡片 -->
-                    <div class="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow bg-white" v-for="course in myCourses" :key="course.id">
-                      <div class="text-dark font-medium mb-2">{{ course.title }}</div>
-                      <div class="text-sm text-secondary mb-3">{{ course.subject }}</div>
-                      <div class="flex -space-x-2">
-                        <img v-for="student in course.students" :key="student" :src="student" alt="学员" class="w-7 h-7 rounded-full border border-white">
-                        <div class="w-7 h-7 rounded-full bg-gray-100 border border-white flex items-center justify-center text-xs text-secondary">+{{ course.extraStudents }}</div>
+                  <!-- 课程网格 -->
+                  <div 
+                    class="grid gap-4 transition-all duration-300"
+                    :class="showAllCourses ? 'grid-cols-1 sm:grid-cols-2 md:grid-cols-3' : 'grid-cols-1 sm:grid-cols-2 md:grid-cols-3 max-h-[400px] overflow-hidden'"
+                  >
+                    <!-- 课程卡片 - 使用主页视频样式 -->
+                    <div 
+                      v-for="course in displayedCourses" 
+                      :key="course.id"
+                      class="bg-white rounded-lg overflow-hidden cursor-pointer hover:shadow-lg transition-all duration-300 group video-card"
+                      @click="goToCourse(course)"
+                    >
+                      <!-- 视频封面 - 16:9比例 -->
+                      <div class="relative" style="aspect-ratio: 16/9;">
+                        <img 
+                          :src="course.image" 
+                          :alt="course.title" 
+                          class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                        >
+                        <!-- 播放按钮 -->
+                        <div class="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 bg-black/20">
+                          <div class="w-12 h-12 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center">
+                            <i class="fa fa-play text-white text-lg"></i>
+                          </div>
+                        </div>
+                      </div>
+                      <!-- 只显示课程名字 -->
+                      <div class="p-3">
+                        <h4 class="text-sm font-medium line-clamp-2 group-hover:text-primary transition-colors">
+                          {{ course.title }}
+                        </h4>
                       </div>
                     </div>
                   </div>
@@ -178,23 +181,47 @@
                 
                 <!-- 我的关注 -->
                 <div class="card p-6 card-shadow">
-                  <h3 class="text-lg font-semibold text-dark mb-6">我的关注</h3>
+                  <div class="flex justify-between items-center mb-6">
+                    <h3 class="text-lg font-semibold text-dark">我的关注</h3>
+                    <span class="text-sm text-secondary">{{ followedTeachers.length }}位老师</span>
+                  </div>
                   
                   <div class="space-y-4">
-                    <div v-for="teacher in followedTeachers" :key="teacher.id" class="flex items-center gap-3">
-                      <img :src="teacher.avatar" :alt="teacher.name" class="w-10 h-10 rounded-full">
+                    <div 
+                      v-for="teacher in followedTeachers" 
+                      :key="teacher.id" 
+                      class="flex items-center gap-3 p-2 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors"
+                      @click="goToTeacherSpace(teacher)"
+                    >
+                      <div class="relative">
+                        <img :src="teacher.avatar" :alt="teacher.name" class="w-10 h-10 rounded-full">
+                        <div class="absolute -bottom-1 -right-1 w-4 h-4 bg-green-500 rounded-full border-2 border-white"></div>
+                      </div>
                       <div class="flex-1">
                         <div class="font-medium text-dark">{{ teacher.name }}</div>
                         <div class="text-xs text-secondary">{{ teacher.department }}</div>
                       </div>
+                      <button 
+                        class="text-xs px-2 py-1 rounded text-primary hover:bg-primary/10 transition-colors"
+                        @click.stop="unfollowTeacher(teacher.id)"
+                      >
+                        取消关注
+                      </button>
+                    </div>
+                    
+                    <!-- 空状态 -->
+                    <div v-if="followedTeachers.length === 0" class="text-center py-8 text-gray-500">
+                      <i class="fa fa-user-friends text-3xl mb-3"></i>
+                      <p class="text-sm">暂无关注的老师</p>
+                      <p class="text-xs mt-1">去视频页面关注喜欢的老师吧</p>
                     </div>
                   </div>
                 </div>
               </div>
               
-              <!-- 我的签名 -->
+              <!-- 我的简介 -->
               <div class="card p-6 card-shadow">
-                <h3 class="text-lg font-semibold text-dark mb-4">我的签名</h3>
+                <h3 class="text-lg font-semibold text-dark mb-4">我的简介</h3>
                 <div class="text-xl text-dark py-8 border-t border-b border-gray-200">
                   {{ userData.signature }}
                 </div>
@@ -272,25 +299,15 @@
                     </div>
                     
                     <div>
-                      <div class="text-sm font-medium text-gray-700 mb-1">粉丝数</div>
-                      <div class="font-medium text-dark">{{ userData.followers }}</div>
-                    </div>
-                    
-                    <div>
-                      <div class="text-sm font-medium text-gray-700 mb-1">发布课程数</div>
-                      <div class="font-medium text-dark">{{ userData.courses }}</div>
+                      <div class="text-sm font-medium text-gray-700 mb-1">教师资格认证</div>
+                      <div class="flex items-center gap-2">
+                        <span :class="teacherCertStatusClass" class="font-medium">{{ teacherCertStatus }}</span>
+                      </div>
                     </div>
                     
                     <div class="md:col-span-3">
-                      <div class="text-sm font-medium text-gray-700 mb-1">个人简介</div>
-                      <textarea v-model="userData.bio" class="input-field" rows="3" placeholder="请输入个人简介"></textarea>
-                      <button class="btn btn-primary mt-2 px-4 py-2 rounded-md" @click="saveBio">保存简介</button>
-                    </div>
-                    
-                    <div class="md:col-span-3">
-                      <div class="text-sm font-medium text-gray-700 mb-1">我的签名</div>
-                      <textarea v-model="userData.signature" class="input-field" rows="2" placeholder="请输入签名"></textarea>
-                      <button class="btn btn-primary mt-2 px-4 py-2 rounded-md" @click="saveSignature">保存签名</button>
+                      <div class="text-sm font-medium text-gray-700 mb-1">我的简介</div>
+                      <textarea v-model="userData.signature" class="input-field" rows="2" placeholder="请输入签名" @input="saveSignatureAuto"></textarea>
                     </div>
                   </div>
                 </div>
@@ -337,14 +354,6 @@
                   
                   <div class="flex justify-between items-center py-3 border-b border-gray-100">
                     <div>
-                      <div class="font-medium text-dark mb-1">密保问题</div>
-                      <div class="text-sm text-secondary">您暂未设置密保问题。密保问题可以有效的保护账号的安全。</div>
-                    </div>
-                    <button class="btn-text px-4 py-2 rounded-md" @click="showDevelopmentAlert">设置</button>
-                  </div>
-                  
-                  <div class="flex justify-between items-center py-3 border-b border-gray-100">
-                    <div>
                       <div class="font-medium text-dark mb-1">安全手机</div>
                       <div class="text-sm text-secondary">已绑定: <span>{{ maskedPhone }}</span></div>
                     </div>
@@ -362,103 +371,60 @@
                 
                 <!-- 教师认证内容 -->
                 <div v-if="activeTab === 'teacher'" class="space-y-8">
-                  <div class="mb-8">
+                  <div class="mb-8 relative">
+                    <!-- 前往认证按钮 -->
+                    <div class="absolute top-0 right-0">
+                      <button class="px-4 py-2 bg-primary text-white rounded-md hover:bg-primary/90 transition-colors" @click="showCertificationModal">
+                        <i class="fa fa-pencil mr-2"></i>前往认证
+                      </button>
+                    </div>
+                    
                     <h3 class="text-lg font-semibold text-dark mb-4">教师实名认证</h3>
                     
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
                       <div class="p-4 bg-gray-50 rounded-lg">
                         <div class="text-sm text-secondary mb-1">账号类型</div>
-                        <div class="font-medium text-dark">企业账号</div>
+                        <div class="font-medium text-dark">{{ teacherCertInfo.accountType || '未填写' }}</div>
                       </div>
                       
                       <div class="p-4 bg-gray-50 rounded-lg">
                         <div class="text-sm text-secondary mb-1">认证状态</div>
-                        <div class="text-success font-medium">已认证</div>
+                        <div :class="teacherCertStatusClass" class="font-medium">{{ teacherCertStatus }}</div>
                       </div>
                       
                       <div class="p-4 bg-gray-50 rounded-lg">
                         <div class="text-sm text-secondary mb-1">认证时间</div>
-                        <div class="font-medium text-dark">2018-10-06</div>
+                        <div class="font-medium text-dark">{{ teacherCertInfo.certTime || '未认证' }}</div>
                       </div>
                       
                       <div class="p-4 bg-gray-50 rounded-lg">
                         <div class="text-sm text-secondary mb-1">教师姓名</div>
-                        <div class="font-medium text-dark">李机皮</div>
+                        <div class="font-medium text-dark">{{ teacherCertInfo.teacherName || '未填写' }}</div>
                       </div>
                       
                       <div class="p-4 bg-gray-50 rounded-lg">
                         <div class="text-sm text-secondary mb-1">教师学位</div>
-                        <div class="font-medium text-dark">教授</div>
+                        <div class="font-medium text-dark">{{ teacherCertInfo.teacherDegree || '未填写' }}</div>
                       </div>
                       
                       <div class="p-4 bg-gray-50 rounded-lg">
                         <div class="text-sm text-secondary mb-1">法人认证号码</div>
-                        <div class="font-medium text-dark">131****3246</div>
+                        <div class="font-medium text-dark">{{ teacherCertInfo.legalPersonId || '未填写' }}</div>
                       </div>
                       
                       <div class="p-4 bg-gray-50 rounded-lg">
                         <div class="text-sm text-secondary mb-1">学校名称</div>
-                        <div class="font-medium text-dark">浙江工商大学</div>
+                        <div class="font-medium text-dark">{{ teacherCertInfo.schoolName || '未填写' }}</div>
                       </div>
                       
                       <div class="p-4 bg-gray-50 rounded-lg">
                         <div class="text-sm text-secondary mb-1">企业证件类型</div>
-                        <div class="font-medium text-dark">企业营业执照</div>
+                        <div class="font-medium text-dark">{{ teacherCertInfo.certificateType || '未填写' }}</div>
                       </div>
                       
                       <div class="p-4 bg-gray-50 rounded-lg">
                         <div class="text-sm text-secondary mb-1">组织机构代码</div>
-                        <div class="font-medium text-dark">5***9</div>
-                      </div>
-                    </div>
-                  </div>
-                  
-                  <div>
-                    <h3 class="text-lg font-semibold text-dark mb-4">记录</h3>
-                    
-                    <div class="overflow-x-auto">
-                      <table class="w-full">
-                        <thead>
-                          <tr class="bg-gray-50 text-left text-sm text-secondary">
-                            <th class="px-4 py-3 rounded-l-lg">课程UID</th>
-                            <th class="px-4 py-3">审核课程</th>
-                            <th class="px-4 py-3">当前状态</th>
-                            <th class="px-4 py-3">创建时间</th>
-                            <th class="px-4 py-3 rounded-r-lg">操作</th>
-                          </tr>
-                        </thead>
-                        <tbody class="text-sm">
-                          <tr class="border-b border-gray-100 bg-white" v-for="record in teacherRecords" :key="record.id">
-                            <td class="px-4 py-3 text-dark">{{ record.id }}</td>
-                            <td class="px-4 py-3 text-dark">{{ record.course }}</td>
-                            <td class="px-4 py-3">
-                              <span class="flex items-center gap-1">
-                                <span class="w-2 h-2 rounded-full" :class="record.statusClass"></span>
-                                <span>{{ record.status }}</span>
-                              </span>
-                            </td>
-                            <td class="px-4 py-3 text-secondary">{{ record.createdAt }}</td>
-                            <td class="px-4 py-3">
-                              <div class="flex gap-3">
-                                <a href="#" class="text-link hover:underline">查看</a>
-                                <a v-if="record.status === '审核中'" href="#" class="text-link hover:underline">撤回</a>
-                              </div>
-                            </td>
-                          </tr>
-                        </tbody>
-                      </table>
-                    </div>
-                    
-                    <div class="flex justify-between items-center mt-4 text-sm">
-                      <div class="text-secondary">共{{ teacherRecords.length }}条</div>
-                      <div class="flex items-center gap-2">
-                        <button class="w-8 h-8 flex items-center justify-center rounded border border-gray-200 text-secondary hover:border-primary hover:text-primary transition-colors">
-                          <i class="fa fa-angle-left"></i>
-                        </button>
-                        <button class="w-8 h-8 flex items-center justify-center rounded bg-primary text-white">51</button>
-                        <button class="w-8 h-8 flex items-center justify-center rounded border border-gray-200 text-secondary hover:border-primary hover:text-primary transition-colors">
-                          <i class="fa fa-angle-right"></i>
-                        </button>
+                        <div class="font-medium text-dark">{{ teacherCertInfo.organizationCode || '未填写' }}</div>
                       </div>
                     </div>
                   </div>
@@ -520,54 +486,6 @@
                         </div>
                       </div>
                     </div>
-                    
-                    <!-- 学习方式偏好 -->
-                    <div class="space-y-4">
-                      <h3 class="font-semibold text-dark mb-1">您偏好的学习方式是？</h3>
-                      <div class="flex flex-wrap gap-3">
-                        <div 
-                          v-for="method in preferencesOptions.method" 
-                          :key="method.value"
-                          class="preference-chip"
-                          :class="{ 'selected': selectedPreferences.method.includes(method.value) }"
-                          @click="togglePreference('method', method.value)"
-                        >
-                          <i :class="method.icon"></i> {{ method.label }}
-                        </div>
-                      </div>
-                    </div>
-                    
-                    <!-- 学习时长偏好 -->
-                    <div class="space-y-4">
-                      <h3 class="font-semibold text-dark mb-1">您每周的学习时间是？</h3>
-                      <div class="flex flex-wrap gap-3">
-                        <div 
-                          v-for="duration in preferencesOptions.duration" 
-                          :key="duration.value"
-                          class="preference-chip"
-                          :class="{ 'selected': selectedPreferences.duration.includes(duration.value) }"
-                          @click="togglePreference('duration', duration.value)"
-                        >
-                          {{ duration.label }}
-                        </div>
-                      </div>
-                    </div>
-                    
-                    <!-- 难度级别偏好 -->
-                    <div class="space-y-4">
-                      <h3 class="font-semibold text-dark mb-1">您偏好的课程难度是？</h3>
-                      <div class="flex flex-wrap gap-3">
-                        <div 
-                          v-for="difficulty in preferencesOptions.difficulty" 
-                          :key="difficulty.value"
-                          class="preference-chip"
-                          :class="{ 'selected': selectedPreferences.difficulty.includes(difficulty.value) }"
-                          @click="togglePreference('difficulty', difficulty.value)"
-                        >
-                          {{ difficulty.label }}
-                        </div>
-                      </div>
-                    </div>
                   </div>
                   
                   <div class="mt-8 pt-6 border-t border-gray-200 flex justify-between items-center">
@@ -604,7 +522,7 @@
       </main>
     </div>
 
-    <!-- 模态框 -->
+    <!-- 修改信息模态框 -->
     <div v-if="showModal" class="modal">
       <div class="modal-content">
         <div class="modal-header">
@@ -647,6 +565,56 @@
       </div>
     </div>
 
+    <!-- 教师认证模态框 -->
+    <div v-if="showCertModal" class="modal">
+      <div class="modal-content max-w-2xl">
+        <div class="modal-header">
+          <h3 class="text-lg font-semibold">教师实名认证</h3>
+          <button @click="closeCertModal" class="text-gray-500 hover:text-gray-700">
+            <i class="fa fa-times"></i>
+          </button>
+        </div>
+        <div class="modal-body">
+          <div class="space-y-4">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">账号类型</label>
+                <input type="text" v-model="certForm.accountType" class="input-field" placeholder="请输入账号类型">
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">教师姓名</label>
+                <input type="text" v-model="certForm.teacherName" class="input-field" placeholder="请输入教师姓名">
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">教师学位</label>
+                <input type="text" v-model="certForm.teacherDegree" class="input-field" placeholder="请输入教师学位">
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">法人认证号码</label>
+                <input type="text" v-model="certForm.legalPersonId" class="input-field" placeholder="请输入法人认证号码">
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">学校名称</label>
+                <input type="text" v-model="certForm.schoolName" class="input-field" placeholder="请输入学校名称">
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">企业证件类型</label>
+                <input type="text" v-model="certForm.certificateType" class="input-field" placeholder="请输入企业证件类型">
+              </div>
+              <div class="md:col-span-2">
+                <label class="block text-sm font-medium text-gray-700 mb-1">组织机构代码</label>
+                <input type="text" v-model="certForm.organizationCode" class="input-field" placeholder="请输入组织机构代码">
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button @click="closeCertModal" class="px-4 py-2 text-gray-700 border border-gray-300 rounded-md hover:bg-gray-50">取消</button>
+          <button @click="submitCertification" class="px-4 py-2 bg-primary text-white rounded-md hover:bg-primary/90">确认认证</button>
+        </div>
+      </div>
+    </div>
+
     <Footer />
   </div>
 </template>
@@ -667,6 +635,8 @@ export default {
       activePage: 'user-info',
       activeTab: 'security',
       showModal: false,
+      showAllCourses: false,
+      showCertModal: false,
       userData: {
         username: 'dsfuis',
         realname: '谷名',
@@ -678,52 +648,109 @@ export default {
         followers: 5000,
         courses: 20,
         avatar: 'https://picsum.photos/200/200?random=1',
-        bio: '',
         signature: '啊啊啊啊啊啊啊啊啊啊啊，摆烂摆烂',
-        email: ''
+        email: '',
+        teacherCertStatus: '未认证'
       },
+      // 教师认证信息
+      teacherCertInfo: {
+        accountType: '',
+        certTime: '',
+        teacherName: '',
+        teacherDegree: '',
+        legalPersonId: '',
+        schoolName: '',
+        certificateType: '',
+        organizationCode: '',
+        status: '未认证'
+      },
+      // 教师认证表单
+      certForm: {
+        accountType: '',
+        teacherName: '',
+        teacherDegree: '',
+        legalPersonId: '',
+        schoolName: '',
+        certificateType: '',
+        organizationCode: ''
+      },
+      // 我的课程数据 - 使用主页视频样式
       myCourses: [
-        { id: 1, title: '操作系统', subject: 'Arco Design System', students: [
-          'https://picsum.photos/32/32?random=10',
-          'https://picsum.photos/32/32?random=11',
-          'https://picsum.photos/32/32?random=12'
-        ], extraStudents: 5 },
-        { id: 2, title: '互联网', subject: 'Arco Design System', students: [
-          'https://picsum.photos/32/32?random=13',
-          'https://picsum.photos/32/32?random=14',
-          'https://picsum.photos/32/32?random=15'
-        ], extraStudents: 8 },
-        { id: 3, title: '操作系统', subject: 'Arco Design System', students: [
-          'https://picsum.photos/32/32?random=16',
-          'https://picsum.photos/32/32?random=17',
-          'https://picsum.photos/32/32?random=18'
-        ], extraStudents: 3 },
-        { id: 4, title: '操作系统', subject: 'Arco Design System', students: [
-          'https://picsum.photos/32/32?random=19',
-          'https://picsum.photos/32/32?random=20',
-          'https://picsum.photos/32/32?random=21'
-        ], extraStudents: 6 },
-        { id: 5, title: '操作系统', subject: 'Arco Design System', students: [
-          'https://picsum.photos/32/32?random=22',
-          'https://picsum.photos/32/32?random=23',
-          'https://picsum.photos/32/32?random=24'
-        ], extraStudents: 7 },
-        { id: 6, title: '操作系统', subject: 'Arco Design System', students: [
-          'https://picsum.photos/32/32?random=25',
-          'https://picsum.photos/32/32?random=26',
-          'https://picsum.photos/32/32?random=27'
-        ], extraStudents: 4 }
+        { 
+          id: 1, 
+          title: '操作系统', 
+          image: 'https://picsum.photos/400/225?random=100',
+          subject: '计算机基础'
+        },
+        { 
+          id: 2, 
+          title: '互联网原理与应用', 
+          image: 'https://picsum.photos/400/225?random=101',
+          subject: '网络技术'
+        },
+        { 
+          id: 3, 
+          title: '数据结构与算法', 
+          image: 'https://picsum.photos/400/225?random=102',
+          subject: '编程基础'
+        },
+        { 
+          id: 4, 
+          title: '数据库系统原理', 
+          image: 'https://picsum.photos/400/225?random=103',
+          subject: '数据管理'
+        },
+        { 
+          id: 5, 
+          title: '计算机网络', 
+          image: 'https://picsum.photos/400/225?random=104',
+          subject: '网络工程'
+        },
+        { 
+          id: 6, 
+          title: '软件工程', 
+          image: 'https://picsum.photos/400/225?random=105',
+          subject: '软件开发'
+        },
+        { 
+          id: 7, 
+          title: '人工智能基础', 
+          image: 'https://picsum.photos/400/225?random=106',
+          subject: '人工智能'
+        },
+        { 
+          id: 8, 
+          title: '机器学习入门', 
+          image: 'https://picsum.photos/400/225?random=107',
+          subject: '机器学习'
+        },
+        { 
+          id: 9, 
+          title: 'Web前端开发', 
+          image: 'https://picsum.photos/400/225?random=108',
+          subject: '前端技术'
+        },
+        { 
+          id: 10, 
+          title: '移动应用开发', 
+          image: 'https://picsum.photos/400/225?random=109',
+          subject: '移动开发'
+        },
+        { 
+          id: 11, 
+          title: '云计算基础', 
+          image: 'https://picsum.photos/400/225?random=110',
+          subject: '云计算'
+        },
+        { 
+          id: 12, 
+          title: '网络安全技术', 
+          image: 'https://picsum.photos/400/225?random=111',
+          subject: '网络安全'
+        }
       ],
-      followedTeachers: [
-        { id: 1, name: '汪老师', department: '计算机学院', avatar: 'https://picsum.photos/48/48?random=30' },
-        { id: 2, name: '董老师', department: '信息工程学院', avatar: 'https://picsum.photos/48/48?random=31' },
-        { id: 3, name: '沈老师', department: '软件学院', avatar: 'https://picsum.photos/48/48?random=32' },
-        { id: 4, name: '何老师', department: '数据科学系', avatar: 'https://picsum.photos/48/48?random=33' }
-      ],
-      teacherRecords: [
-        { id: 232, course: '操作系统', status: '审核中', statusClass: 'bg-primary', createdAt: '2021-02-28 10:30' },
-        { id: 254, course: '计算机网络', status: '已通过', statusClass: 'bg-success', createdAt: '2021-02-28 10:30' }
-      ],
+      // 我的关注老师 - 从localStorage加载
+      followedTeachers: [],
       preferencesOptions: {
         field: [
           { value: 'programming', label: '编程开发', icon: 'fa fa-code mr-2' },
@@ -742,35 +769,11 @@ export default {
           { value: 'hobby', label: '兴趣爱好', icon: 'fa fa-heart mr-2' },
           { value: 'school', label: '学业辅助', icon: 'fa fa-graduation-cap mr-2' },
           { value: 'entrepreneurship', label: '创业指导', icon: 'fa fa-rocket mr-2' }
-        ],
-        method: [
-          { value: 'video', label: '视频课程', icon: 'fa fa-video-camera mr-2' },
-          { value: 'text', label: '图文教程', icon: 'fa fa-file-text mr-2' },
-          { value: 'interactive', label: '互动练习', icon: 'fa fa-mouse-pointer mr-2' },
-          { value: 'live', label: '直播授课', icon: 'fa fa-desktop mr-2' },
-          { value: 'project', label: '项目实战', icon: 'fa fa-code-fork mr-2' },
-          { value: 'one-on-one', label: '一对一辅导', icon: 'fa fa-users mr-2' }
-        ],
-        duration: [
-          { value: '1-3', label: '1-3小时' },
-          { value: '3-5', label: '3-5小时' },
-          { value: '5-10', label: '5-10小时' },
-          { value: '10-15', label: '10-15小时' },
-          { value: '15+', label: '15小时以上' }
-        ],
-        difficulty: [
-          { value: 'beginner', label: '初级入门' },
-          { value: 'intermediate', label: '中级进阶' },
-          { value: 'advanced', label: '高级精通' },
-          { value: 'mixed', label: '混合难度' }
         ]
       },
       selectedPreferences: {
         field: [],
-        goal: [],
-        method: [],
-        duration: [],
-        difficulty: []
+        goal: []
       },
       editField: '',
       modalTitle: '',
@@ -778,7 +781,8 @@ export default {
       modalInputValue: '',
       oldPassword: '',
       newPassword: '',
-      confirmPassword: ''
+      confirmPassword: '',
+      signatureSaveTimer: null
     }
   },
   computed: {
@@ -822,44 +826,37 @@ export default {
           html += `<div><span class="font-medium">学习目标:</span> ${goalDisplay}</div>`
         }
         
-        // 学习方式
-        if (parsed.method && parsed.method.length > 0) {
-          const methodDisplay = parsed.method.map(m => {
-            const method = this.preferencesOptions.method.find(opt => opt.value === m)
-            return method ? method.label : m
-          }).join('、')
-          html += `<div><span class="font-medium">学习方式:</span> ${methodDisplay}</div>`
-        }
-        
-        // 学习时长
-        if (parsed.duration && parsed.duration.length > 0) {
-          const durationDisplay = parsed.duration.map(d => {
-            const duration = this.preferencesOptions.duration.find(opt => opt.value === d)
-            return duration ? duration.label : d
-          }).join('、')
-          html += `<div><span class="font-medium">学习时长:</span> ${durationDisplay}</div>`
-        }
-        
-        // 难度级别
-        if (parsed.difficulty && parsed.difficulty.length > 0) {
-          const difficultyDisplay = parsed.difficulty.map(d => {
-            const difficulty = this.preferencesOptions.difficulty.find(opt => opt.value === d)
-            return difficulty ? difficulty.label : d
-          }).join('、')
-          html += `<div><span class="font-medium">课程难度:</span> ${difficultyDisplay}</div>`
-        }
-        
         html += '</div>'
         return html
       } catch (e) {
         console.error('解析偏好设置失败:', e)
         return ''
       }
+    },
+    displayedCourses() {
+      return this.showAllCourses ? this.myCourses : this.myCourses.slice(0, 6)
+    },
+    teacherCertStatus() {
+      return this.teacherCertInfo.status === '已认证' ? '已认证' : '未认证'
+    },
+    teacherCertStatusClass() {
+      return this.teacherCertInfo.status === '已认证' ? 'text-success' : 'text-danger'
     }
   },
   mounted() {
     this.loadUserData()
     this.loadPreferences()
+    this.loadFollowedTeachers()
+    this.loadTeacherCertInfo()
+    
+    // 监听关注更新事件
+    window.addEventListener('storage', this.handleStorageEvent)
+    // 监听自定义事件（同页面内更新）
+    window.addEventListener('followUpdated', this.loadFollowedTeachers)
+  },
+  beforeUnmount() {
+    window.removeEventListener('storage', this.handleStorageEvent)
+    window.removeEventListener('followUpdated', this.loadFollowedTeachers)
   },
   methods: {
     toggleSubmenu(submenu) {
@@ -867,25 +864,16 @@ export default {
     },
 
     switchPage(page) {
-    this.activePage = page
-    // 确保子菜单是展开状态
-    this.activeSubmenu = 'user-center'
-    },
-
-    showDevelopmentAlert() {
-    alert('密保问题设置功能开发中');
-    },
-
-    showAlert(message) {
-    alert(message);
+      this.activePage = page
+      this.activeSubmenu = 'user-center'
     },
 
     goToTeacherDashboard() {
-    this.$router.push('/teacher-dashboard')
+      this.$router.push('/teacher-dashboard')
     },
 
     goToFavorites() {
-    this.$router.push('/favorites-management')
+      this.$router.push('/favorites-management')
     },
     
     goToWorkEngine() {
@@ -904,6 +892,7 @@ export default {
       this.$router.push(path)
     },
 
+    // 加载用户数据
     loadUserData() {
       const storedUserData = localStorage.getItem('bgareaUserData')
       const storedUser = localStorage.getItem('bgareaCurrentUser') || sessionStorage.getItem('bgareaCurrentUser')
@@ -920,8 +909,96 @@ export default {
           phone: user.phone || this.userData.phone,
           location: user.location || this.userData.location,
           school: user.school || this.userData.school,
-          avatar: user.avatar || this.userData.avatar
+          avatar: user.avatar || this.userData.avatar,
+          teacherCertStatus: user.teacherCertStatus || this.userData.teacherCertStatus
         }
+      }
+    },
+    
+    // 加载教师认证信息
+    loadTeacherCertInfo() {
+      const storedCertInfo = localStorage.getItem('teacherCertificationInfo')
+      if (storedCertInfo) {
+        this.teacherCertInfo = JSON.parse(storedCertInfo)
+      }
+    },
+    
+    // 加载关注的老师
+    loadFollowedTeachers() {
+      const followed = localStorage.getItem('userFollowedTeachers')
+      if (followed) {
+        this.followedTeachers = JSON.parse(followed)
+      } else {
+        // 默认关注的老师
+        this.followedTeachers = [
+          { 
+            id: 1, 
+            name: '汪老师', 
+            department: '计算机学院', 
+            avatar: 'https://picsum.photos/48/48?random=30',
+            userId: 'teacher_001'
+          },
+          { 
+            id: 2, 
+            name: '董老师', 
+            department: '信息工程学院', 
+            avatar: 'https://picsum.photos/48/48?random=31',
+            userId: 'teacher_002'
+          },
+          { 
+            id: 3, 
+            name: '沈老师', 
+            department: '软件学院', 
+            avatar: 'https://picsum.photos/48/48?random=32',
+            userId: 'teacher_003'
+          },
+          { 
+            id: 4, 
+            name: '何老师', 
+            department: '数据科学系', 
+            avatar: 'https://picsum.photos/48/48?random=33',
+            userId: 'teacher_004'
+          }
+        ]
+        localStorage.setItem('userFollowedTeachers', JSON.stringify(this.followedTeachers))
+      }
+    },
+    
+    // 处理storage事件，用于接收来自视频播放器的关注更新
+    handleStorageEvent(event) {
+      if (event.key === 'userFollowedTeachers') {
+        this.loadFollowedTeachers()
+      }
+    },
+    
+    // 跳转到课程详情页
+    goToCourse(course) {
+      this.$router.push({
+        name: 'VideoPlayer',
+        params: { courseId: course.id }
+      })
+    },
+    
+    // 切换课程展开/收起
+    toggleExpandCourses() {
+      this.showAllCourses = !this.showAllCourses
+    },
+    
+    // 跳转到老师空间
+    goToTeacherSpace(teacher) {
+      // 这里先实现跳转，但暂不做老师空间页面
+      this.$router.push({
+        path: '/teacher-space',
+        query: { teacherId: teacher.userId, teacherName: teacher.name }
+      })
+    },
+    
+    // 取消关注老师
+    unfollowTeacher(teacherId) {
+      if (confirm('确定要取消关注这位老师吗？')) {
+        this.followedTeachers = this.followedTeachers.filter(teacher => teacher.id !== teacherId)
+        localStorage.setItem('userFollowedTeachers', JSON.stringify(this.followedTeachers))
+        alert('已取消关注')
       }
     },
     
@@ -966,17 +1043,59 @@ export default {
           alert('请填写所有密码字段')
           return
         }
-        
+
         if (this.newPassword !== this.confirmPassword) {
           alert('新密码与确认密码不一致')
           return
         }
-        
+
         if (this.newPassword.length < 6) {
           alert('密码长度至少6位')
           return
         }
-        
+
+        // 验证原密码是否正确
+        const currentUser = localStorage.getItem('bgareaCurrentUser') || sessionStorage.getItem('bgareaCurrentUser')
+        if (currentUser) {
+          const user = JSON.parse(currentUser)
+
+          // 从用户列表中查找当前用户
+          const users = JSON.parse(localStorage.getItem('bgareaUsers') || '[]')
+          const userIndex = users.findIndex(u => u.email === user.email || u.userId === user.userId)
+
+          if (userIndex > -1) {
+            // 检查原密码是否匹配
+            if (users[userIndex].password !== this.oldPassword) {
+              // 如果没有密码字段，或者密码不匹配，检查是否从用户对象获取
+              if (user.password && user.password !== this.oldPassword) {
+                alert('原密码错误')
+                return
+              }
+            }
+
+            // 更新用户列表中的密码
+            users[userIndex].password = this.newPassword
+
+            // 更新当前登录用户的密码
+            user.password = this.newPassword
+
+            // 保存更新后的用户列表
+            localStorage.setItem('bgareaUsers', JSON.stringify(users))
+
+            // 保存更新后的当前用户
+            if (localStorage.getItem('bgareaCurrentUser')) {
+              localStorage.setItem('bgareaCurrentUser', JSON.stringify(user))
+            } else {
+              sessionStorage.setItem('bgareaCurrentUser', JSON.stringify(user))
+            }
+
+            alert('密码修改成功！下次登录请使用新密码。')
+            this.closeModal()
+            return
+          }
+        }
+
+        // 如果没有找到用户，尝试其他方式
         alert('密码修改成功！')
         this.closeModal()
       } else {
@@ -985,24 +1104,39 @@ export default {
           alert('请输入有效值')
           return
         }
-        
+
         if (this.editField === 'phone' && !/^1[3-9]\d{9}$/.test(value)) {
           alert('请输入有效的手机号码')
           return
         }
-        
+
         // 更新用户数据
         this.userData[this.editField] = value
-        
-        // 更新本地存储
+
+        // 更新本地存储中的用户数据
         localStorage.setItem('bgareaUserData', JSON.stringify(this.userData))
-        
-        // 更新当前登录信息中的用户名
-        if (this.editField === 'username') {
-          const storedUser = localStorage.getItem('bgareaCurrentUser') || sessionStorage.getItem('bgareaCurrentUser')
-          if (storedUser) {
-            const user = JSON.parse(storedUser)
-            user.username = value
+
+        // 同时更新用户列表中的对应字段
+        const currentUser = localStorage.getItem('bgareaCurrentUser') || sessionStorage.getItem('bgareaCurrentUser')
+        if (currentUser) {
+          const user = JSON.parse(currentUser)
+          const users = JSON.parse(localStorage.getItem('bgareaUsers') || '[]')
+          const userIndex = users.findIndex(u => u.email === user.email || u.userId === user.userId)
+
+          if (userIndex > -1) {
+            // 更新用户列表中的对应字段
+            users[userIndex][this.editField] = value
+
+            // 如果是用户名，还需要更新其他引用
+            if (this.editField === 'username') {
+              users[userIndex].username = value
+              user.username = value
+            }
+
+            // 保存更新后的用户列表
+            localStorage.setItem('bgareaUsers', JSON.stringify(users))
+
+            // 保存更新后的当前用户
             if (localStorage.getItem('bgareaCurrentUser')) {
               localStorage.setItem('bgareaCurrentUser', JSON.stringify(user))
             } else {
@@ -1010,7 +1144,7 @@ export default {
             }
           }
         }
-        
+
         alert('修改成功！')
         this.closeModal()
       }
@@ -1038,14 +1172,18 @@ export default {
       reader.readAsDataURL(file)
     },
     
-    saveBio() {
-      localStorage.setItem('bgareaUserData', JSON.stringify(this.userData))
-      alert('个人简介已保存！')
-    },
-    
-    saveSignature() {
-      localStorage.setItem('bgareaUserData', JSON.stringify(this.userData))
-      alert('签名已保存！')
+    // 自动保存签名
+    saveSignatureAuto() {
+      // 清除之前的定时器
+      if (this.signatureSaveTimer) {
+        clearTimeout(this.signatureSaveTimer)
+      }
+      
+      // 设置新的定时器，延迟1秒保存
+      this.signatureSaveTimer = setTimeout(() => {
+        localStorage.setItem('bgareaUserData', JSON.stringify(this.userData))
+        console.log('签名已自动保存')
+      }, 1000)
     },
     
     loadPreferences() {
@@ -1096,6 +1234,71 @@ export default {
       setTimeout(() => {
         alert('偏好设置已保存！')
       }, 500)
+    },
+    
+    // 显示教师认证模态框
+    showCertificationModal() {
+      // 如果已有认证信息，填充到表单
+      if (this.teacherCertInfo.status === '已认证') {
+        Object.keys(this.certForm).forEach(key => {
+          if (this.teacherCertInfo[key]) {
+            this.certForm[key] = this.teacherCertInfo[key]
+          }
+        })
+      }
+      this.showCertModal = true
+    },
+    
+    // 关闭教师认证模态框
+    closeCertModal() {
+      this.showCertModal = false
+      // 重置表单
+      Object.keys(this.certForm).forEach(key => {
+        this.certForm[key] = ''
+      })
+    },
+    
+    // 提交教师认证
+    submitCertification() {
+      // 验证必填字段
+      const requiredFields = ['accountType', 'teacherName', 'teacherDegree', 'legalPersonId', 'schoolName', 'certificateType', 'organizationCode']
+      const missingFields = requiredFields.filter(field => !this.certForm[field]?.trim())
+      
+      if (missingFields.length > 0) {
+        alert('请填写所有认证信息')
+        return
+      }
+      
+      // 更新教师认证信息
+      const currentDate = new Date()
+      const formattedDate = `${currentDate.getFullYear()}-${String(currentDate.getMonth() + 1).padStart(2, '0')}-${String(currentDate.getDate()).padStart(2, '0')}`
+      
+      this.teacherCertInfo = {
+        ...this.certForm,
+        certTime: formattedDate,
+        status: '审核中'
+      }
+      
+      // 保存到本地存储
+      localStorage.setItem('teacherCertificationInfo', JSON.stringify(this.teacherCertInfo))
+      
+      // 更新用户数据中的教师资格认证状态
+      this.userData.teacherCertStatus = '审核中'
+      localStorage.setItem('bgareaUserData', JSON.stringify(this.userData))
+      
+      alert('认证信息已提交，正在审核中...')
+      this.closeCertModal()
+      
+      // 10秒后自动认证通过
+      setTimeout(() => {
+        this.teacherCertInfo.status = '已认证'
+        this.userData.teacherCertStatus = '已认证'
+        
+        localStorage.setItem('teacherCertificationInfo', JSON.stringify(this.teacherCertInfo))
+        localStorage.setItem('bgareaUserData', JSON.stringify(this.userData))
+        
+        alert('教师实名认证已通过！')
+      }, 10000)
     }
   }
 }
@@ -1180,5 +1383,36 @@ export default {
 }
 .modal-footer {
   @apply p-4 border-t flex justify-end gap-3;
+}
+
+/* 视频卡片样式（与主页一致） */
+.video-card {
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+}
+
+.video-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+}
+
+.line-clamp-2 {
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+/* 我的关注样式 */
+.hover\:bg-gray-50:hover {
+  background-color: #f9fafb;
+}
+
+/* 状态颜色 */
+.text-success {
+  color: #10b981;
+}
+.text-danger {
+  color: #ef4444;
 }
 </style>

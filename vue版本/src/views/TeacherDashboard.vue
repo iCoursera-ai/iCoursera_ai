@@ -27,27 +27,6 @@
             </div>
           </div>
 
-          <!-- 管理员管理
-          <div class="sidebar-group">
-            <div class="sidebar-parent" @click="toggleSubmenu('admin')">
-              <div class="sidebar-parent-content">
-                <i class="fa fa-user-secret sidebar-icon"></i>
-                <span>管理员管理</span>
-              </div>
-              <i class="fa fa-angle-right text-xs transition-transform duration-200" :class="{'rotate-icon': activeSubmenu === 'admin'}"></i>
-            </div>
-            <div id="submenu-admin" class="bg-gray-50" :class="{'hidden': activeSubmenu !== 'admin'}">
-              <div class="sidebar-child" @click="goToPage('/course-management')">
-                <i class="fa fa-circle-o text-xs sidebar-icon"></i>
-                <span class="sidebar-child-text">课程管理</span>
-              </div>
-              <div class="sidebar-child" @click="goToPage('/user-management')">
-                <i class="fa fa-circle-o text-xs sidebar-icon"></i>
-                <span class="sidebar-child-text">用户管理</span>
-              </div>
-            </div>
-          </div> -->
-             
           <!-- 收藏管理 -->
           <div class="sidebar-group">
             <div class="sidebar-parent" @click="toggleSubmenu('favorites')">
@@ -118,14 +97,16 @@
           <!-- 工作台头部 -->
           <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
             <div>
-              <h2 class="text-xl font-bold text-dark">欢迎回来, 奥利翔</h2>
               <div class="text-sm text-secondary mt-1 flex items-center gap-3">
-                <button class="flex items-center gap-1 hover:text-primary transition-colors">
+                <button 
+                  class="flex items-center gap-1 hover:text-primary transition-colors"
+                  @click="syncData"
+                >
                   <i class="fa fa-refresh"></i>
                   <span>同步数据</span>
                 </button>
                 <span>|</span>
-                <span>最后同步时间: 2023-11-01 11:00</span>
+                <span>最后同步时间: {{ lastSyncTime }}</span>
               </div>
             </div>
           </div>
@@ -137,12 +118,7 @@
               <!-- 总播放量图表 -->
               <div class="card p-4 card-shadow">
                 <div class="flex justify-between items-center mb-4">
-                  <h3 class="font-medium text-dark">总播放量数据(近7日)</h3>
-                  <div class="flex gap-2">
-                    <button class="text-xs text-secondary hover:text-primary px-2 py-1">日</button>
-                    <button class="text-xs text-secondary hover:text-primary px-2 py-1">周</button>
-                    <button class="text-xs text-primary bg-primary/10 px-2 py-1 rounded">月</button>
-                  </div>
+                  <h3 class="font-medium text-dark">{{ chartTitle }}</h3>
                 </div>
                 
                 <!-- 图表容器 -->
@@ -159,48 +135,67 @@
                 <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
                   <div class="stat-card">
                     <div class="stat-card-label">总播放量</div>
-                    <div class="stat-card-value">1234.5w</div>
-                    <div class="stat-card-change up">
-                      <i class="fa fa-caret-up"></i>
-                      <span>1245w</span>
+                    <div class="stat-card-value">{{ videoStats.totalPlayCount }}</div>
+                    <div class="stat-card-change" :class="videoStats.totalPlayCountChange.direction">
+                      <i :class="videoStats.totalPlayCountChange.icon"></i>
+                      <span>{{ videoStats.totalPlayCountChange.value }}</span>
                     </div>
                   </div>
                   <div class="stat-card">
                     <div class="stat-card-label">粉丝数</div>
-                    <div class="stat-card-value">1234.5w</div>
-                    <div class="stat-card-change up">
-                      <i class="fa fa-caret-up"></i>
-                      <span>1245w</span>
+                    <div class="stat-card-value">{{ videoStats.fansCount }}</div>
+                    <div class="stat-card-change" :class="videoStats.fansCountChange.direction">
+                      <i :class="videoStats.fansCountChange.icon"></i>
+                      <span>{{ videoStats.fansCountChange.value }}</span>
                     </div>
                   </div>
                   <div class="stat-card">
                     <div class="stat-card-label">总视频数</div>
-                    <div class="stat-card-value">1234</div>
+                    <div class="stat-card-value">{{ videoStats.totalVideos }}</div>
                     <div class="stat-card-change">
                       <span>--</span>
                     </div>
                   </div>
                   <div class="stat-card">
                     <div class="stat-card-label">总评论数</div>
-                    <div class="stat-card-value">1234.5w</div>
-                    <div class="stat-card-change up">
-                      <i class="fa fa-caret-up"></i>
-                      <span>1245w</span>
+                    <div class="stat-card-value">{{ videoStats.totalComments }}</div>
+                    <div class="stat-card-change" :class="videoStats.totalCommentsChange.direction">
+                      <i :class="videoStats.totalCommentsChange.icon"></i>
+                      <span>{{ videoStats.totalCommentsChange.value }}</span>
                     </div>
                   </div>
                 </div>
                 <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mt-4 text-sm">
                   <div class="flex items-center gap-2">
                     <span class="text-secondary">视频类型:</span>
-                    <select class="border border-gray-200 rounded px-2 py-1 text-sm">
-                      <option>全部</option>
+                    <select 
+                      v-model="selectedVideoType" 
+                      class="border border-gray-200 rounded px-2 py-1 text-sm"
+                      @change="updateDataByType"
+                    >
+                      <option value="all">全部</option>
+                      <option value="operating-system">操作系统</option>
+                      <option value="iot">物联网</option>
+                      <option value="network">计算机网络</option>
+                      <option value="data-structure">数据结构</option>
+                      <option value="database">数据库原理</option>
                     </select>
                   </div>
                   <div class="flex flex-wrap items-center gap-2">
                     <span class="text-secondary">开始日期</span>
-                    <input type="date" class="border border-gray-200 rounded px-2 py-1 text-sm">
+                    <input 
+                      type="date" 
+                      v-model="startDate" 
+                      class="border border-gray-200 rounded px-2 py-1 text-sm"
+                      @change="updateDataByDate"
+                    >
                     <span class="text-secondary">--</span>
-                    <input type="date" class="border border-gray-200 rounded px-2 py-1 text-sm">
+                    <input 
+                      type="date" 
+                      v-model="endDate" 
+                      class="border border-gray-200 rounded px-2 py-1 text-sm"
+                      @change="updateDataByDate"
+                    >
                   </div>
                 </div>
               </div>
@@ -209,14 +204,22 @@
               <div class="card p-4 card-shadow">
                 <div class="flex justify-between items-center mb-4">
                   <h3 class="font-medium text-dark">课程数据</h3>
-                  <button class="text-link">视频列表 ></button>
+                  <button 
+                    class="text-link flex items-center gap-1"
+                    @click="toggleAllCourses"
+                  >
+                    {{ showAllCourses ? '收起列表' : '视频列表' }}
+                    <i :class="showAllCourses ? 'fa fa-angle-down' : 'fa fa-angle-right'"></i>
+                  </button>
                 </div>
+
+                <!-- 课程列表 -->
                 <div class="space-y-2">
                   <!-- 课程项 -->
                   <div 
                     v-for="course in courses" 
                     :key="course.id" 
-                    class="course-item cursor-pointer" 
+                    class="course-item cursor-pointer hover:bg-gray-50 transition-colors duration-200" 
                     @click="goToVideoAnalysis(course.id)"
                   >
                     <div class="course-item-info">
@@ -230,8 +233,8 @@
                             <i class="fa fa-play-circle-o"></i>
                             <span>{{ course.playCount }}</span>
                           </div>
-                          <div class="course-item-stat">
-                            <i class="fa fa-caret-up text-success"></i>
+                          <div class="course-item-stat" :class="course.increaseDirection">
+                            <i :class="course.increaseIcon"></i>
                             <span>{{ course.increase }}</span>
                           </div>
                         </div>
@@ -267,114 +270,28 @@
 
             <!-- 右侧功能栏 -->
             <div class="w-full lg:w-64 space-y-6">
-              <!-- 热门功能
-              <div class="card p-4 card-shadow">
-                <div class="flex justify-between items-center mb-4">
-                  <h3 class="font-medium text-dark">热门功能</h3>
-                  <span class="text-xs text-secondary">更多</span>
-                </div>
-                <div class="grid grid-cols-2 gap-3">
-                  <button class="flex flex-col items-center p-2 hover:bg-gray-50 rounded">
-                    <i class="fa fa-play-circle-o text-primary text-xl mb-1"></i>
-                    <span class="text-xs">视频管理</span>
-                  </button>
-                  <button class="flex flex-col items-center p-2 hover:bg-gray-50 rounded">
-                    <i class="fa fa-line-chart text-primary text-xl mb-1"></i>
-                    <span class="text-xs">内容统计</span>
-                  </button>
-                  <button class="flex flex-col items-center p-2 hover:bg-gray-50 rounded">
-                    <i class="fa fa-bar-chart text-primary text-xl mb-1"></i>
-                    <span class="text-xs">流量管理</span>
-                  </button>
-                  <button class="flex flex-col items-center p-2 hover:bg-gray-50 rounded">
-                    <i class="fa fa-upload text-primary text-xl mb-1"></i>
-                    <span class="text-xs">线上推广</span>
-                  </button>
-                  <button class="flex flex-col items-center p-2 hover:bg-gray-50 rounded">
-                    <i class="fa fa-bell text-warning text-xl mb-1"></i>
-                    <span class="text-xs">内容违规</span>
-                  </button>
-                </div>
-              </div> -->
-
-              <!-- 后台提问
-              <div class="card p-4 card-shadow">
-                <div class="flex justify-between items-center mb-4">
-                  <h3 class="font-medium text-dark">后台提问</h3>
-                  <span class="text-xs text-link">全部 ></span>
-                </div>
-                <div class="space-y-3 text-sm">
-                  <div class="flex gap-2">
-                    <span class="text-secondary">学生1:</span>
-                    <span>老师我这么做对吗？</span>
-                  </div>
-                  <div class="flex gap-2">
-                    <span class="text-secondary">学生2:</span>
-                    <span>老师，这个知识点不太懂</span>
-                  </div>
-                  <div class="flex gap-2">
-                    <span class="text-secondary">学生3:</span>
-                    <span>怎么破解这个问题？</span>
-                  </div>
-                </div>
-              </div> -->
-
               <!-- 公告 -->
               <div class="card p-4 card-shadow">
                 <div class="flex justify-between items-center mb-4">
                   <h3 class="font-medium text-dark">公告</h3>
-                  <span class="text-xs text-link">查看更多</span>
+                  <button 
+                    class="text-xs text-link"
+                    @click="toggleAnnouncementExpand"
+                  >
+                    {{ showFullAnnouncement ? '收起' : '查看更多' }}
+                  </button>
                 </div>
                 <div class="space-y-2 text-xs text-secondary">
-                  <div class="line-clamp-1">内容即将审核完成</div>
-                  <div class="line-clamp-1">视频内容一、二审核通过</div>
-                  <div class="line-clamp-1">新功能上线：数据分析模块</div>
-                </div>
-              </div>
-
-              <!-- 视频TOP
-              <div class="card p-4 card-shadow">
-                <div class="flex justify-between items-center mb-4">
-                  <h3 class="font-medium text-dark">视频TOP</h3>
-                  <select class="text-xs border border-gray-200 rounded px-1 py-0.5">
-                    <option>近7天</option>
-                  </select>
-                </div>
-                
-                视频TOP标签按钮
-                <div class="video-top-tabs">
-                  <div 
-                    v-for="tab in videoTopTabs" 
-                    :key="tab.type"
-                    class="video-top-tab" 
-                    :class="{ 'active': activeVideoTab === tab.type }"
-                    @click="switchVideoTab(tab.type)"
-                  >
-                    {{ tab.label }}
+                  <div class="line-clamp-1" v-if="!showFullAnnouncement">
+                    {{ announcements[0] }}
                   </div>
-                </div>
-                
-                视频TOP内容
-                <div class="video-top-content">
-                  <div v-for="tab in videoTopTabs" :key="tab.type" class="video-top-list" :class="{ 'hidden': activeVideoTab !== tab.type }">
-                    <div class="space-y-3">
-                      <div 
-                        v-for="(item, index) in videoTopData[tab.type]" 
-                        :key="item.id"
-                        class="flex justify-between items-center"
-                      >
-                        <div class="flex items-center gap-2">
-                          <span class="w-5 h-5 rounded-full flex items-center justify-center text-xs" :class="getRankClass(index)">
-                            {{ index + 1 }}
-                          </span>
-                          <span class="text-sm">{{ item.name }}</span>
-                        </div>
-                        <span class="text-sm">{{ item.value }}</span>
-                      </div>
+                  <div v-else class="space-y-2">
+                    <div v-for="(announcement, index) in announcements" :key="index">
+                      {{ announcement }}
                     </div>
                   </div>
                 </div>
-              </div> -->
+              </div>
             </div>
           </div>
         </div>
@@ -388,6 +305,7 @@
 <script>
 import Header from '@/components/Header.vue'
 import Footer from '@/components/Footer.vue'
+import Chart from 'chart.js/auto'
 
 export default {
   name: 'TeacherDashboard',
@@ -398,7 +316,45 @@ export default {
   data() {
     return {
       activeSubmenu: 'dashboard',
-      activeVideoTab: 'play',
+      showFullAnnouncement: false,
+      selectedVideoType: 'all',
+      startDate: '2023-11-01',
+      endDate: '2023-11-07',
+      lastSyncTime: '2023-11-01 11:00',
+      chartTitle: '总播放量数据(近7日)',
+      showAllCourses: false, // 控制是否显示所有课程
+      expandedCourses: [],   // 展开后的课程列表
+      originalCourses: [],   // 原始课程列表（用于备份）
+      announcements: [
+        '内容即将审核完成',
+        '视频内容一、二审核通过',
+        '新功能上线：数据分析模块',
+        '系统将于本周五凌晨进行维护',
+        '新增视频分类：人工智能入门',
+        '教师培训课程已上线',
+        '欢迎新教师加入平台'
+      ],
+      videoStats: {
+        totalPlayCount: '1234.5w',
+        totalPlayCountChange: {
+          value: '1245w',
+          direction: 'up',
+          icon: 'fa fa-caret-up'
+        },
+        fansCount: '1234.5w',
+        fansCountChange: {
+          value: '1245w',
+          direction: 'up',
+          icon: 'fa fa-caret-up'
+        },
+        totalVideos: '1234',
+        totalComments: '1234.5w',
+        totalCommentsChange: {
+          value: '1245w',
+          direction: 'up',
+          icon: 'fa fa-caret-up'
+        }
+      },
       courses: [
         { 
           id: 1, 
@@ -406,6 +362,8 @@ export default {
           avatar: 'https://picsum.photos/32/32?random=1',
           playCount: '1234.5w',
           increase: '1245w',
+          increaseIcon: 'fa fa-caret-up text-success',
+          increaseDirection: 'text-success',
           viewCount: '1234.5w',
           userCount: '1245w'
         },
@@ -415,6 +373,8 @@ export default {
           avatar: 'https://picsum.photos/32/32?random=2',
           playCount: '1234.5w',
           increase: '1245w',
+          increaseIcon: 'fa fa-caret-up text-success',
+          increaseDirection: 'text-success',
           viewCount: '1234.5w',
           userCount: '1245w'
         },
@@ -424,59 +384,25 @@ export default {
           avatar: 'https://picsum.photos/32/32?random=3',
           playCount: '1234.5w',
           increase: '1245w',
+          increaseIcon: 'fa fa-caret-up text-success',
+          increaseDirection: 'text-success',
           viewCount: '1234.5w',
           userCount: '1245w'
         }
       ],
-      videoTopTabs: [
-        { type: 'play', label: '播放' },
-        { type: 'like', label: '点赞' },
-        { type: 'comment', label: '评论' },
-        { type: 'share', label: '分享' },
-        { type: 'collect', label: '收藏' }
-      ],
-      videoTopData: {
-        play: [
-          { id: 1, name: '操作系统', value: '1234.5w' },
-          { id: 2, name: '物联网', value: '1200.0w' },
-          { id: 3, name: '数据结构', value: '1100.0w' }
-        ],
-        like: [
-          { id: 4, name: '计算机网络', value: '876.2w' },
-          { id: 5, name: '操作系统', value: '765.1w' },
-          { id: 6, name: '数据库原理', value: '654.0w' }
-        ],
-        comment: [
-          { id: 7, name: '物联网', value: '123.4w' },
-          { id: 8, name: '计算机网络', value: '112.3w' },
-          { id: 9, name: '操作系统', value: '101.2w' }
-        ],
-        share: [
-          { id: 10, name: '数据结构', value: '98.7w' },
-          { id: 11, name: '物联网', value: '87.6w' },
-          { id: 12, name: '计算机网络', value: '76.5w' }
-        ],
-        collect: [
-          { id: 13, name: '操作系统', value: '156.7w' },
-          { id: 14, name: '数据结构', value: '145.6w' },
-          { id: 15, name: '数据库原理', value: '134.5w' }
-        ]
-      },
       chartInstance: null
     }
   },
   mounted() {
     this.initChart()
+    this.generateAllCourses() // 生成所有课程数据
   },
-  // TeacherDashboard.vue
   beforeUnmount() {
-    // 使用 try-catch 包装销毁逻辑
     try {
       if (this.chartInstance && this.chartInstance.destroy) {
         this.chartInstance.destroy()
       }
     } catch (error) {
-      // 静默处理错误，避免影响页面切换
       console.warn('图表销毁时出错:', error.message)
     }
     this.chartInstance = null
@@ -496,10 +422,6 @@ export default {
         query: { tab }
       })
     },
-    
-    toggleSubmenu(submenu) {
-      this.activeSubmenu = this.activeSubmenu === submenu ? null : submenu
-    },
 
     goToPersonalCenter(page = 'user-info') {
       this.$router.push({ 
@@ -515,40 +437,93 @@ export default {
       })
     },
 
-    switchVideoTab(tabType) {
-      this.activeVideoTab = tabType
+    goToCourseList() {
+      this.$router.push('/course-list')
     },
 
-    goToWorkEngine() {
-      this.$router.push('/work-engine')
-    },
-    
-    goToCourseManagement() {
-      this.$router.push('/course-management')
-    },
-    
-    goToUserManagement() {
-      this.$router.push('/user-management')
-    },
-    
-
-    getRankClass(index) {
-      if (index === 0) return 'bg-primary text-white'
-      if (index === 1) return 'bg-gray-300 text-white'
-      if (index === 2) return 'bg-warning/30 text-warning'
-      return 'bg-gray-200 text-gray-700'
+    toggleAnnouncementExpand() {
+      this.showFullAnnouncement = !this.showFullAnnouncement
     },
 
-    initChart() {
-      const dates = ['2023-11-01', '2023-11-02', '2023-11-03', '2023-11-04', '2023-11-05', '2023-11-06', '2023-11-07', '2023-11-08']
-      const playCounts = [8000, 15000, 39068, 35000, 20000, 32000, 25000, 12000]
+    syncData() {
+      this.generateRandomData()
+      this.updateLastSyncTime()
+    },
+
+    updateLastSyncTime() {
+      const now = new Date()
+      const year = now.getFullYear()
+      const month = String(now.getMonth() + 1).padStart(2, '0')
+      const day = String(now.getDate()).padStart(2, '0')
+      const hours = String(now.getHours()).padStart(2, '0')
+      const minutes = String(now.getMinutes()).padStart(2, '0')
+      this.lastSyncTime = `${year}-${month}-${day} ${hours}:${minutes}`
+    },
+
+    updateDataByType() {
+      this.generateRandomData()
+      this.updateChartTitle()
+    },
+
+    updateDataByDate() {
+      this.generateRandomData()
+      this.updateChartTitle()
+    },
+
+    updateChartTitle() {
+      const days = this.getDateRangeDays()
+      const typeMap = {
+        'all': '全部',
+        'operating-system': '操作系统',
+        'iot': '物联网',
+        'network': '计算机网络',
+        'data-structure': '数据结构',
+        'database': '数据库原理'
+      }
+      const typeText = typeMap[this.selectedVideoType] || '全部'
+      this.chartTitle = `${typeText}播放量数据(近${days}日)`
+    },
+
+    getDateRangeDays() {
+      const start = new Date(this.startDate)
+      const end = new Date(this.endDate)
+      const diffTime = Math.abs(end - start)
+      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
+      return diffDays + 1
+    },
+
+    generateRandomData() {
+      // 生成随机的图表数据
+      const days = this.getDateRangeDays()
+      const dates = []
+      const playCounts = []
       
-      const ctx = document.getElementById('playCountChart')
-      if (!ctx) return
+      let currentDate = new Date(this.startDate)
+      for (let i = 0; i < days; i++) {
+        const dateStr = currentDate.toISOString().split('T')[0]
+        dates.push(dateStr)
+        playCounts.push(Math.floor(Math.random() * 40000) + 5000)
+        
+        currentDate.setDate(currentDate.getDate() + 1)
+      }
       
+      // 更新图表
+      this.updateChart(dates, playCounts)
+      
+      // 更新视频统计数据
+      this.updateVideoStats()
+      
+      // 更新课程数据
+      this.updateCoursesData()
+    },
+
+    updateChart(dates, data) {
       if (this.chartInstance) {
         this.chartInstance.destroy()
       }
+      
+      const ctx = document.getElementById('playCountChart')
+      if (!ctx) return
       
       this.chartInstance = new Chart(ctx, {
         type: 'line',
@@ -556,7 +531,7 @@ export default {
           labels: dates,
           datasets: [{
             label: '总播放量',
-            data: playCounts,
+            data: data,
             borderColor: '#165DFF',
             backgroundColor: 'rgba(22, 93, 255, 0.05)',
             borderWidth: 2.5,
@@ -613,6 +588,87 @@ export default {
           }
         }
       })
+    },
+
+    updateVideoStats() {
+      const randomUpDown = () => Math.random() > 0.5 ? 'up' : 'down'
+      const randomValue = () => (Math.random() * 1000).toFixed(1) + 'w'
+      const randomIcon = (direction) => direction === 'up' ? 'fa fa-caret-up' : 'fa fa-caret-down'
+      
+      const totalPlayCountChange = {
+        direction: randomUpDown(),
+        value: randomValue()
+      }
+      totalPlayCountChange.icon = randomIcon(totalPlayCountChange.direction)
+      
+      const fansCountChange = {
+        direction: randomUpDown(),
+        value: randomValue()
+      }
+      fansCountChange.icon = randomIcon(fansCountChange.direction)
+      
+      const totalCommentsChange = {
+        direction: randomUpDown(),
+        value: randomValue()
+      }
+      totalCommentsChange.icon = randomIcon(totalCommentsChange.direction)
+      
+      this.videoStats = {
+        totalPlayCount: (Math.random() * 2000 + 1000).toFixed(1) + 'w',
+        totalPlayCountChange,
+        fansCount: (Math.random() * 2000 + 1000).toFixed(1) + 'w',
+        fansCountChange,
+        totalVideos: Math.floor(Math.random() * 1000 + 500).toString(),
+        totalComments: (Math.random() * 2000 + 1000).toFixed(1) + 'w',
+        totalCommentsChange
+      }
+    },
+
+    generateAllCourses() {
+      const courseTypes = [
+        '操作系统', '物联网', '计算机网络', '数据结构', '数据库原理',
+        '人工智能', '软件工程', '编译原理', '计算机组成原理', '算法设计',
+        '机器学习', '深度学习', 'Web开发', '移动开发', '网络安全'
+      ]
+
+      this.expandedCourses = Array.from({ length: 12 }, (_, i) => {
+        const randomUpDown = Math.random() > 0.5 ? 'up' : 'down'
+        const increaseValue = (Math.random() * 500).toFixed(1) + 'w'
+
+        return {
+          id: i + 1,
+          name: `${courseTypes[i % courseTypes.length]}课程`,
+          avatar: `https://picsum.photos/32/32?random=${i + 1}`,
+          playCount: (Math.random() * 2000 + 1000).toFixed(1) + 'w',
+          increase: increaseValue,
+          increaseIcon: randomUpDown === 'up' ? 'fa fa-caret-up text-success' : 'fa fa-caret-down text-error',
+          increaseDirection: randomUpDown === 'up' ? 'text-success' : 'text-error',
+          viewCount: (Math.random() * 2000 + 1000).toFixed(1) + 'w',
+          userCount: (Math.random() * 2000 + 1000).toFixed(1) + 'w'
+        }
+      })
+
+      // 初始只显示前3个
+      this.courses = this.expandedCourses.slice(0, 3)
+      this.originalCourses = [...this.courses]
+    },
+
+    // 修改 updateCoursesData 方法
+    updateCoursesData() {
+      if (this.showAllCourses) {
+        this.courses = [...this.expandedCourses]
+      } else {
+        this.courses = this.expandedCourses.slice(0, 3)
+      }
+    },
+    
+    toggleAllCourses() {
+      this.showAllCourses = !this.showAllCourses
+      this.updateCoursesData()
+    },
+
+    initChart() {
+      this.generateRandomData()
     }
   }
 }
@@ -675,12 +731,18 @@ export default {
   @apply text-success;
 }
 .stat-card-change.down {
+  @apply text-error;
+}
+.text-error {
   color: #F53F3F;
 }
 
 /* 课程项 */
 .course-item {
   @apply flex items-center justify-between py-3 border-b border-gray-100;
+}
+.course-item:hover {
+  @apply bg-gray-50;
 }
 .course-item-info {
   @apply flex items-center gap-3;
@@ -696,17 +758,6 @@ export default {
 }
 .course-item-stat {
   @apply flex items-center gap-1;
-}
-
-/* 视频TOP标签 */
-.video-top-tabs {
-  @apply flex border-b border-gray-200 mb-3;
-}
-.video-top-tab {
-  @apply px-2 py-1 text-xs cursor-pointer hover:text-primary transition-colors;
-}
-.video-top-tab.active {
-  @apply text-primary border-b-2 border-primary font-medium;
 }
 
 /* 图表工具提示 */

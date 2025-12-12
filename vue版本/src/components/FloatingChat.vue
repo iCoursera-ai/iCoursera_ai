@@ -1,6 +1,6 @@
 <template>
-  <!-- 只在登录状态下显示AI助手 -->
-  <div v-if="isLoggedIn" class="floating-chat-container">
+  <!-- 只在登录状态下且在允许显示的页面上显示AI助手 -->
+  <div v-if="shouldShowChat" class="floating-chat-container">
     <!-- 悬浮球 -->
     <div 
       v-if="!isChatOpen"
@@ -58,24 +58,56 @@ export default {
         bottom: 20,
         right: 20
       },
-      cozeClient: null,
       chatIframeUrl: '',
       isLoggedIn: false,
+      currentRoute: null,
       checkInterval: null
     }
   },
+  computed: {
+    // 判断是否应该显示悬浮球
+    shouldShowChat() {
+      // 1. 用户必须登录
+      if (!this.isLoggedIn) return false
+      
+      // 2. 当前路由不能是登录或注册页面
+      if (!this.currentRoute) return false
+      
+      const excludeRoutes = ['/login', '/register']
+      if (excludeRoutes.includes(this.currentRoute.path)) {
+        return false
+      }
+      
+      return true
+    }
+  },
   mounted() {
-    // 初始化时检查登录状态
+    // 初始化时检查登录状态和当前路由
     this.checkLoginStatus()
+    this.updateCurrentRoute()
+    
     // 设置定期检查登录状态
     this.checkInterval = setInterval(this.checkLoginStatus, 2000)
     
     // 监听登录状态变化
     window.addEventListener('storage', this.handleStorageChange)
     window.addEventListener('user-auth-change', this.checkLoginStatus)
+    
+    // 监听路由变化
+    this.$watch(
+      () => this.$route,
+      (to) => {
+        this.currentRoute = to
+        // 路由变化时，如果切换到登录/注册页面，关闭聊天框
+        if (to.path === '/login' || to.path === '/register') {
+          this.isChatOpen = false
+          this.isMinimized = false
+        }
+      },
+      { immediate: true }
+    )
   },
   beforeUnmount() {
-    this.cleanup()
     // 清除定时器
     if (this.checkInterval) {
       clearInterval(this.checkInterval)
@@ -109,6 +141,10 @@ export default {
       if (event.key === 'bgareaCurrentUser' || event.key === null) {
         this.checkLoginStatus()
       }
+    },
+    
+    updateCurrentRoute() {
+      this.currentRoute = this.$route
     },
     
     initializeCozeChat() {
@@ -190,13 +226,6 @@ export default {
 
     toggleMinimize() {
       this.isMinimized = !this.isMinimized
-    },
-
-    cleanup() {
-      if (this.cozeClient) {
-        // 清理 Coze 客户端资源
-        this.cozeClient = null
-      }
     }
   }
 }

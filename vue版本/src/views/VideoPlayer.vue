@@ -85,7 +85,7 @@
             <h1 class="video-title">{{ course.title }}</h1>
             <div class="author-section">
               <div class="author-info">
-                <div class="author-avatar">👤</div>
+                <div class="author-avatar" @click="goToTeacherSpace(instructor)">👤</div>
                 <div>
                   <div class="author-name">{{ instructor.name }}</div>
                   <div class="author-date">{{ course.updateTime }}</div>
@@ -176,9 +176,7 @@
                   </div>
                   <p>{{ comment.content }}</p>
                   <div class="comment-stats">
-                    <span @click="likeComment(comment.id)">
-                      👍 {{ comment.likes }}
-                    </span>
+                    <span @click="likeComment(comment.id)">👍 {{ comment.likes }}</span>
                     <span @click="showReplyBox(comment.id)">💬 回复</span>
                   </div>
                 </div>
@@ -198,7 +196,7 @@
           <!-- 课程信息卡片 -->
           <div class="course-card">
             <div class="course-card-header">
-              <div class="course-author">
+              <div class="course-author" @click="goToTeacherSpace(instructor)">
                 <div class="course-author-avatar">👤</div>
                 <div>
                   <div class="course-author-name">{{ instructor.name }}</div>
@@ -214,7 +212,7 @@
               </button>
             </div>
             <p class="course-description">{{ instructor.description }}</p>
-            <button class="enter-space-btn" @click="goToInstructorSpace">进入空间</button>
+            <button class="enter-space-btn" @click="goToTeacherSpace(instructor)">进入空间</button>
           </div>
 
           <!-- 课程章节导航 -->
@@ -386,11 +384,14 @@ export default {
       tags: ['操作系统', '考研', '教育', '计算机', '王道', '考研专题']
     })
     
-    // 讲师数据
+    // 讲师数据 - 添加更多信息
     const instructor = ref({
       name: '王道计算机',
       fans: '123.0万',
-      description: '感谢你我是计算机专业学子...'
+      description: '感谢你我是计算机专业学子...',
+      userId: 'teacher_wangdao', // 添加用户ID
+      department: '计算机学院',
+      avatar: 'https://picsum.photos/48/48?random=50'
     })
     
     // 评论数据
@@ -577,6 +578,67 @@ export default {
       showNotification(`切换到第${id}节`)
     }
     
+    // 关注/取消关注讲师
+    const toggleFollow = () => {
+      isFollowing.value = !isFollowing.value
+      saveFollowData()
+      showNotification(isFollowing.value ? '已关注讲师' : '已取消关注')
+    }
+    
+    // 保存关注数据到 localStorage
+    const saveFollowData = () => {
+      // 获取当前关注的老师列表
+      const followedTeachers = JSON.parse(localStorage.getItem('userFollowedTeachers') || '[]')
+      
+      const teacherData = {
+        id: Date.now(), // 使用时间戳作为唯一ID
+        userId: instructor.value.userId || `teacher_${instructor.value.name}_${Date.now()}`, // 使用现有userId或生成新的
+        name: instructor.value.name,
+        department: instructor.value.department || '计算机学院',
+        avatar: instructor.value.avatar || 'https://picsum.photos/48/48?random=' + Math.floor(Math.random() * 100),
+        followedAt: new Date().toISOString().split('T')[0]
+      }
+
+      if (isFollowing.value) {
+        // 添加到关注列表（避免重复）
+        const existingIndex = followedTeachers.findIndex(t => t.name === teacherData.name)
+        if (existingIndex === -1) {
+          followedTeachers.push(teacherData)
+          localStorage.setItem('userFollowedTeachers', JSON.stringify(followedTeachers))
+          
+          // 触发storage事件通知个人中心页面
+          window.dispatchEvent(new StorageEvent('storage', {
+            key: 'userFollowedTeachers',
+            newValue: JSON.stringify(followedTeachers)
+          }))
+          
+          // 同时触发自定义事件（同页面内更新）
+          window.dispatchEvent(new CustomEvent('followUpdated'))
+        }
+      } else {
+        // 从关注列表中移除
+        const updatedTeachers = followedTeachers.filter(t => t.name !== teacherData.name)
+        localStorage.setItem('userFollowedTeachers', JSON.stringify(updatedTeachers))
+        
+        // 触发storage事件
+        window.dispatchEvent(new StorageEvent('storage', {
+          key: 'userFollowedTeachers',
+          newValue: JSON.stringify(updatedTeachers)
+        }))
+        
+        // 触发自定义事件
+        window.dispatchEvent(new CustomEvent('followUpdated'))
+      }
+    }
+    
+    // 加载关注状态 - 修复版本
+    const loadFollowStatus = () => {
+      const followedTeachers = JSON.parse(localStorage.getItem('userFollowedTeachers') || '[]')
+      // 检查当前讲师是否在关注列表中
+      const isTeacherFollowed = followedTeachers.some(teacher => teacher.name === instructor.value.name)
+      isFollowing.value = isTeacherFollowed
+    }
+    
     const toggleLike = () => {
       isLiked.value = !isLiked.value
       likeCount.value += isLiked.value ? 1 : -1
@@ -706,11 +768,6 @@ export default {
       }))
     }
     
-    const toggleFollow = () => {
-      isFollowing.value = !isFollowing.value
-      showNotification(isFollowing.value ? '已关注讲师' : '已取消关注')
-    }
-    
     const likeComment = (commentId) => {
       const comment = comments.value.find(c => c.id === commentId)
       if (comment) {
@@ -765,8 +822,27 @@ export default {
       }
     }
     
-    const goToInstructorSpace = () => {
-      showNotification('进入讲师空间功能开发中')
+    // 跳转到老师空间
+    const goToTeacherSpace = (teacher) => {
+      // 先保存当前老师信息到localStorage，供个人中心页面使用
+      const teacherInfo = {
+        name: teacher.name,
+        userId: teacher.userId || `teacher_${teacher.name}`,
+        department: teacher.department || '计算机学院',
+        avatar: teacher.avatar || 'https://picsum.photos/48/48?random=50',
+        description: teacher.description || '资深讲师'
+      }
+      
+      localStorage.setItem('currentTeacherInfo', JSON.stringify(teacherInfo))
+      
+      // 跳转到老师空间页面
+      router.push({
+        path: '/teacher-space',
+        query: {
+          teacherId: teacher.userId || `teacher_${teacher.name}`,
+          teacherName: teacher.name
+        }
+      })
     }
     
     const toggleSection = (section) => {
@@ -864,6 +940,9 @@ export default {
       if (!user) {
         router.push('/login')
       }
+
+      // 加载关注状态 - 调用修复后的方法
+      loadFollowStatus()
 
       // 检查当前课程是否已收藏和已点赞
       const favorites = JSON.parse(localStorage.getItem('userFavorites') || '[]')
@@ -979,7 +1058,7 @@ export default {
       loadMoreComments,
       toggleAutoPlay,
       selectPlaylistItem,
-      goToInstructorSpace,
+      goToTeacherSpace,
       toggleSection,
       toggleOtherSection
     }
@@ -1231,6 +1310,11 @@ export default {
   align-items: center;
   justify-content: center;
   font-size: 24px;
+  cursor: pointer;
+}
+
+.author-avatar:hover {
+  opacity: 0.8;
 }
 
 .author-name {
@@ -1592,6 +1676,11 @@ export default {
   display: flex;
   gap: 10px;
   align-items: center;
+  cursor: pointer;
+}
+
+.course-author:hover {
+  opacity: 0.8;
 }
 
 .course-author-avatar {

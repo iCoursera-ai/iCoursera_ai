@@ -265,70 +265,9 @@
               </div>
             </div>
 
-            <!-- 右侧：习题数据统计 -->
+            <!-- 右侧区域（已清空） -->
             <div class="w-full lg:w-80 space-y-6">
-              <!-- 习题1.1 数据统计 -->
-              <div class="bg-white rounded-lg border border-gray-200 p-4 shadow-sm">
-                <div class="flex justify-between items-center mb-4">
-                  <h3 class="font-medium text-dark">习题1.1</h3>
-                  <span class="text-xs text-primary">综合难度分析</span>
-                </div>
-                <div class="overflow-x-auto">
-                  <table class="w-full text-sm">
-                    <thead>
-                      <tr class="border-b border-gray-200">
-                        <th class="text-left py-2 text-secondary text-xs">排名</th>
-                        <th class="text-left py-2 text-secondary text-xs">题号</th>
-                        <th class="text-left py-2 text-secondary text-xs">正确率</th>
-                        <th class="text-left py-2 text-secondary text-xs">测试量</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      <tr v-for="item in exerciseRanking" :key="item.id" class="border-b border-gray-100">
-                        <td class="py-2 text-xs">{{ item.rank }}</td>
-                        <td class="py-2 text-xs">{{ item.number }}</td>
-                        <td class="py-2 text-xs" :class="getAccuracyClass(item.accuracy)">{{ item.accuracy }}</td>
-                        <td class="py-2 text-xs">{{ item.tests }}</td>
-                      </tr>
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-
-              <!-- 错误选项分析 -->
-              <div class="bg-white rounded-lg border border-gray-200 p-4 shadow-sm">
-                <h3 class="font-medium text-dark mb-4">错误选项分析</h3>
-                <div class="space-y-4">
-                  <div v-for="error in errorAnalysis" :key="error.id">
-                    <div class="flex justify-between items-center mb-1">
-                      <span class="text-xs font-medium">{{ error.option }}</span>
-                      <span class="text-xs px-1.5 py-0.5 rounded" :class="error.colorClass">{{ error.errorRate }}</span>
-                    </div>
-                    <div class="w-full bg-gray-200 rounded-full h-2 mb-1">
-                      <div class="h-2 rounded-full" :style="`width: ${error.percentage}%`" :class="error.bgColorClass"></div>
-                    </div>
-                    <p class="text-xs text-secondary">{{ error.description }}</p>
-                  </div>
-                </div>
-              </div>
-
-              <!-- 相关视频推荐 -->
-              <div class="bg-white rounded-lg border border-gray-200 p-4 shadow-sm">
-                <h3 class="font-medium text-dark mb-4">相关视频推荐</h3>
-                <div class="space-y-3">
-                  <div v-for="video in recommendedVideos" :key="video.id" 
-                       class="flex gap-3 p-2 hover:bg-gray-50 rounded-lg cursor-pointer transition-colors" 
-                       @click="goToVideoAnalysis()">
-                    <div class="w-20 h-14 bg-gray-100 rounded flex items-center justify-center flex-shrink-0">
-                      <i class="fa fa-play-circle text-primary"></i>
-                    </div>
-                    <div>
-                      <h4 class="text-xs font-medium text-dark">{{ video.title }}</h4>
-                      <p class="text-xs text-gray-500 mt-1">{{ video.duration }} 时长</p>
-                    </div>
-                  </div>
-                </div>
-              </div>
+              <!-- 这里的内容已被删除 -->
             </div>
           </div>
         </div>
@@ -449,47 +388,6 @@ export default {
           ]
         }
       ],
-      exerciseRanking: [
-        { id: 1, rank: 1, number: 1, accuracy: '100%', tests: '22,214' },
-        { id: 2, rank: 2, number: 2, accuracy: '90%', tests: '21,445' },
-        { id: 3, rank: 3, number: 3, accuracy: '10%', tests: '21,567' },
-        { id: 4, rank: 4, number: 4, accuracy: '17%', tests: '12,266' },
-        { id: 5, rank: 5, number: 5, accuracy: '21%', tests: '11,566' }
-      ],
-      errorAnalysis: [
-        {
-          id: 1,
-          option: '题目3选项C',
-          errorRate: '89%错误率',
-          percentage: 89,
-          colorClass: 'text-danger bg-danger/10',
-          bgColorClass: 'bg-danger',
-          description: '学生对该概念理解存在严重不足'
-        },
-        {
-          id: 2,
-          option: '题目4选项B',
-          errorRate: '83%错误率',
-          percentage: 83,
-          colorClass: 'text-danger bg-danger/10',
-          bgColorClass: 'bg-danger',
-          description: '可能选项表述存在歧义'
-        },
-        {
-          id: 3,
-          option: '题目5选项D',
-          errorRate: '52%错误率',
-          percentage: 52,
-          colorClass: 'text-warning bg-warning/10',
-          bgColorClass: 'bg-warning',
-          description: '知识点较难，建议加强讲解'
-        }
-      ],
-      recommendedVideos: [
-        { id: 1, title: '视频1.1 - 计算机发展历史', duration: '15:30' },
-        { id: 2, title: '视频1.2 - 人工智能基础', duration: '21:15' },
-        { id: 3, title: '视频2.1 - 神经网络入门', duration: '18:45' }
-      ],
       chartRefs: {},
       chartInstances: {}
     }
@@ -521,12 +419,6 @@ export default {
     
     goToExerciseAnalysis() {
       this.$router.push('/exercise-analysis')
-    },
-    
-    getAccuracyClass(accuracy) {
-      if (accuracy === '100%') return 'text-success'
-      if (accuracy === '90%') return 'text-warning'
-      return 'text-danger'
     },
     
     initCharts() {

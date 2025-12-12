@@ -205,7 +205,7 @@ export default {
             id: Date.now().toString(),
             username: this.form.username,
             email: this.form.email,
-            password: this.form.password,
+            password: this.form.password, // 确保密码被存储
             realname: '',
             realnameStatus: '未认证',
             userId: Date.now().toString().slice(-8),

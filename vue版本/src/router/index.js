@@ -111,6 +111,12 @@ const routes = [
   name: 'Category',
   component: () => import('../views/Category.vue'),
   props: true
+  },
+  {
+    path: '/teacher-space',
+    name: 'TeacherSpace',
+    component: () => import('../views/TeacherSpace.vue'),
+    meta: { requiresAuth: true }
   }
 ]
 
