@@ -368,10 +368,24 @@ export default {
           userCount: '1245w'
         }
       ],
-      chartInstance: null
+      chartInstance: null,
+      currentUser: null
+    }
+  },
+  computed: {
+    // 检查是否是教师认证用户
+    isTeacherCertified() {
+      return this.currentUser && this.currentUser.teacherCertStatus === '已认证'
     }
   },
   mounted() {
+    this.loadCurrentUser()
+    // 只有教师认证用户才能访问工作台
+    if (!this.isTeacherCertified) {
+      this.$router.push('/personal-information')
+      return
+    }
+    
     this.initChart()
     this.generateAllCourses() // 生成所有课程数据
     this.setActivePage() // 设置当前激活页面
@@ -387,6 +401,22 @@ export default {
     this.chartInstance = null
   },
   methods: {
+    // 加载当前用户信息
+    loadCurrentUser() {
+      try {
+        const storedUser = localStorage.getItem('bgareaCurrentUser') || sessionStorage.getItem('bgareaCurrentUser')
+        if (storedUser) {
+          this.currentUser = JSON.parse(storedUser)
+        } else {
+          // 如果没有登录，跳转到登录页
+          this.$router.push('/login')
+        }
+      } catch (error) {
+        console.error('加载用户信息失败:', error)
+        this.$router.push('/login')
+      }
+    },
+    
     // 设置当前激活页面
     setActivePage() {
       const currentPath = this.$route.path

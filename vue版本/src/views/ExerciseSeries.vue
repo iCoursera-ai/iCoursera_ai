@@ -1,11 +1,11 @@
 <template>
   <div class="exercise-container">
-    <!-- 面包屑导航 - 更简约 -->
+    <!-- 面包屑导航 - 动态获取 -->
     <div class="breadcrumb-nav">
       <router-link to="/">首页</router-link> >
-      <router-link to="/courses?category=computer">计算机考研</router-link> >
-      <router-link to="/courses?category=os">操作系统</router-link> >
-      <span class="current">课后习题</span>
+      <router-link :to="getCategoryLink()">{{ getCategoryName() }}</router-link> >
+      <router-link :to="getCourseLink()">{{ getCourseName() }}</router-link> >
+      <span class="current">{{ getCurrentExerciseTitle() }}</span>
     </div>
 
     <!-- 加载状态 -->
@@ -383,7 +383,7 @@ export default {
     
     // 路由参数
     const courseId = ref(route.params.courseId || 1)
-    const seriesId = ref(route.params.seriesId || 'series_1_1')
+    const seriesId = ref(route.params.seriesId || 'section_1_1')
     
     // 加载状态
     const isLoading = ref(true)
@@ -407,86 +407,462 @@ export default {
     // 反馈弹窗
     const showFeedbackModal = ref(false)
     
-    // 习题集数据（保持不变）
-    const exerciseSeriesData = {
-      'series_1_1': {
-        id: 'series_1_1',
-        title: '1.1 课后习题集：机器学习基本概念',
+    // 面包屑导航相关函数
+    const getCategoryName = () => {
+      // 获取课程类别信息
+      const savedCourse = localStorage.getItem('selectedCourse')
+      if (savedCourse) {
+        try {
+          const courseData = JSON.parse(savedCourse)
+          const category = courseData.category || 'computer'
+          
+          const categories = {
+            computer: '计算机考研',
+            business: '商业管理',
+            design: '设计创意'
+          }
+          
+          return categories[category] || '计算机考研'
+        } catch (error) {
+          console.error('解析课程数据失败:', error)
+        }
+      }
+      return '计算机考研'
+    }
+    
+    const getCategoryLink = () => {
+      // 获取课程类别信息
+      const savedCourse = localStorage.getItem('selectedCourse')
+      if (savedCourse) {
+        try {
+          const courseData = JSON.parse(savedCourse)
+          const category = courseData.category || 'computer'
+          
+          const categoryLinks = {
+            computer: '/courses?category=computer',
+            business: '/courses?category=business',
+            design: '/courses?category=design'
+          }
+          
+          return categoryLinks[category] || '/courses?category=computer'
+        } catch (error) {
+          console.error('解析课程数据失败:', error)
+        }
+      }
+      return '/courses?category=computer'
+    }
+    
+    const getCourseName = () => {
+      // 获取课程名称
+      const savedCourse = localStorage.getItem('selectedCourse')
+      if (savedCourse) {
+        try {
+          const courseData = JSON.parse(savedCourse)
+          
+          // 根据课程类别获取对应的课程名称
+          const category = courseData.category || 'computer'
+          const courseNames = {
+            computer: '操作系统',
+            business: '商业分析',
+            design: 'UI/UX设计'
+          }
+          
+          return courseNames[category] || '操作系统'
+        } catch (error) {
+          console.error('解析课程数据失败:', error)
+        }
+      }
+      return '操作系统'
+    }
+    
+    const getCourseLink = () => {
+      // 获取课程链接
+      const savedCourse = localStorage.getItem('selectedCourse')
+      if (savedCourse) {
+        try {
+          const courseData = JSON.parse(savedCourse)
+          const category = courseData.category || 'computer'
+          
+          const courseLinks = {
+            computer: '/courses?category=os',
+            business: '/courses?category=business-analysis',
+            design: '/courses?category=ui-ux'
+          }
+          
+          return courseLinks[category] || '/courses?category=os'
+        } catch (error) {
+          console.error('解析课程数据失败:', error)
+        }
+      }
+      return '/courses?category=os'
+    }
+    
+    const getCurrentExerciseTitle = () => {
+      // 获取当前习题的简短标题
+      const title = getExerciseTitleFromStorage()
+      
+      // 从完整标题中提取简短的习题标题
+      // 例如：从"1.1 课后习题集：设计思维练习"提取"设计思维练习"
+      const parts = title.split('：')
+      if (parts.length > 1) {
+        return parts[1] // 返回冒号后面的部分
+      }
+      
+      // 如果标题中没有冒号，尝试提取章节信息后的部分
+      const match = title.match(/课后习题集：(.+)/)
+      if (match && match[1]) {
+        return match[1]
+      }
+      
+      return '课后习题' // 默认值
+    }
+    
+    // 从路由参数或localStorage获取习题标题
+    const getExerciseTitleFromStorage = () => {
+      // 1. 首先尝试从路由query参数获取
+      if (route.query.title) {
+        return route.query.title
+      }
+      
+      // 2. 尝试从localStorage获取
+      const savedExercise = localStorage.getItem('currentExercise')
+      if (savedExercise) {
+        try {
+          const exerciseData = JSON.parse(savedExercise)
+          return exerciseData.title || `${getChapterSectionFromId()} 课后习题集：${getExerciseContentTitle()}`
+        } catch (error) {
+          console.error('解析习题数据失败:', error)
+        }
+      }
+      
+      // 3. 默认标题
+      return `${getChapterSectionFromId()} 课后习题集：${getExerciseContentTitle()}`
+    }
+    
+    // 从seriesId提取章节信息
+    const getChapterSectionFromId = () => {
+      if (!seriesId.value) return '1.1'
+      
+      const parts = seriesId.value.split('_')
+      if (parts.length >= 3) {
+        return `${parts[1]}.${parts[2]}`
+      }
+      return '1.1'
+    }
+    
+    // 根据课程类别和章节获取习题内容标题
+    const getExerciseContentTitle = () => {
+      // 获取课程类别
+      const savedCourse = localStorage.getItem('selectedCourse')
+      let category = 'computer'
+      if (savedCourse) {
+        try {
+          const courseData = JSON.parse(savedCourse)
+          category = courseData.category || 'computer'
+        } catch (error) {
+          console.error('解析课程数据失败:', error)
+        }
+      }
+      
+      // 从seriesId提取章节信息
+      const parts = seriesId.value.split('_')
+      if (parts.length >= 3) {
+        const chapter = parseInt(parts[1])
+        const section = parseInt(parts[2])
+        
+        // 计算对应的视频索引
+        const videoIndex = (chapter - 1) * 2 + section
+        
+        // 根据课程类别返回对应的习题标题
+        const titles = {
+          computer: [
+            '操作系统基础',
+            '进程管理练习',
+            '调度算法应用',
+            '死锁问题解决',
+            '内存管理实践',
+            '文件系统操作',
+            '设备管理练习',
+            '系统接口应用',
+            '安全机制实践',
+            '综合案例分析'
+          ],
+          business: [
+            '商业分析基础',
+            '数据收集练习',
+            '统计分析应用',
+            '模型构建实践',
+            '报告撰写练习',
+            '案例研究分析',
+            '战略规划练习',
+            '决策模拟实践',
+            '绩效评估应用',
+            '综合商业分析'
+          ],
+          design: [
+            '设计思维练习',
+            '用户研究实践',
+            '交互设计任务',
+            '视觉设计练习',
+            '原型制作实践',
+            '设计评审练习',
+            '用户体验测试',
+            '界面设计任务',
+            '设计交付练习',
+            '综合设计项目'
+          ]
+        }
+        
+        const categoryTitles = titles[category] || titles.computer
+        const index = (videoIndex - 1) % categoryTitles.length
+        return categoryTitles[index] || '基础练习'
+      }
+      
+      return '基础练习'
+    }
+    
+    // 获取默认的习题数据
+    const getDefaultSeriesData = (category, seriesId) => {
+      // 基础的习题数据结构
+      const baseData = {
+        id: seriesId,
+        title: getChapterSectionFromId() + ' 课后习题集：' + getExerciseContentTitle(),
         difficulty: '简单',
         totalPoints: 50,
-        questions: [
+        questions: getDefaultQuestions(category)
+      }
+      
+      return baseData
+    }
+    
+    // 获取默认的问题数据
+    const getDefaultQuestions = (category) => {
+      // 根据不同课程类别返回不同的问题
+      const questionsByCategory = {
+        computer: [
           {
             id: 1,
-            question: '下列哪项不属于机器学习的主要任务类型？',
+            question: '下列哪项不是操作系统的基本功能？',
             type: '单选题',
-            options: ['A. 分类', 'B. 回归', 'C. 聚类', 'D. 编译'],
+            options: ['A. 进程管理', 'B. 内存管理', 'C. 文件管理', 'D. 应用程序开发'],
             correctAnswer: 3,
             points: 10,
-            hint: '机器学习主要解决分类、回归、聚类等问题，编译是编程语言处理过程。',
-            explanation: '机器学习的主要任务包括分类、回归、聚类、降维等。编译是将源代码转换为机器代码的过程，属于编译器领域，不属于机器学习任务。',
-            knowledgePoints: ['机器学习基本概念', '任务类型']
+            hint: '操作系统管理硬件资源，但不直接开发应用程序。',
+            explanation: '操作系统的基本功能包括进程管理、内存管理、文件管理、设备管理等。应用程序开发是软件开发人员的任务，不是操作系统的基本功能。',
+            knowledgePoints: ['操作系统基本概念', '功能分类']
           },
           {
             id: 2,
-            question: '机器学习中的"过拟合"指的是什么？',
+            question: '操作系统的核心是什么？',
             type: '单选题',
             options: [
-              'A. 模型在训练集上表现很好，但在测试集上表现差',
-              'B. 模型在训练集和测试集上都表现差',
-              'C. 模型过于简单，无法捕捉数据特征',
-              'D. 模型训练时间过长'
+              'A. 图形用户界面',
+              'B. 内核',
+              'C. 应用程序',
+              'D. 驱动程序'
             ],
-            correctAnswer: 0,
+            correctAnswer: 1,
             points: 10,
-            hint: '过拟合是模型过度学习了训练数据的噪声和细节。',
-            explanation: '过拟合是指模型在训练数据上表现很好，但在未见过的测试数据上表现较差，通常是因为模型过于复杂或训练数据不足。',
-            knowledgePoints: ['过拟合', '模型评估']
+            hint: '操作系统最核心的部分负责最基础的硬件管理和进程调度。',
+            explanation: '内核是操作系统的核心部分，负责管理系统的硬件资源，如CPU、内存、设备等，并提供最基本的服务。',
+            knowledgePoints: ['操作系统结构', '内核']
           },
           {
             id: 3,
-            question: '监督学习和无监督学习的主要区别是什么？',
+            question: '批处理操作系统的主要特点是什么？',
             type: '单选题',
             options: [
-              'A. 是否有标签数据',
-              'B. 是否使用神经网络',
-              'C. 是否需要训练',
-              'D. 是否有输出结果'
+              'A. 交互性强',
+              'B. 实时响应',
+              'C. 自动成批处理作业',
+              'D. 图形界面'
             ],
-            correctAnswer: 0,
+            correctAnswer: 2,
             points: 10,
-            hint: '关注数据是否有预先标注的标签。',
-            explanation: '监督学习使用有标签的数据进行训练，而无监督学习使用无标签的数据。',
-            knowledgePoints: ['监督学习', '无监督学习']
+            hint: '批处理系统强调作业的自动化和批量处理。',
+            explanation: '批处理操作系统将多个作业收集成一批，由系统自动依次处理，用户不进行交互。',
+            knowledgePoints: ['操作系统类型', '批处理系统']
           },
           {
             id: 4,
-            question: '下列哪项是常见的机器学习算法？',
+            question: '下列哪些是现代操作系统的主要类型？',
             type: '多选题',
-            options: ['A. 决策树', 'B. 支持向量机', 'C. K-means聚类', 'D. 线性回归'],
+            options: ['A. 批处理系统', 'B. 分时系统', 'C. 实时系统', 'D. 分布式系统'],
             correctAnswer: [0, 1, 2, 3],
             points: 10,
-            hint: '这些都是经典的机器学习算法。',
-            explanation: '决策树、支持向量机、K-means聚类和线性回归都是常见的机器学习算法。',
-            knowledgePoints: ['机器学习算法']
+            hint: '这些是现代操作系统的常见分类。',
+            explanation: '现代操作系统的主要类型包括批处理系统、分时系统、实时系统和分布式系统，它们各有不同的设计目标和应用场景。',
+            knowledgePoints: ['操作系统分类']
           },
           {
             id: 5,
-            question: '机器学习的核心目标是什么？',
+            question: '操作系统的目标是什么？',
             type: '单选题',
             options: [
-              'A. 让计算机自动从数据中学习规律',
-              'B. 编写复杂的程序',
-              'C. 提高计算速度',
-              'D. 减少存储空间'
+              'A. 方便用户使用计算机',
+              'B. 提高系统资源利用率',
+              'C. 提供良好的用户接口',
+              'D. 以上都是'
+            ],
+            correctAnswer: 3,
+            points: 10,
+            hint: '操作系统有多个设计目标。',
+            explanation: '操作系统的主要目标是方便用户使用计算机系统，提高系统资源利用率，并为用户提供良好的接口。',
+            knowledgePoints: ['操作系统目标']
+          }
+        ],
+        business: [
+          {
+            id: 1,
+            question: '下列哪项不是商业分析的核心目标？',
+            type: '单选题',
+            options: ['A. 提高决策质量', 'B. 优化业务流程', 'C. 编写代码', 'D. 识别商机'],
+            correctAnswer: 2,
+            points: 10,
+            hint: '商业分析关注业务问题，不直接涉及编码。',
+            explanation: '商业分析的核心目标是通过数据分析提高决策质量、优化业务流程和识别商业机会，而不是直接编写代码。',
+            knowledgePoints: ['商业分析基础', '目标定位']
+          },
+          {
+            id: 2,
+            question: '商业分析的第一步通常是什么？',
+            type: '单选题',
+            options: [
+              'A. 数据收集',
+              'B. 问题定义',
+              'C. 模型构建',
+              'D. 报告撰写'
+            ],
+            correctAnswer: 1,
+            points: 10,
+            hint: '明确问题是解决问题的前提。',
+            explanation: '商业分析的第一步通常是明确和定义业务问题，只有清楚了解问题，才能进行有效的数据收集和分析。',
+            knowledgePoints: ['商业分析流程', '问题定义']
+          },
+          {
+            id: 3,
+            question: 'KPI是什么意思？',
+            type: '单选题',
+            options: [
+              'A. 关键绩效指标',
+              'B. 关键流程改进',
+              'C. 知识流程集成',
+              'D. 关键项目识别'
             ],
             correctAnswer: 0,
             points: 10,
-            hint: '机器学习关注的是从数据中学习的能力。',
-            explanation: '机器学习的核心目标是让计算机能够自动从数据中学习规律和模式，而不是通过明确的编程指令。',
-            knowledgePoints: ['机器学习目标']
+            hint: 'KPI是衡量业务绩效的重要指标。',
+            explanation: 'KPI是Key Performance Indicator的缩写，意为关键绩效指标，用于衡量组织或个人在达成目标方面的表现。',
+            knowledgePoints: ['商业分析术语', 'KPI']
+          },
+          {
+            id: 4,
+            question: '下列哪些是常用的商业分析工具？',
+            type: '多选题',
+            options: ['A. SWOT分析', 'B. PEST分析', 'C. 波特五力模型', 'D. 波士顿矩阵'],
+            correctAnswer: [0, 1, 2, 3],
+            points: 10,
+            hint: '这些都是经典的商业分析框架。',
+            explanation: '常用的商业分析工具包括SWOT分析（优势、劣势、机会、威胁）、PEST分析（政治、经济、社会、技术）、波特五力模型和波士顿矩阵等。',
+            knowledgePoints: ['商业分析工具']
+          },
+          {
+            id: 5,
+            question: '数据驱动决策的主要优势是什么？',
+            type: '单选题',
+            options: [
+              'A. 减少主观偏见',
+              'B. 提高决策速度',
+              'C. 降低决策成本',
+              'D. 以上都是'
+            ],
+            correctAnswer: 3,
+            points: 10,
+            hint: '数据驱动决策有多个优点。',
+            explanation: '数据驱动决策的主要优势包括减少主观偏见、提高决策的科学性和准确性，同时也能提高决策效率和降低成本。',
+            knowledgePoints: ['数据驱动决策']
+          }
+        ],
+        design: [
+          {
+            id: 1,
+            question: '设计思维的核心阶段是什么？',
+            type: '单选题',
+            options: [
+              'A. 同理心、定义、构思、原型、测试',
+              'B. 调研、设计、开发、测试',
+              'C. 分析、设计、实现、维护',
+              'D. 计划、执行、检查、行动'
+            ],
+            correctAnswer: 0,
+            points: 10,
+            hint: '设计思维强调以用户为中心的五阶段模型。',
+            explanation: '设计思维的核心阶段包括同理心（理解用户）、定义（明确问题）、构思（产生想法）、原型（制作样品）和测试（验证方案）。',
+            knowledgePoints: ['设计思维', '创新流程']
+          },
+          {
+            id: 2,
+            question: '用户体验设计的核心原则是什么？',
+            type: '单选题',
+            options: [
+              'A. 以用户为中心',
+              'B. 视觉美观',
+              'C. 技术实现',
+              'D. 成本控制'
+            ],
+            correctAnswer: 0,
+            points: 10,
+            hint: 'UX设计的核心理念始终围绕用户。',
+            explanation: '用户体验设计的核心原则是以用户为中心，所有的设计决策都应该基于对用户需求、行为和目标的深入理解。',
+            knowledgePoints: ['用户体验设计', '设计原则']
+          },
+          {
+            id: 3,
+            question: '什么是线框图？',
+            type: '单选题',
+            options: [
+              'A. 产品的视觉设计稿',
+              'B. 产品功能的简单布局图',
+              'C. 产品的代码框架',
+              'D. 项目的进度图'
+            ],
+            correctAnswer: 1,
+            points: 10,
+            hint: '线框图关注结构和布局，不关注视觉细节。',
+            explanation: '线框图是产品界面的简单布局图，用于展示页面结构、内容区域和功能布局，不包含视觉设计细节。',
+            knowledgePoints: ['设计工具', '线框图']
+          },
+          {
+            id: 4,
+            question: '下列哪些是UI设计的基本原则？',
+            type: '多选题',
+            options: ['A. 一致性', 'B. 简洁性', 'C. 反馈性', 'D. 容错性'],
+            correctAnswer: [0, 1, 2, 3],
+            points: 10,
+            hint: 'UI设计需要考虑用户的使用体验。',
+            explanation: 'UI设计的基本原则包括一致性（保持设计风格统一）、简洁性（避免不必要的复杂）、反馈性（提供操作反馈）和容错性（允许用户犯错并恢复）。',
+            knowledgePoints: ['UI设计原则']
+          },
+          {
+            id: 5,
+            question: '可用性测试的主要目的是什么？',
+            type: '单选题',
+            options: [
+              'A. 评估产品的视觉吸引力',
+              'B. 发现产品的可用性问题',
+              'C. 测试产品的性能',
+              'D. 验证产品的市场需求'
+            ],
+            correctAnswer: 1,
+            points: 10,
+            hint: '可用性测试关注用户能否顺利使用产品。',
+            explanation: '可用性测试的主要目的是通过观察真实用户使用产品，发现并解决可用性问题，提高产品的易用性和用户体验。',
+            knowledgePoints: ['用户测试', '可用性']
           }
         ]
       }
+      
+      return questionsByCategory[category] || questionsByCategory.computer
     }
     
     // 计算属性
@@ -790,11 +1166,53 @@ export default {
       isLoading.value = true
       
       setTimeout(() => {
-        const seriesData = exerciseSeriesData[seriesId.value]
+        // 获取动态标题
+        const dynamicTitle = getExerciseTitleFromStorage()
+        
+        // 获取课程类别
+        const savedCourse = localStorage.getItem('selectedCourse')
+        let category = 'computer'
+        if (savedCourse) {
+          try {
+            const courseData = JSON.parse(savedCourse)
+            category = courseData.category || 'computer'
+          } catch (error) {
+            console.error('解析课程数据失败:', error)
+          }
+        }
+        
+        // 根据系列ID和课程类别选择习题数据
+        let seriesData
+        
+        if (seriesId.value.startsWith('section_')) {
+          // 使用动态标题和对应的习题数据
+          const defaultSeriesData = getDefaultSeriesData(category, seriesId.value)
+          
+          seriesData = {
+            ...defaultSeriesData,
+            title: dynamicTitle
+          }
+        } else {
+          // 根据课程类别选择默认习题
+          const defaultSeriesData = getDefaultSeriesData(category, 'section_1_1')
+          
+          seriesData = {
+            ...defaultSeriesData,
+            title: dynamicTitle
+          }
+        }
+        
         if (seriesData) {
           exerciseSeries.value = seriesData
         } else {
-          exerciseSeries.value = exerciseSeriesData['series_1_1']
+          // 备用方案
+          exerciseSeries.value = {
+            id: 'section_1_1',
+            title: dynamicTitle,
+            difficulty: '简单',
+            totalPoints: 50,
+            questions: getDefaultQuestions(category)
+          }
         }
         
         loadProgress()
@@ -856,6 +1274,13 @@ export default {
       feedbackMessage,
       feedbackSuggestions,
       feedbackActionText,
+      
+      // 面包屑导航方法
+      getCategoryName,
+      getCategoryLink,
+      getCourseName,
+      getCourseLink,
+      getCurrentExerciseTitle,
       
       // 方法
       checkAnswerCorrect,

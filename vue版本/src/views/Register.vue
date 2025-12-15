@@ -141,6 +141,13 @@ export default {
     }
   },
   methods: {
+    // 生成随机用户ID
+    generateRandomId() {
+      const timestamp = Date.now().toString().slice(-6)
+      const random = Math.floor(Math.random() * 10000).toString().padStart(4, '0')
+      return `UID${timestamp}${random}`
+    },
+    
     validateForm() {
       this.errors = {}
       
@@ -205,13 +212,13 @@ export default {
             id: Date.now().toString(),
             username: this.form.username,
             email: this.form.email,
-            password: this.form.password, // 确保密码被存储
-            realname: '',
-            realnameStatus: '未认证',
-            userId: Date.now().toString().slice(-8),
-            phone: '',
-            location: '',
-            school: '',
+            password: this.form.password,
+            realname: '', // 初始为空
+            realnameStatus: '未认证', // 初始为未认证
+            userId: this.generateRandomId(), // 随机生成的ID
+            phone: '', // 初始为空
+            location: '', // 初始为空
+            school: '', // 初始为空
             followers: 0,
             courses: 0,
             avatar: 'https://picsum.photos/200/200?random=1',
@@ -219,7 +226,8 @@ export default {
             signature: '',
             isNewUser: true,
             hasPreferences: false,
-            registerTime: new Date().toISOString()
+            registerTime: new Date().toISOString(),
+            teacherCertStatus: '未认证' // 教师认证状态
           }
           
           // 保存用户到列表

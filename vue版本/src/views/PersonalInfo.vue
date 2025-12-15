@@ -6,8 +6,8 @@
       <!-- 侧边栏导航 -->
       <aside class="w-64 bg-white border-r border-gray-200 flex-shrink-0 fixed top-[5rem] left-0 h-[calc(100vh-5rem)] overflow-y-auto z-30">
         <nav class="py-4 space-y-1 px-4">
-          <!-- 工作台 -->
-          <div class="sidebar-group">
+          <!-- 工作台 - 只有教师认证用户才显示 -->
+          <div v-if="isTeacherCertified" class="sidebar-group">
             <div class="sidebar-parent" :class="{ 'active': activePage === 'dashboard' }" @click="goToTeacherDashboard">
               <div class="sidebar-parent-content">
                 <i class="fa fa-tachometer sidebar-icon"></i>
@@ -71,15 +71,6 @@
       <!-- 主内容区域 -->
       <main class="flex-1 overflow-y-auto p-6 ml-64" style="max-height: calc(100vh - 5rem);">
         <div class="p-6">
-          <!-- 面包屑导航
-          <div class="text-sm text-secondary mb-6">
-            <span>用户中心</span>
-            <i class="fa fa-angle-right mx-1 text-gray-400"></i>
-            <span>个人中心</span>
-            <i class="fa fa-angle-right mx-1 text-gray-400"></i>
-            <span class="text-dark font-medium">{{ breadcrumbCurrent }}</span>
-          </div> -->
-
           <!-- 页面内容容器 -->
           <div class="space-y-6">
             <!-- 用户信息页面 -->
@@ -94,15 +85,19 @@
                   </div>
                   
                   <div class="text-center md:text-left flex-1">
-                    <h2 class="text-2xl font-bold text-dark mb-2">{{ userData.realname }}</h2>
+                    <h2 class="text-2xl font-bold text-dark mb-2">{{ userData.username }}</h2>
+                    <!-- 显示真实姓名（如果已认证） -->
+                    <div v-if="userData.realnameStatus === '已认证' && userData.realname" class="mb-3">
+                      <span class="px-2 py-1 bg-primary/10 text-primary text-sm rounded">实名：{{ userData.realname }}</span>
+                    </div>
                     <div class="flex flex-wrap items-center gap-x-6 gap-y-2 text-sm text-secondary">
                       <div class="flex items-center gap-1">
                         <i class="fa fa-graduation-cap text-primary"></i>
-                        <span>{{ userData.school }}</span>
+                        <span>{{ userData.school || '未设置' }}</span>
                       </div>
                       <div class="flex items-center gap-1">
                         <i class="fa fa-map-marker text-primary"></i>
-                        <span>{{ userData.location }}</span>
+                        <span>{{ userData.location || '未设置' }}</span>
                       </div>
                       <div class="flex items-center gap-1">
                         <i class="fa fa-star text-yellow-500"></i>
@@ -233,7 +228,7 @@
                     <input type="file" ref="avatarInput" class="hidden" accept="image/*" @change="handleAvatarUpload">
                   </div>
                   
-                  <div class="flex-1 grid grid-cols-1 md:grid-cols-3 gap-x-6 gap-y-4">
+                  <div class="flex-1 grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4">
                     <div>
                       <div class="text-sm font-medium text-gray-700 mb-1">用户名</div>
                       <div class="flex items-center gap-2">
@@ -243,38 +238,47 @@
                     </div>
                     
                     <div>
+                      <div class="text-sm font-medium text-gray-700 mb-1">账号ID</div>
+                      <div class="font-medium text-dark">{{ userData.userId }}</div>
+                    </div>
+                    
+                    <div>
                       <div class="text-sm font-medium text-gray-700 mb-1">实名认证</div>
                       <div class="flex items-center gap-2">
-                        <span class="text-success font-medium">{{ userData.realnameStatus }}</span>
-                        <button class="text-link text-sm hover:underline" @click="showEditModal('realname')">修改</button>
+                        <span :class="realnameStatusClass">{{ userData.realnameStatus }}</span>
+                        <button v-if="userData.realnameStatus === '未认证'" 
+                                class="text-link text-sm hover:underline" 
+                                @click="showRealnameCertModal">
+                          去认证
+                        </button>
                       </div>
                     </div>
                     
                     <div>
                       <div class="text-sm font-medium text-gray-700 mb-1">真实姓名</div>
                       <div class="flex items-center gap-2">
-                        <span class="font-medium text-dark">{{ userData.realname }}</span>
-                        <button class="text-link text-sm hover:underline" @click="showEditModal('realname')">修改</button>
+                        <span class="font-medium text-dark">{{ userData.realname || '未认证' }}</span>
+                        <!-- 已认证用户才能修改真实姓名 -->
+                        <button v-if="userData.realnameStatus === '已认证'" 
+                                class="text-link text-sm hover:underline" 
+                                @click="showEditModal('realname')">
+                          修改
+                        </button>
                       </div>
-                    </div>
-                    
-                    <div>
-                      <div class="text-sm font-medium text-gray-700 mb-1">账号ID</div>
-                      <div class="font-medium text-dark">{{ userData.userId }}</div>
                     </div>
                     
                     <div>
                       <div class="text-sm font-medium text-gray-700 mb-1">手机号码</div>
                       <div class="flex items-center gap-2">
-                        <span class="font-medium text-dark">{{ userData.phone }}</span>
-                        <button class="text-link text-sm hover:underline" @click="showEditModal('phone')">修改</button>
+                        <span class="font-medium text-dark">{{ userData.phone || '未绑定' }}</span>
+                        <!-- 手机号码通过安全设置绑定，这里不显示修改按钮 -->
                       </div>
                     </div>
                     
                     <div>
                       <div class="text-sm font-medium text-gray-700 mb-1">位置</div>
                       <div class="flex items-center gap-1">
-                        <span class="font-medium text-dark">{{ userData.location }}</span>
+                        <span class="font-medium text-dark">{{ userData.location || '未设置' }}</span>
                         <button class="text-link text-sm hover:underline" @click="showEditModal('location')">修改</button>
                       </div>
                     </div>
@@ -282,7 +286,7 @@
                     <div>
                       <div class="text-sm font-medium text-gray-700 mb-1">学校</div>
                       <div class="flex items-center gap-1">
-                        <span class="font-medium text-dark">{{ userData.school }}</span>
+                        <span class="font-medium text-dark">{{ userData.school || '未设置' }}</span>
                         <button class="text-link text-sm hover:underline" @click="showEditModal('school')">修改</button>
                       </div>
                     </div>
@@ -290,11 +294,16 @@
                     <div>
                       <div class="text-sm font-medium text-gray-700 mb-1">教师资格认证</div>
                       <div class="flex items-center gap-2">
-                        <span :class="teacherCertStatusClass" class="font-medium">{{ teacherCertStatus }}</span>
+                        <span :class="teacherCertStatusClass" class="font-medium">{{ userData.teacherCertStatus }}</span>
+                        <button v-if="userData.teacherCertStatus === '未认证'" 
+                                class="text-link text-sm hover:underline" 
+                                @click="showCertificationModal">
+                          去认证
+                        </button>
                       </div>
                     </div>
                     
-                    <div class="md:col-span-3">
+                    <div class="md:col-span-2">
                       <div class="text-sm font-medium text-gray-700 mb-1">我的简介</div>
                       <textarea v-model="userData.signature" class="input-field" rows="2" placeholder="请输入签名" @input="saveSignatureAuto"></textarea>
                     </div>
@@ -321,13 +330,6 @@
                     >
                       教师认证
                     </button>
-                    <!-- <button 
-                      class="px-4 py-2 border-b-2 font-medium" 
-                      :class="activeTab === 'preferences' ? 'text-primary border-primary' : 'text-secondary hover:text-primary'"
-                      @click="activeTab = 'preferences'; loadPreferences()"
-                    >
-                      偏好设置
-                    </button> -->
                   </div>
                 </div>
                 
@@ -344,15 +346,19 @@
                   <div class="flex justify-between items-center py-3 border-b border-gray-100">
                     <div>
                       <div class="font-medium text-dark mb-1">安全手机</div>
-                      <div class="text-sm text-secondary">已绑定: <span>{{ maskedPhone }}</span></div>
+                      <div class="text-sm text-secondary">
+                        {{ userData.phone ? `已绑定: ${maskedPhone}` : '未绑定手机，绑定手机可以用来找回密码、接收通知等。' }}
+                      </div>
                     </div>
-                    <button class="btn-text px-4 py-2 rounded-md" @click="showEditModal('phone')">修改</button>
+                    <button class="btn-text px-4 py-2 rounded-md" @click="showPhoneBindingModal">绑定</button>
                   </div>
                   
                   <div class="flex justify-between items-center py-3">
                     <div>
                       <div class="font-medium text-dark mb-1">安全邮箱</div>
-                      <div class="text-sm text-secondary">您暂未设置邮箱，绑定邮箱可以用来找回密码、接收通知等。</div>
+                      <div class="text-sm text-secondary">
+                        {{ userData.email ? `已绑定: ${userData.email}` : '未设置邮箱，绑定邮箱可以用来找回密码、接收通知等。' }}
+                      </div>
                     </div>
                     <button class="btn-text px-4 py-2 rounded-md" @click="showEditModal('email')">设置</button>
                   </div>
@@ -362,7 +368,7 @@
                 <div v-if="activeTab === 'teacher'" class="space-y-8">
                   <div class="mb-8 relative">
                     <!-- 前往认证按钮 -->
-                    <div class="absolute top-0 right-0">
+                    <div v-if="userData.teacherCertStatus === '未认证'" class="absolute top-0 right-0">
                       <button class="px-4 py-2 bg-primary text-white rounded-md hover:bg-primary/90 transition-colors" @click="showCertificationModal">
                         <i class="fa fa-pencil mr-2"></i>前往认证
                       </button>
@@ -371,14 +377,10 @@
                     <h3 class="text-lg font-semibold text-dark mb-4">教师实名认证</h3>
                     
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                      <div class="p-4 bg-gray-50 rounded-lg">
-                        <div class="text-sm text-secondary mb-1">账号类型</div>
-                        <div class="font-medium text-dark">{{ teacherCertInfo.accountType || '未填写' }}</div>
-                      </div>
-                      
+                      <!-- 认证状态显示 -->
                       <div class="p-4 bg-gray-50 rounded-lg">
                         <div class="text-sm text-secondary mb-1">认证状态</div>
-                        <div :class="teacherCertStatusClass" class="font-medium">{{ teacherCertStatus }}</div>
+                        <div :class="teacherCertStatusClass" class="font-medium">{{ userData.teacherCertStatus }}</div>
                       </div>
                       
                       <div class="p-4 bg-gray-50 rounded-lg">
@@ -386,122 +388,61 @@
                         <div class="font-medium text-dark">{{ teacherCertInfo.certTime || '未认证' }}</div>
                       </div>
                       
-                      <div class="p-4 bg-gray-50 rounded-lg">
-                        <div class="text-sm text-secondary mb-1">教师姓名</div>
-                        <div class="font-medium text-dark">{{ teacherCertInfo.teacherName || '未填写' }}</div>
-                      </div>
-                      
-                      <div class="p-4 bg-gray-50 rounded-lg">
-                        <div class="text-sm text-secondary mb-1">教师学位</div>
-                        <div class="font-medium text-dark">{{ teacherCertInfo.teacherDegree || '未填写' }}</div>
-                      </div>
-                      
-                      <div class="p-4 bg-gray-50 rounded-lg">
-                        <div class="text-sm text-secondary mb-1">法人认证号码</div>
-                        <div class="font-medium text-dark">{{ teacherCertInfo.legalPersonId || '未填写' }}</div>
-                      </div>
-                      
-                      <div class="p-4 bg-gray-50 rounded-lg">
-                        <div class="text-sm text-secondary mb-1">学校名称</div>
-                        <div class="font-medium text-dark">{{ teacherCertInfo.schoolName || '未填写' }}</div>
-                      </div>
-                      
-                      <div class="p-4 bg-gray-50 rounded-lg">
-                        <div class="text-sm text-secondary mb-1">企业证件类型</div>
-                        <div class="font-medium text-dark">{{ teacherCertInfo.certificateType || '未填写' }}</div>
-                      </div>
-                      
-                      <div class="p-4 bg-gray-50 rounded-lg">
-                        <div class="text-sm text-secondary mb-1">组织机构代码</div>
-                        <div class="font-medium text-dark">{{ teacherCertInfo.organizationCode || '未填写' }}</div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-                
-                <!-- 偏好设置内容 -->
-                <div v-if="activeTab === 'preferences'">
-                  <div class="mb-6">
-                    <div class="flex justify-between items-center mb-4">
-                      <h3 class="text-lg font-semibold text-dark">学习偏好设置</h3>
-                      <div class="text-sm text-secondary">
-                        已选择 <span class="font-medium text-primary">{{ selectedPreferencesCount }}</span> 个偏好
-                      </div>
-                    </div>
-                    <p class="text-sm text-secondary mb-6">根据您的偏好，我们将为您推荐更相关的内容</p>
-                  </div>
-                  
-                  <div class="space-y-8">
-                    <!-- 学习领域偏好 -->
-                    <div class="space-y-4">
-                      <div class="flex items-start justify-between">
-                        <div>
-                          <h3 class="font-semibold text-dark mb-1">您感兴趣的领域是？</h3>
-                          <p class="text-sm text-gray-600">选择您最感兴趣的学习领域（可多选）</p>
+                      <!-- 其他认证信息，认证后才显示 -->
+                      <template v-if="userData.teacherCertStatus === '已认证' || userData.teacherCertStatus === '审核中'">
+                        <div class="p-4 bg-gray-50 rounded-lg">
+                          <div class="text-sm text-secondary mb-1">账号类型</div>
+                          <div class="font-medium text-dark">{{ teacherCertInfo.accountType || '未填写' }}</div>
                         </div>
-                        <span class="text-xs bg-primary/10 text-primary px-2 py-1 rounded">必选</span>
-                      </div>
-                      <div class="flex flex-wrap gap-3">
-                        <div 
-                          v-for="field in preferencesOptions.field" 
-                          :key="field.value"
-                          class="preference-chip"
-                          :class="{ 'selected': selectedPreferences.field.includes(field.value) }"
-                          @click="togglePreference('field', field.value)"
-                        >
-                          <i :class="field.icon"></i> {{ field.label }}
+                        
+                        <div class="p-4 bg-gray-50 rounded-lg">
+                          <div class="text-sm text-secondary mb-1">教师姓名</div>
+                          <div class="font-medium text-dark">{{ teacherCertInfo.teacherName || '未填写' }}</div>
                         </div>
-                      </div>
+                        
+                        <div class="p-4 bg-gray-50 rounded-lg">
+                          <div class="text-sm text-secondary mb-1">教师学位</div>
+                          <div class="font-medium text-dark">{{ teacherCertInfo.teacherDegree || '未填写' }}</div>
+                        </div>
+                        
+                        <div class="p-4 bg-gray-50 rounded-lg">
+                          <div class="text-sm text-secondary mb-1">法人认证号码</div>
+                          <div class="font-medium text-dark">{{ teacherCertInfo.legalPersonId || '未填写' }}</div>
+                        </div>
+                        
+                        <div class="p-4 bg-gray-50 rounded-lg">
+                          <div class="text-sm text-secondary mb-1">学校名称</div>
+                          <div class="font-medium text-dark">{{ teacherCertInfo.schoolName || '未填写' }}</div>
+                        </div>
+                        
+                        <div class="p-4 bg-gray-50 rounded-lg">
+                          <div class="text-sm text-secondary mb-1">企业证件类型</div>
+                          <div class="font-medium text-dark">{{ teacherCertInfo.certificateType || '未填写' }}</div>
+                        </div>
+                        
+                        <div class="p-4 bg-gray-50 rounded-lg">
+                          <div class="text-sm text-secondary mb-1">组织机构代码</div>
+                          <div class="font-medium text-dark">{{ teacherCertInfo.organizationCode || '未填写' }}</div>
+                        </div>
+                      </template>
                     </div>
                     
-                    <!-- 学习目标偏好 -->
-                    <div class="space-y-4">
-                      <div class="flex items-start justify-between">
+                    <!-- 认证提示 -->
+                    <div v-if="userData.teacherCertStatus === '未认证'" class="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                      <div class="flex items-start">
+                        <i class="fa fa-info-circle text-blue-500 mt-1 mr-3"></i>
                         <div>
-                          <h3 class="font-semibold text-dark mb-1">您的学习目标是？</h3>
-                          <p class="text-sm text-gray-600">明确目标有助于推荐合适的课程</p>
-                        </div>
-                        <span class="text-xs bg-primary/10 text-primary px-2 py-1 rounded">必选</span>
-                      </div>
-                      <div class="flex flex-wrap gap-3">
-                        <div 
-                          v-for="goal in preferencesOptions.goal" 
-                          :key="goal.value"
-                          class="preference-chip"
-                          :class="{ 'selected': selectedPreferences.goal.includes(goal.value) }"
-                          @click="togglePreference('goal', goal.value)"
-                        >
-                          <i :class="goal.icon"></i> {{ goal.label }}
+                          <h4 class="font-medium text-blue-800 mb-1">教师认证说明</h4>
+                          <p class="text-sm text-blue-700">
+                            通过教师认证后，您将获得以下权限：<br>
+                            1. 发布和管理课程<br>
+                            2. 获得教师工作台<br>
+                            3. 创建和管理班级<br>
+                            4. 获得官方认证标识
+                          </p>
                         </div>
                       </div>
                     </div>
-                  </div>
-                  
-                  <div class="mt-8 pt-6 border-t border-gray-200 flex justify-between items-center">
-                    <div class="text-sm text-gray-600">
-                      您可以随时修改这些偏好设置
-                    </div>
-                    <div class="flex gap-3">
-                      <button 
-                        @click="resetPreferences" 
-                        class="px-5 py-2.5 text-gray-700 font-medium rounded-md border border-gray-300 hover:bg-gray-50 transition-all duration-200"
-                      >
-                        重置选择
-                      </button>
-                      <button 
-                        @click="savePreferences" 
-                        :disabled="!canSavePreferences"
-                        class="px-5 py-2.5 bg-primary text-white font-medium rounded-md hover:bg-primary/90 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
-                      >
-                        保存偏好设置
-                      </button>
-                    </div>
-                  </div>
-                  
-                  <!-- 当前偏好展示 -->
-                  <div v-if="currentPreferencesDisplay" class="mt-6 p-4 bg-gray-50 rounded-lg">
-                    <h4 class="font-medium text-dark mb-2">当前设置的学习偏好：</h4>
-                    <div v-html="currentPreferencesDisplay"></div>
                   </div>
                 </div>
               </div>
@@ -509,6 +450,67 @@
           </div>
         </div>
       </main>
+    </div>
+
+    <!-- 实名认证模态框 -->
+    <div v-if="showRealnameModal" class="modal">
+      <div class="modal-content max-w-md">
+        <div class="modal-header">
+          <h3 class="text-lg font-semibold">实名认证</h3>
+          <button @click="closeRealnameModal" class="text-gray-500 hover:text-gray-700">
+            <i class="fa fa-times"></i>
+          </button>
+        </div>
+        <div class="modal-body">
+          <div class="space-y-4">
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">真实姓名</label>
+              <input type="text" v-model="realnameForm.name" class="input-field" placeholder="请输入您的真实姓名">
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">身份证号码</label>
+              <input type="text" v-model="realnameForm.idCard" class="input-field" placeholder="请输入您的身份证号码">
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button @click="closeRealnameModal" class="px-4 py-2 text-gray-700 border border-gray-300 rounded-md hover:bg-gray-50">取消</button>
+          <button @click="submitRealnameCert" class="px-4 py-2 bg-primary text-white rounded-md hover:bg-primary/90">提交认证</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 手机绑定模态框 -->
+    <div v-if="showPhoneModal" class="modal">
+      <div class="modal-content max-w-md">
+        <div class="modal-header">
+          <h3 class="text-lg font-semibold">{{ userData.phone ? '修改手机' : '绑定手机' }}</h3>
+          <button @click="closePhoneModal" class="text-gray-500 hover:text-gray-700">
+            <i class="fa fa-times"></i>
+          </button>
+        </div>
+        <div class="modal-body">
+          <div class="space-y-4">
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">手机号码</label>
+              <input type="text" v-model="phoneForm.phone" class="input-field" placeholder="请输入您的手机号码">
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">验证码</label>
+              <div class="flex gap-2">
+                <input type="text" v-model="phoneForm.verificationCode" class="input-field flex-1" placeholder="请输入验证码">
+                <button @click="sendVerificationCode" :disabled="codeSending" class="px-3 py-2 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200 disabled:opacity-50">
+                  {{ codeSending ? `${countdown}秒后重发` : '获取验证码' }}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button @click="closePhoneModal" class="px-4 py-2 text-gray-700 border border-gray-300 rounded-md hover:bg-gray-50">取消</button>
+          <button @click="submitPhoneBinding" class="px-4 py-2 bg-primary text-white rounded-md hover:bg-primary/90">确认{{ userData.phone ? '修改' : '绑定' }}</button>
+        </div>
+      </div>
     </div>
 
     <!-- 修改信息模态框 -->
@@ -625,21 +627,41 @@ export default {
       showModal: false,
       showAllCourses: false,
       showCertModal: false,
+      showRealnameModal: false,
+      showPhoneModal: false,
+      codeSending: false,
+      countdown: 60,
+      countdownTimer: null,
+      
+      // 用户数据从注册信息加载
       userData: {
-        username: 'dsfuis',
-        realname: '谷名',
-        realnameStatus: '已认证',
-        userId: '2489372598',
-        phone: '13800138000',
-        location: '北京',
-        school: '北京理工大学',
-        followers: 5000,
-        courses: 20,
+        username: '',
+        realname: '',
+        realnameStatus: '未认证',
+        userId: '',
+        phone: '',
+        location: '',
+        school: '',
+        followers: 0,
+        courses: 0,
         avatar: 'https://picsum.photos/200/200?random=1',
-        signature: '啊啊啊啊啊啊啊啊啊啊啊，摆烂摆烂',
+        signature: '',
         email: '',
         teacherCertStatus: '未认证'
       },
+      
+      // 实名认证表单
+      realnameForm: {
+        name: '',
+        idCard: ''
+      },
+      
+      // 手机绑定表单
+      phoneForm: {
+        phone: '',
+        verificationCode: ''
+      },
+      
       // 教师认证信息
       teacherCertInfo: {
         accountType: '',
@@ -662,6 +684,7 @@ export default {
         certificateType: '',
         organizationCode: ''
       },
+      
       // 我的课程数据 - 使用主页视频样式
       myCourses: [
         { 
@@ -739,30 +762,7 @@ export default {
       ],
       // 我的关注老师 - 从localStorage加载
       followedTeachers: [],
-      preferencesOptions: {
-        field: [
-          { value: 'programming', label: '编程开发', icon: 'fa fa-code mr-2' },
-          { value: 'design', label: '设计艺术', icon: 'fa fa-paint-brush mr-2' },
-          { value: 'business', label: '商业管理', icon: 'fa fa-line-chart mr-2' },
-          { value: 'data-science', label: '数据科学', icon: 'fa fa-database mr-2' },
-          { value: 'language', label: '语言学习', icon: 'fa fa-language mr-2' },
-          { value: 'marketing', label: '市场营销', icon: 'fa fa-bullhorn mr-2' },
-          { value: 'personal-growth', label: '个人成长', icon: 'fa fa-user-plus mr-2' },
-          { value: 'academic', label: '学术教育', icon: 'fa fa-book mr-2' }
-        ],
-        goal: [
-          { value: 'career', label: '职业发展', icon: 'fa fa-briefcase mr-2' },
-          { value: 'skill-upgrade', label: '技能提升', icon: 'fa fa-wrench mr-2' },
-          { value: 'exam', label: '考试认证', icon: 'fa fa-certificate mr-2' },
-          { value: 'hobby', label: '兴趣爱好', icon: 'fa fa-heart mr-2' },
-          { value: 'school', label: '学业辅助', icon: 'fa fa-graduation-cap mr-2' },
-          { value: 'entrepreneurship', label: '创业指导', icon: 'fa fa-rocket mr-2' }
-        ]
-      },
-      selectedPreferences: {
-        field: [],
-        goal: []
-      },
+      
       editField: '',
       modalTitle: '',
       modalLabel: '',
@@ -774,61 +774,22 @@ export default {
     }
   },
   computed: {
-    breadcrumbCurrent() {
-      return this.activePage === 'user-info' ? '用户信息' : '用户设置'
+    isTeacherCertified() {
+      return this.userData.teacherCertStatus === '已认证'
+    },
+    realnameStatusClass() {
+      return this.userData.realnameStatus === '已认证' ? 'text-success font-medium' : 'text-danger font-medium'
+    },
+    teacherCertStatusClass() {
+      return this.userData.teacherCertStatus === '已认证' ? 'text-success' : 
+             this.userData.teacherCertStatus === '审核中' ? 'text-warning' : 'text-danger'
     },
     maskedPhone() {
+      if (!this.userData.phone) return ''
       return this.userData.phone.replace(/(\d{3})\d{4}(\d{4})/, '$1****$2')
-    },
-    selectedPreferencesCount() {
-      return Object.values(this.selectedPreferences).reduce((total, arr) => total + arr.length, 0)
-    },
-    canSavePreferences() {
-      return this.selectedPreferences.field.length > 0 && this.selectedPreferences.goal.length > 0
-    },
-    currentPreferencesDisplay() {
-      const saved = localStorage.getItem('userPreferences')
-      if (!saved) return ''
-      
-      try {
-        const parsed = JSON.parse(saved)
-        if (Object.keys(parsed).length === 0) return ''
-        
-        let html = '<div class="space-y-2">'
-        
-        // 领域偏好
-        if (parsed.field && parsed.field.length > 0) {
-          const fieldDisplay = parsed.field.map(f => {
-            const field = this.preferencesOptions.field.find(opt => opt.value === f)
-            return field ? field.label : f
-          }).join('、')
-          html += `<div><span class="font-medium">学习领域:</span> ${fieldDisplay}</div>`
-        }
-        
-        // 目标偏好
-        if (parsed.goal && parsed.goal.length > 0) {
-          const goalDisplay = parsed.goal.map(g => {
-            const goal = this.preferencesOptions.goal.find(opt => opt.value === g)
-            return goal ? goal.label : g
-          }).join('、')
-          html += `<div><span class="font-medium">学习目标:</span> ${goalDisplay}</div>`
-        }
-        
-        html += '</div>'
-        return html
-      } catch (e) {
-        console.error('解析偏好设置失败:', e)
-        return ''
-      }
     },
     displayedCourses() {
       return this.showAllCourses ? this.myCourses : this.myCourses.slice(0, 6)
-    },
-    teacherCertStatus() {
-      return this.teacherCertInfo.status === '已认证' ? '已认证' : '未认证'
-    },
-    teacherCertStatusClass() {
-      return this.teacherCertInfo.status === '已认证' ? 'text-success' : 'text-danger'
     }
   },
   mounted() {
@@ -840,7 +801,6 @@ export default {
     }
     
     this.loadUserData()
-    this.loadPreferences()
     this.loadFollowedTeachers()
     this.loadTeacherCertInfo()
     
@@ -908,24 +868,28 @@ export default {
     
     // 加载用户数据
     loadUserData() {
-      const storedUserData = localStorage.getItem('bgareaUserData')
       const storedUser = localStorage.getItem('bgareaCurrentUser') || sessionStorage.getItem('bgareaCurrentUser')
       
-      if (storedUserData) {
-        this.userData = JSON.parse(storedUserData)
-      } else if (storedUser) {
+      if (storedUser) {
         const user = JSON.parse(storedUser)
         this.userData = {
-          ...this.userData,
-          username: user.username || this.userData.username,
-          realname: user.realname || this.userData.realname,
-          userId: user.userId || this.userData.userId,
-          phone: user.phone || this.userData.phone,
-          location: user.location || this.userData.location,
-          school: user.school || this.userData.school,
-          avatar: user.avatar || this.userData.avatar,
-          teacherCertStatus: user.teacherCertStatus || this.userData.teacherCertStatus
+          username: user.username || '',
+          realname: user.realname || '',
+          realnameStatus: user.realnameStatus || '未认证',
+          userId: user.userId || '',
+          phone: user.phone || '',
+          location: user.location || '',
+          school: user.school || '',
+          followers: user.followers || 0,
+          courses: user.courses || 0,
+          avatar: user.avatar || 'https://picsum.photos/200/200?random=1',
+          signature: user.signature || '',
+          email: user.email || '',
+          teacherCertStatus: user.teacherCertStatus || '未认证'
         }
+        
+        // 保存到userData便于其他页面使用
+        localStorage.setItem('bgareaUserData', JSON.stringify(this.userData))
       }
     },
     
@@ -982,6 +946,139 @@ export default {
     handleStorageEvent(event) {
       if (event.key === 'userFollowedTeachers') {
         this.loadFollowedTeachers()
+      }
+    },
+    
+    // 显示实名认证模态框
+    showRealnameCertModal() {
+      this.showRealnameModal = true
+    },
+    
+    // 关闭实名认证模态框
+    closeRealnameModal() {
+      this.showRealnameModal = false
+      this.realnameForm.name = ''
+      this.realnameForm.idCard = ''
+    },
+    
+    // 提交实名认证
+    submitRealnameCert() {
+      if (!this.realnameForm.name.trim()) {
+        alert('请输入真实姓名')
+        return
+      }
+      
+      if (!this.realnameForm.idCard.trim() || !/^\d{17}[\dXx]$/.test(this.realnameForm.idCard)) {
+        alert('请输入有效的身份证号码')
+        return
+      }
+      
+      // 更新用户数据
+      this.userData.realname = this.realnameForm.name
+      this.userData.realnameStatus = '已认证'
+      
+      // 更新本地存储
+      this.updateUserData()
+      
+      alert('实名认证提交成功！')
+      this.closeRealnameModal()
+    },
+    
+    // 显示手机绑定模态框
+    showPhoneBindingModal() {
+      this.phoneForm.phone = this.userData.phone || ''
+      this.showPhoneModal = true
+    },
+    
+    // 关闭手机绑定模态框
+    closePhoneModal() {
+      this.showPhoneModal = false
+      this.phoneForm.phone = ''
+      this.phoneForm.verificationCode = ''
+    },
+    
+    // 发送验证码
+    sendVerificationCode() {
+      if (!this.phoneForm.phone || !/^1[3-9]\d{9}$/.test(this.phoneForm.phone)) {
+        alert('请输入有效的手机号码')
+        return
+      }
+      
+      this.codeSending = true
+      this.countdown = 60
+      
+      // 模拟发送验证码
+      console.log(`发送验证码到: ${this.phoneForm.phone}`)
+      
+      this.countdownTimer = setInterval(() => {
+        this.countdown--
+        if (this.countdown <= 0) {
+          clearInterval(this.countdownTimer)
+          this.codeSending = false
+        }
+      }, 1000)
+      
+      alert('验证码已发送，请注意查收')
+    },
+    
+    // 提交手机绑定
+    submitPhoneBinding() {
+      if (!this.phoneForm.phone || !/^1[3-9]\d{9}$/.test(this.phoneForm.phone)) {
+        alert('请输入有效的手机号码')
+        return
+      }
+      
+      if (!this.phoneForm.verificationCode.trim()) {
+        alert('请输入验证码')
+        return
+      }
+      
+      // 模拟验证码验证
+      if (this.phoneForm.verificationCode !== '123456') {
+        alert('验证码错误，请输入123456进行测试')
+        return
+      }
+      
+      // 更新用户数据
+      this.userData.phone = this.phoneForm.phone
+      
+      // 更新本地存储
+      this.updateUserData()
+      
+      alert(`手机号码${this.userData.phone ? '修改' : '绑定'}成功！`)
+      this.closePhoneModal()
+    },
+    
+    // 更新用户数据到本地存储
+    updateUserData() {
+      // 更新bgareaUserData
+      localStorage.setItem('bgareaUserData', JSON.stringify(this.userData))
+      
+      // 同时更新bgareaCurrentUser和bgareaUsers中的对应数据
+      const storedUser = localStorage.getItem('bgareaCurrentUser') || sessionStorage.getItem('bgareaCurrentUser')
+      if (storedUser) {
+        const user = JSON.parse(storedUser)
+        const users = JSON.parse(localStorage.getItem('bgareaUsers') || '[]')
+        const userIndex = users.findIndex(u => u.userId === user.userId)
+        
+        if (userIndex > -1) {
+          // 更新用户列表
+          Object.keys(this.userData).forEach(key => {
+            users[userIndex][key] = this.userData[key]
+          })
+          localStorage.setItem('bgareaUsers', JSON.stringify(users))
+          
+          // 更新当前用户
+          Object.keys(this.userData).forEach(key => {
+            user[key] = this.userData[key]
+          })
+          
+          if (localStorage.getItem('bgareaCurrentUser')) {
+            localStorage.setItem('bgareaCurrentUser', JSON.stringify(user))
+          } else {
+            sessionStorage.setItem('bgareaCurrentUser', JSON.stringify(user))
+          }
+        }
       }
     },
     
@@ -1096,37 +1193,8 @@ export default {
         // 更新用户数据
         this.userData[this.editField] = value
 
-        // 更新本地存储中的用户数据
-        localStorage.setItem('bgareaUserData', JSON.stringify(this.userData))
-
-        // 同时更新用户列表中的对应字段
-        const currentUser = localStorage.getItem('bgareaCurrentUser') || sessionStorage.getItem('bgareaCurrentUser')
-        if (currentUser) {
-          const user = JSON.parse(currentUser)
-          const users = JSON.parse(localStorage.getItem('bgareaUsers') || '[]')
-          const userIndex = users.findIndex(u => u.email === user.email || u.userId === user.userId)
-
-          if (userIndex > -1) {
-            // 更新用户列表中的对应字段
-            users[userIndex][this.editField] = value
-
-            // 如果是用户名，还需要更新其他引用
-            if (this.editField === 'username') {
-              users[userIndex].username = value
-              user.username = value
-            }
-
-            // 保存更新后的用户列表
-            localStorage.setItem('bgareaUsers', JSON.stringify(users))
-
-            // 保存更新后的当前用户
-            if (localStorage.getItem('bgareaCurrentUser')) {
-              localStorage.setItem('bgareaCurrentUser', JSON.stringify(user))
-            } else {
-              sessionStorage.setItem('bgareaCurrentUser', JSON.stringify(user))
-            }
-          }
-        }
+        // 更新本地存储
+        this.updateUserData()
 
         alert('修改成功！')
         this.closeModal()
@@ -1149,7 +1217,7 @@ export default {
       const reader = new FileReader()
       reader.onload = (e) => {
         this.userData.avatar = e.target.result
-        localStorage.setItem('bgareaUserData', JSON.stringify(this.userData))
+        this.updateUserData()
         alert('头像上传成功！')
       }
       reader.readAsDataURL(file)
@@ -1164,65 +1232,15 @@ export default {
       
       // 设置新的定时器，延迟1秒保存
       this.signatureSaveTimer = setTimeout(() => {
-        localStorage.setItem('bgareaUserData', JSON.stringify(this.userData))
+        this.updateUserData()
         console.log('签名已自动保存')
       }, 1000)
-    },
-    
-    loadPreferences() {
-      const saved = localStorage.getItem('userPreferences')
-      if (saved) {
-        try {
-          const parsed = JSON.parse(saved)
-          Object.keys(this.selectedPreferences).forEach(category => {
-            this.selectedPreferences[category] = parsed[category] || []
-          })
-        } catch (e) {
-          console.error('加载偏好设置失败:', e)
-        }
-      }
-    },
-    
-    togglePreference(category, value) {
-      const index = this.selectedPreferences[category].indexOf(value)
-      if (index > -1) {
-        this.selectedPreferences[category].splice(index, 1)
-      } else {
-        this.selectedPreferences[category].push(value)
-      }
-    },
-    
-    resetPreferences() {
-      if (confirm('确定要重置所有偏好选择吗？')) {
-        Object.keys(this.selectedPreferences).forEach(key => {
-          this.selectedPreferences[key] = []
-        })
-      }
-    },
-    
-    savePreferences() {
-      // 收集所有选中的偏好
-      const selectedPreferences = {}
-      Object.keys(this.selectedPreferences).forEach(category => {
-        if (this.selectedPreferences[category].length > 0) {
-          selectedPreferences[category] = this.selectedPreferences[category]
-        }
-      })
-      
-      // 保存到localStorage
-      localStorage.setItem('userPreferences', JSON.stringify(selectedPreferences))
-      localStorage.setItem('preferencesCompleted', 'true')
-      
-      // 模拟保存过程
-      setTimeout(() => {
-        alert('偏好设置已保存！')
-      }, 500)
     },
     
     // 显示教师认证模态框
     showCertificationModal() {
       // 如果已有认证信息，填充到表单
-      if (this.teacherCertInfo.status === '已认证') {
+      if (this.teacherCertInfo.status === '已认证' || this.teacherCertInfo.status === '审核中') {
         Object.keys(this.certForm).forEach(key => {
           if (this.teacherCertInfo[key]) {
             this.certForm[key] = this.teacherCertInfo[key]
@@ -1267,7 +1285,7 @@ export default {
       
       // 更新用户数据中的教师资格认证状态
       this.userData.teacherCertStatus = '审核中'
-      localStorage.setItem('bgareaUserData', JSON.stringify(this.userData))
+      this.updateUserData()
       
       alert('认证信息已提交，正在审核中...')
       this.closeCertModal()
@@ -1278,7 +1296,7 @@ export default {
         this.userData.teacherCertStatus = '已认证'
         
         localStorage.setItem('teacherCertificationInfo', JSON.stringify(this.teacherCertInfo))
-        localStorage.setItem('bgareaUserData', JSON.stringify(this.userData))
+        this.updateUserData()
         
         alert('教师实名认证已通过！')
       }, 10000)
@@ -1343,14 +1361,6 @@ export default {
   @apply text-primary hover:text-primary/80 transition-colors duration-200 cursor-pointer;
 }
 
-/* 偏好设置样式 */
-.preference-chip {
-  @apply px-4 py-2 rounded-full border border-gray-300 text-gray-700 bg-white hover:bg-gray-50 transition-all duration-200 cursor-pointer;
-}
-.preference-chip.selected {
-  @apply bg-primary text-white border-primary;
-}
-
 /* 模态框样式 */
 .modal {
   @apply fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4;
@@ -1397,5 +1407,8 @@ export default {
 }
 .text-danger {
   color: #ef4444;
+}
+.text-warning {
+  color: #f59e0b;
 }
 </style>

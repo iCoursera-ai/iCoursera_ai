@@ -6,7 +6,7 @@
     <div class="container">
       <nav class="breadcrumb">
         <router-link to="/">首页</router-link> > 
-        <router-link to="/category/2">编程开发</router-link> > 
+        <router-link :to="'/category/' + categoryId">{{ categoryName }}</router-link> > 
         <span>{{ course.title }}</span>
       </nav>
     </div>
@@ -24,20 +24,22 @@
                 <i class="fa fa-play-circle text-white text-6xl mb-4 opacity-70 cursor-pointer hover:opacity-100 transition-opacity"></i>
                 <p class="text-white text-lg">点击播放视频</p>
               </div>
-              <video 
-                class="video-element w-full h-full object-contain"
-                ref="videoElement"
-                preload="metadata"
-                @timeupdate="updateProgress"
-                @loadedmetadata="onVideoLoaded"
-                @ended="onVideoEnded"
-                v-show="isPlaying"
-                @error="handleVideoError"
-              >
-                <source src="https://test-videos.co.uk/vids/bigbuckbunny/mp4/h264/720/Big_Buck_Bunny_720_10s_1MB.mp4" type="video/mp4">
-                <source src="https://videos.pexels.com/video-files/3195399/3195399-hd_1920_1080_30fps.mp4" type="video/mp4">
-                您的浏览器不支持视频播放。
-              </video>
+              <div v-if="isPlaying" class="video-wrapper">
+                <video 
+                  class="video-element w-full h-full object-contain"
+                  ref="videoElement"
+                  preload="metadata"
+                  @timeupdate="updateProgress"
+                  @loadedmetadata="onVideoLoaded"
+                  @ended="onVideoEnded"
+                  @error="handleVideoError"
+                  :src="currentVideoUrl"
+                  playsinline
+                  webkit-playsinline
+                >
+                  您的浏览器不支持视频播放。
+                </video>
+              </div>
             </div>
             
             <!-- 视频控制栏 -->
@@ -136,7 +138,7 @@
 
           <!-- 课程简介 -->
           <div class="course-intro" v-if="activeTab === 'intro'">
-            <h3>【王道论坛】欢迎你我，青春无悔！来和大咖朋友交朋友吧啦！</h3>
+            <h3>{{ course.introTitle }}</h3>
             <p>{{ course.description }}</p>
             <div class="tags">
               <span class="tag" v-for="tag in course.tags" :key="tag">{{ tag }}</span>
@@ -218,55 +220,57 @@
           <!-- 课程章节导航 -->
           <div class="course-navigation">
             <div class="course-section-title">
-              操作系统课程
+              {{ courseTitle }}
             </div>
             
             <!-- 第一章 -->
             <div class="border-b border-gray-200">
               <div class="course-section-title flex justify-between items-center cursor-pointer" @click="toggleSection('section1')">
-                <span>第一章</span>
+                <span>第一章 {{ getChapterName('section1') }}</span>
                 <i class="fa" :class="section1Open ? 'fa-angle-down' : 'fa-angle-right'"></i>
               </div>
               <div class="pl-2" v-show="section1Open">
                 <div 
                   class="course-item" 
-                  :class="{ 'active': currentItemId === 2 }"
-                  @click="selectPlaylistItem({ id: 2, type: 'video', title: '1.1 什么是机器学习？- 机器学习与机器视觉介绍' })"
+                  :class="{ 'active': currentVideoIndex === 1 }"
+                  @click="playVideo(1, '第一章 - ' + getVideoTitle(1))"
                 >
                   <div class="course-item-icon course-item-video">
                     <i class="fa fa-play text-xs"></i>
                   </div>
-                  <span>1.1 什么是机器学习？</span>
+                  <span>1.1 {{ getVideoTitle(1) }}</span>
+                  <span class="ml-auto text-xs text-gray-500">{{ getVideoDuration(1) }}</span>
                 </div>
                 <div 
                   class="course-item" 
-                  :class="{ 'active': currentItemId === 3 }"
-                  @click="selectPlaylistItem({ id: 3, type: 'exercise', title: '1.1 课后习题集：机器学习基本概念' })"
+                  :class="{ 'active': false }"
+                  @click="goToExerciseSeries('section_1_1')"
                 >
                   <div class="course-item-icon course-item-exercise">
                     <i class="fa fa-pencil text-xs"></i>
                   </div>
-                  <span>习题1.1</span>
+                  <span>习题1.1：{{ getExerciseTitle(1) }}</span>
                 </div>
                 <div 
                   class="course-item" 
-                  :class="{ 'active': currentItemId === 4 }"
-                  @click="selectPlaylistItem({ id: 4, type: 'video', title: '1.2 监督学习与非监督学习' })"
+                  :class="{ 'active': currentVideoIndex === 2 }"
+                  @click="playVideo(2, '第一章 - ' + getVideoTitle(2))"
                 >
                   <div class="course-item-icon course-item-video">
                     <i class="fa fa-play text-xs"></i>
                   </div>
-                  <span>1.2 监督学习与非监督学习</span>
+                  <span>1.2 {{ getVideoTitle(2) }}</span>
+                  <span class="ml-auto text-xs text-gray-500">{{ getVideoDuration(2) }}</span>
                 </div>
                 <div 
                   class="course-item" 
-                  :class="{ 'active': currentItemId === 5 }"
-                  @click="selectPlaylistItem({ id: 5, type: 'exercise', title: '1.2 课后习题集：监督学习算法' })"
+                  :class="{ 'active': false }"
+                  @click="goToExerciseSeries('section_1_2')"
                 >
                   <div class="course-item-icon course-item-exercise">
                     <i class="fa fa-pencil text-xs"></i>
                   </div>
-                  <span>习题1.2</span>
+                  <span>习题1.2：{{ getExerciseTitle(2) }}</span>
                 </div>
               </div>
             </div>
@@ -274,45 +278,208 @@
             <!-- 第二章 -->
             <div class="border-b border-gray-200">
               <div class="course-section-title flex justify-between items-center cursor-pointer" @click="toggleSection('section2')">
-                <span>第二章</span>
+                <span>第二章 {{ getChapterName('section2') }}</span>
                 <i class="fa" :class="section2Open ? 'fa-angle-down' : 'fa-angle-right'"></i>
               </div>
               <div class="pl-2" v-show="section2Open">
                 <div 
                   class="course-item" 
-                  @click="selectPlaylistItem({ id: 7, type: 'video', title: '2.1 神经网络基础' })"
+                  :class="{ 'active': currentVideoIndex === 3 }"
+                  @click="playVideo(3, '第二章 - ' + getVideoTitle(3))"
                 >
                   <div class="course-item-icon course-item-video">
                     <i class="fa fa-play text-xs"></i>
                   </div>
-                  <span>2.1 神经网络基础</span>
+                  <span>2.1 {{ getVideoTitle(3) }}</span>
+                  <span class="ml-auto text-xs text-gray-500">{{ getVideoDuration(3) }}</span>
                 </div>
                 <div 
                   class="course-item" 
-                  @click="selectPlaylistItem({ id: 8, type: 'exercise', title: '2.1 课后习题集：神经网络基础' })"
+                  :class="{ 'active': false }"
+                  @click="goToExerciseSeries('section_2_1')"
                 >
                   <div class="course-item-icon course-item-exercise">
                     <i class="fa fa-pencil text-xs"></i>
                   </div>
-                  <span>习题2.1</span>
+                  <span>习题2.1：{{ getExerciseTitle(3) }}</span>
                 </div>
                 <div 
                   class="course-item" 
-                  @click="selectPlaylistItem({ id: 9, type: 'video', title: '2.2 卷积神经网络' })"
+                  :class="{ 'active': currentVideoIndex === 4 }"
+                  @click="playVideo(4, '第二章 - ' + getVideoTitle(4))"
                 >
                   <div class="course-item-icon course-item-video">
                     <i class="fa fa-play text-xs"></i>
                   </div>
-                  <span>2.2 卷积神经网络</span>
+                  <span>2.2 {{ getVideoTitle(4) }}</span>
+                  <span class="ml-auto text-xs text-gray-500">{{ getVideoDuration(4) }}</span>
+                </div>
+                <div 
+                  class="course-item" 
+                  :class="{ 'active': false }"
+                  @click="goToExerciseSeries('section_2_2')"
+                >
+                  <div class="course-item-icon course-item-exercise">
+                    <i class="fa fa-pencil text-xs"></i>
+                  </div>
+                  <span>习题2.2：{{ getExerciseTitle(4) }}</span>
                 </div>
               </div>
             </div>
             
-            <!-- 其他章节 -->
-            <div v-for="chapter in otherChapters" :key="chapter.id" class="border-b border-gray-200">
-              <div class="course-section-title flex justify-between items-center cursor-pointer" @click="toggleOtherSection(chapter.id)">
-                <span>{{ chapter.name }}</span>
-                <i class="fa" :class="openSections[chapter.id] ? 'fa-angle-down' : 'fa-angle-right'"></i>
+            <!-- 第三章 -->
+            <div class="border-b border-gray-200">
+              <div class="course-section-title flex justify-between items-center cursor-pointer" @click="toggleOtherSection('section3')">
+                <span>第三章 {{ getChapterName('section3') }}</span>
+                <i class="fa" :class="openSections['section3'] ? 'fa-angle-down' : 'fa-angle-right'"></i>
+              </div>
+              <div class="pl-2" v-show="openSections['section3']">
+                <div 
+                  class="course-item" 
+                  :class="{ 'active': currentVideoIndex === 5 }"
+                  @click="playVideo(5, '第三章 - ' + getVideoTitle(5))"
+                >
+                  <div class="course-item-icon course-item-video">
+                    <i class="fa fa-play text-xs"></i>
+                  </div>
+                  <span>3.1 {{ getVideoTitle(5) }}</span>
+                  <span class="ml-auto text-xs text-gray-500">{{ getVideoDuration(5) }}</span>
+                </div>
+                <div 
+                  class="course-item" 
+                  :class="{ 'active': false }"
+                  @click="goToExerciseSeries('section_3_1')"
+                >
+                  <div class="course-item-icon course-item-exercise">
+                    <i class="fa fa-pencil text-xs"></i>
+                  </div>
+                  <span>习题3.1：{{ getExerciseTitle(5) }}</span>
+                </div>
+                <div 
+                  class="course-item" 
+                  :class="{ 'active': currentVideoIndex === 6 }"
+                  @click="playVideo(6, '第三章 - ' + getVideoTitle(6))"
+                >
+                  <div class="course-item-icon course-item-video">
+                    <i class="fa fa-play text-xs"></i>
+                  </div>
+                  <span>3.2 {{ getVideoTitle(6) }}</span>
+                  <span class="ml-auto text-xs text-gray-500">{{ getVideoDuration(6) }}</span>
+                </div>
+                <div 
+                  class="course-item" 
+                  :class="{ 'active': false }"
+                  @click="goToExerciseSeries('section_3_2')"
+                >
+                  <div class="course-item-icon course-item-exercise">
+                    <i class="fa fa-pencil text-xs"></i>
+                  </div>
+                  <span>习题3.2：{{ getExerciseTitle(6) }}</span>
+                </div>
+              </div>
+            </div>
+            
+            <!-- 第四章 -->
+            <div class="border-b border-gray-200">
+              <div class="course-section-title flex justify-between items-center cursor-pointer" @click="toggleOtherSection('section4')">
+                <span>第四章 {{ getChapterName('section4') }}</span>
+                <i class="fa" :class="openSections['section4'] ? 'fa-angle-down' : 'fa-angle-right'"></i>
+              </div>
+              <div class="pl-2" v-show="openSections['section4']">
+                <div 
+                  class="course-item" 
+                  :class="{ 'active': currentVideoIndex === 7 }"
+                  @click="playVideo(7, '第四章 - ' + getVideoTitle(7))"
+                >
+                  <div class="course-item-icon course-item-video">
+                    <i class="fa fa-play text-xs"></i>
+                  </div>
+                  <span>4.1 {{ getVideoTitle(7) }}</span>
+                  <span class="ml-auto text-xs text-gray-500">{{ getVideoDuration(7) }}</span>
+                </div>
+                <div 
+                  class="course-item" 
+                  :class="{ 'active': false }"
+                  @click="goToExerciseSeries('section_4_1')"
+                >
+                  <div class="course-item-icon course-item-exercise">
+                    <i class="fa fa-pencil text-xs"></i>
+                  </div>
+                  <span>习题4.1：{{ getExerciseTitle(7) }}</span>
+                </div>
+                <div 
+                  class="course-item" 
+                  :class="{ 'active': currentVideoIndex === 8 }"
+                  @click="playVideo(8, '第四章 - ' + getVideoTitle(8))"
+                >
+                  <div class="course-item-icon course-item-video">
+                    <i class="fa fa-play text-xs"></i>
+                  </div>
+                  <span>4.2 {{ getVideoTitle(8) }}</span>
+                  <span class="ml-auto text-xs text-gray-500">{{ getVideoDuration(8) }}</span>
+                </div>
+                <div 
+                  class="course-item" 
+                  :class="{ 'active': false }"
+                  @click="goToExerciseSeries('section_4_2')"
+                >
+                  <div class="course-item-icon course-item-exercise">
+                    <i class="fa fa-pencil text-xs"></i>
+                  </div>
+                  <span>习题4.2：{{ getExerciseTitle(8) }}</span>
+                </div>
+              </div>
+            </div>
+            
+            <!-- 第五章 -->
+            <div class="border-b border-gray-200">
+              <div class="course-section-title flex justify-between items-center cursor-pointer" @click="toggleOtherSection('section5')">
+                <span>第五章 {{ getChapterName('section5') }}</span>
+                <i class="fa" :class="openSections['section5'] ? 'fa-angle-down' : 'fa-angle-right'"></i>
+              </div>
+              <div class="pl-2" v-show="openSections['section5']">
+                <div 
+                  class="course-item" 
+                  :class="{ 'active': currentVideoIndex === 9 }"
+                  @click="playVideo(9, '第五章 - ' + getVideoTitle(9))"
+                >
+                  <div class="course-item-icon course-item-video">
+                    <i class="fa fa-play text-xs"></i>
+                  </div>
+                  <span>5.1 {{ getVideoTitle(9) }}</span>
+                  <span class="ml-auto text-xs text-gray-500">{{ getVideoDuration(9) }}</span>
+                </div>
+                <div 
+                  class="course-item" 
+                  :class="{ 'active': false }"
+                  @click="goToExerciseSeries('section_5_1')"
+                >
+                  <div class="course-item-icon course-item-exercise">
+                    <i class="fa fa-pencil text-xs"></i>
+                  </div>
+                  <span>习题5.1：{{ getExerciseTitle(9) }}</span>
+                </div>
+                <div 
+                  class="course-item" 
+                  :class="{ 'active': currentVideoIndex === 10 }"
+                  @click="playVideo(10, '第五章 - ' + getVideoTitle(10))"
+                >
+                  <div class="course-item-icon course-item-video">
+                    <i class="fa fa-play text-xs"></i>
+                  </div>
+                  <span>5.2 {{ getVideoTitle(10) }}</span>
+                  <span class="ml-auto text-xs text-gray-500">{{ getVideoDuration(10) }}</span>
+                </div>
+                <div 
+                  class="course-item" 
+                  :class="{ 'active': false }"
+                  @click="goToExerciseSeries('section_5_2')"
+                >
+                  <div class="course-item-icon course-item-exercise">
+                    <i class="fa fa-pencil text-xs"></i>
+                  </div>
+                  <span>习题5.2：{{ getExerciseTitle(10) }}</span>
+                </div>
               </div>
             </div>
           </div>
@@ -327,8 +494,9 @@
 <script>
 import Header from '@/components/Header.vue'
 import Footer from '@/components/Footer.vue'
-import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
+import { ref, computed, onMounted, onBeforeUnmount, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
+import pinyin from 'pinyin'
 
 export default {
   name: 'VideoPlayer',
@@ -340,12 +508,18 @@ export default {
     const route = useRoute()
     const router = useRouter()
     
+    // 课程类别信息
+    const categoryId = ref('2')
+    const categoryName = ref('编程开发')
+    
     // 视频播放状态
     const isPlaying = ref(false)
     const currentTime = ref(0)
     const duration = ref(0)
     const isFullscreenV2 = ref(false)
     const autoPlay = ref(true)
+    const currentVideoIndex = ref(1) // 当前播放的视频索引
+    const currentVideoUrl = ref('') // 当前视频URL
     
     // 互动状态
     const isLiked = ref(false)
@@ -357,42 +531,63 @@ export default {
     const sortBy = ref('all')
     const newComment = ref('')
     
-    // 播放列表状态
-    const currentItemId = ref(2)
-    
     // 课程章节导航状态
     const section1Open = ref(true)
     const section2Open = ref(false)
     const openSections = ref({})
     
-    // 其他章节数据
-    const otherChapters = ref([
-      { id: 'section3', name: '第三章' },
-      { id: 'section4', name: '第四章' },
-      { id: 'section5', name: '第五章' },
-      { id: 'section6', name: '第六章' },
-      { id: 'section7', name: '第七章' },
-      { id: 'section8', name: '第八章' }
-    ])
-    
     // 课程数据
     const course = ref({
-      id: route.params.courseId || 1,
+      id: parseInt(route.params.courseId) || 1,
       title: '王道计算机考研操作系统',
+      introTitle: '【王道论坛】欢迎你我，青春无悔！来和大咖朋友交朋友吧啦！',
       updateTime: '2019-10-19 14:02:39',
       description: '自从在发表面试的2024考研《恭喜你你》、《祝你心自由》、《冲刺版》、《冲刺版》、《高数版》、《高数版》，学好就地理学对压正的，可能我在某些要多套版的教材你的动力。',
       tags: ['操作系统', '考研', '教育', '计算机', '王道', '考研专题']
     })
     
-    // 讲师数据 - 添加更多信息
-    const instructor = ref({
-      name: '王道计算机',
-      fans: '123.0万',
-      description: '感谢你我是计算机专业学子...',
-      userId: 'teacher_wangdao', // 添加用户ID
-      department: '计算机学院',
-      avatar: 'https://picsum.photos/48/48?random=50'
+    // 计算课程标题
+    const courseTitle = computed(() => {
+      const category = getCategoryFromCourse()
+      if (category === 'computer') {
+        return '操作系统课程'
+      } else if (category === 'business') {
+        return '商业分析课程'
+      } else {
+        return 'UI/UX设计课程'
+      }
     })
+    
+    // 讲师数据
+    const instructor = ref({
+      name: '',
+      fans: '0',
+      description: '',
+      userId: '',
+      department: '',
+      avatar: '👤'  // 默认头像
+    })
+
+    // 格式化粉丝数
+    const formatFansCount = (views) => {
+      const fans = Math.floor(views * 0.05) // 假设5%的观看者成为粉丝
+      if (fans >= 10000) {
+        return `${(fans / 10000).toFixed(1)}万`
+      } else if (fans >= 1000) {
+        return `${(fans / 1000).toFixed(1)}千`
+      }
+      return fans.toString()
+    }
+
+    // 根据类别获取部门
+    const getDepartmentByCategory = (category) => {
+      const departments = {
+        computer: '计算机学院',
+        business: '商学院',
+        design: '设计学院'
+      }
+      return departments[category] || '未分类学院'
+    }
     
     // 评论数据
     const comments = ref([
@@ -422,6 +617,47 @@ export default {
       }
     ])
     
+    // 视频URL列表 - 使用国内可访问的视频源
+    const videoUrls = {
+      computer: [
+        // 国内可访问的视频源
+        'https://sf1-cdn-tos.huoshanstatic.com/obj/media-fe/xgplayer_doc_video/mp4/xgplayer-demo-360p.mp4',
+        'https://sf1-cdn-tos.huoshanstatic.com/obj/media-fe/xgplayer_doc_video/mp4/xgplayer-demo-360p.mp4',
+        'https://media.w3.org/2010/05/video/movie_300.mp4',
+        'https://media.w3.org/2010/05/sintel/trailer.mp4',
+        'https://media.w3.org/2010/05/bunny/trailer.mp4',
+        'https://media.w3.org/2010/05/video/movie_300.mp4',
+        'https://media.w3.org/2010/05/sintel/trailer.mp4',
+        'https://media.w3.org/2010/05/bunny/trailer.mp4',
+        'https://media.w3.org/2010/05/video/movie_300.mp4',
+        'https://media.w3.org/2010/05/sintel/trailer.mp4'
+      ],
+      business: [
+        'https://media.w3.org/2010/05/sintel/trailer.mp4',
+        'https://media.w3.org/2010/05/bunny/trailer.mp4',
+        'https://media.w3.org/2010/05/video/movie_300.mp4',
+        'https://media.w3.org/2010/05/sintel/trailer.mp4',
+        'https://media.w3.org/2010/05/bunny/trailer.mp4',
+        'https://media.w3.org/2010/05/video/movie_300.mp4',
+        'https://media.w3.org/2010/05/sintel/trailer.mp4',
+        'https://media.w3.org/2010/05/bunny/trailer.mp4',
+        'https://media.w3.org/2010/05/video/movie_300.mp4',
+        'https://media.w3.org/2010/05/sintel/trailer.mp4'
+      ],
+      design: [
+        'https://media.w3.org/2010/05/sintel/trailer.mp4',
+        'https://media.w3.org/2010/05/bunny/trailer.mp4',
+        'https://media.w3.org/2010/05/video/movie_300.mp4',
+        'https://media.w3.org/2010/05/sintel/trailer.mp4',
+        'https://media.w3.org/2010/05/bunny/trailer.mp4',
+        'https://media.w3.org/2010/05/video/movie_300.mp4',
+        'https://media.w3.org/2010/05/sintel/trailer.mp4',
+        'https://media.w3.org/2010/05/bunny/trailer.mp4',
+        'https://media.w3.org/2010/05/video/movie_300.mp4',
+        'https://media.w3.org/2010/05/sintel/trailer.mp4'
+      ]
+    }
+    
     // DOM 引用
     const videoElement = ref(null)
     const videoContainer = ref(null)
@@ -446,12 +682,431 @@ export default {
     })
     
     // 方法
+    // 从课程信息获取类别
+    const getCategoryFromCourse = () => {
+      const savedCourse = localStorage.getItem('selectedCourse')
+      if (savedCourse) {
+        try {
+          const courseData = JSON.parse(savedCourse)
+          return courseData.category || 'computer'
+        } catch (error) {
+          return 'computer'
+        }
+      }
+      return 'computer'
+    }
+    
+    // 加载课程信息
+    // 修改 loadCourseData() 函数（约在第230行开始）：
+    const loadCourseData = () => {
+      const savedCourse = localStorage.getItem('selectedCourse')
+      if (savedCourse) {
+        try {
+          const courseData = JSON.parse(savedCourse)
+          console.log('从首页传递的课程数据:', courseData) // 调试用
+
+          // 更新课程信息
+          course.value.id = courseData.id || course.value.id
+          course.value.title = courseData.title || course.value.title
+          course.value.description = courseData.description || course.value.description
+
+          // 根据类别设置课程信息
+          const category = courseData.category || 'computer'
+          setCourseDetailsByCategory(category)
+
+          // 设置课程简介标题
+          setIntroTitle(category, courseData.title)
+
+          // 关键：从首页数据中获取老师信息
+          if (courseData.teacher) {
+            // 直接使用首页传递的老师名字
+            instructor.value.name = courseData.teacher
+
+            // 根据课程类型设置老师信息
+            if (category === 'computer') {
+              instructor.value.description = '计算机教育专家，专注编程和计算机基础教学'
+              instructor.value.department = '计算机学院'
+            } else if (category === 'business') {
+              instructor.value.description = '商业分析专家，拥有多年企业咨询经验'
+              instructor.value.department = '商学院'
+            } else {
+              instructor.value.description = '设计专家，拥有丰富的创意设计经验'
+              instructor.value.department = '设计学院'
+            }
+
+            // 生成用户ID（简单处理，移除特殊字符）
+            instructor.value.userId = `teacher_${courseData.teacher.replace(/[^\w\u4e00-\u9fa5]/g, '_')}`
+
+            // 根据观看量估算粉丝数
+            if (courseData.views) {
+              const viewsStr = courseData.views
+              let viewsNum = 0
+
+              if (viewsStr.includes('万')) {
+                viewsNum = parseFloat(viewsStr) * 10000
+              } else if (viewsStr.includes('千')) {
+                viewsNum = parseFloat(viewsStr) * 1000
+              } else {
+                viewsNum = parseInt(viewsStr) || 0
+              }
+
+              // 假设5%的观看者成为粉丝
+              const fans = Math.floor(viewsNum * 0.05)
+              if (fans >= 10000) {
+                instructor.value.fans = `${(fans / 10000).toFixed(1)}万`
+              } else if (fans >= 1000) {
+                instructor.value.fans = `${(fans / 1000).toFixed(1)}千`
+              } else {
+                instructor.value.fans = fans.toString()
+              }
+            } else {
+              instructor.value.fans = '1.2万'
+            }
+
+            // 设置头像（使用老师名字生成不同的随机头像）
+            const nameHash = courseData.teacher.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0)
+            instructor.value.avatar = `https://picsum.photos/48/48?random=${nameHash}`
+          }
+
+          // 设置初始视频
+          setTimeout(() => {
+            playVideo(1, course.value.title)
+          }, 100)
+
+        } catch (error) {
+          console.error('解析课程数据失败:', error)
+          setDefaultCourseDetails()
+        }
+      } else {
+        setDefaultCourseDetails()
+      }
+    }
+    
+    // 设置课程简介标题
+    const setIntroTitle = (category, courseTitle) => {
+      const introTitles = {
+        computer: `【${courseTitle}】欢迎你我，青春无悔！来和大咖朋友交朋友吧啦！`,
+        business: `【${courseTitle}】实战演练，数据驱动！一起探索商业分析的奥秘！`,
+        design: `【${courseTitle}】创意无限，设计未来！开启你的设计之旅！`
+      }
+      
+      course.value.introTitle = introTitles[category] || `【${courseTitle}】欢迎你我，青春无悔！来和大咖朋友交朋友吧啦！`
+    }
+    
+    // 根据类别设置课程详情
+    const setCourseDetailsByCategory = (category) => {
+      // 设置面包屑导航
+      if (category === 'computer') {
+        categoryId.value = '2'
+        categoryName.value = '编程开发'
+      } else if (category === 'business') {
+        categoryId.value = '5'
+        categoryName.value = '商业管理'
+      } else {
+        categoryId.value = '6'
+        categoryName.value = '设计创意'
+      }
+      
+      // 设置课程标签
+      const tagsByCategory = {
+        computer: ['操作系统', '考研', '教育', '计算机', '王道', '考研专题', '计算机基础', '系统编程'],
+        business: ['商业分析', '数据分析', '数据驱动', '决策支持', '商业智能', '市场分析', '企业战略'],
+        design: ['UI设计', 'UX设计', '用户体验', '交互设计', '界面设计', '原型设计', '设计思维']
+      }
+      
+      course.value.tags = tagsByCategory[category] || course.value.tags
+      
+      // 设置讲师信息
+      setInstructorByCategory(category)
+    }
+    
+    // 根据类别设置讲师信息
+    // 修改 setInstructorByCategory() 函数（约在第380行）：
+    const setInstructorByCategory = (category) => {
+      // 如果已经有老师信息（从首页传递的），就不要覆盖
+      if (instructor.value.name && instructor.value.name !== '') {
+        console.log('使用首页传递的老师信息:', instructor.value.name)
+        return
+      }
+
+      // 只有在没有老师信息时才使用默认值
+      const instructorsByCategory = {
+        computer: {
+          name: '王道计算机',
+          fans: '123.0万',
+          description: '计算机教育专家，专注操作系统和计算机基础教学15年，培养了大量计算机专业人才。',
+          userId: 'teacher_wangdao',
+          department: '计算机学院'
+        },
+        business: {
+          name: '李商业分析师',
+          fans: '89.5万',
+          description: '资深商业分析师，拥有10年企业咨询和数据分析经验，擅长数据驱动决策。',
+          userId: 'teacher_business_li',
+          department: '商学院'
+        },
+        design: {
+          name: '张设计师',
+          fans: '156.3万',
+          description: '知名UI/UX设计师，曾任多家互联网公司设计总监，设计作品获得多项国际大奖。',
+          userId: 'teacher_design_zhang',
+          department: '设计学院'
+        }
+      }
+
+      const instructorInfo = instructorsByCategory[category] || instructorsByCategory.computer
+      Object.assign(instructor.value, instructorInfo)
+    }
+    
+    // 设置默认课程详情
+    const setDefaultCourseDetails = () => {
+      const category = 'computer'
+      setCourseDetailsByCategory(category)
+      setIntroTitle(category, course.value.title)
+      setTimeout(() => {
+        playVideo(1, course.value.title)
+      }, 100)
+    }
+    
+    // 获取章节名称
+    const getChapterName = (sectionId) => {
+      const category = getCategoryFromCourse()
+      const chapters = {
+        computer: {
+          section1: '操作系统引论',
+          section2: '进程管理',
+          section3: '处理机调度',
+          section4: '存储器管理',
+          section5: '设备管理'
+        },
+        business: {
+          section1: '商业分析导论',
+          section2: '数据收集',
+          section3: '统计分析',
+          section4: '预测建模',
+          section5: '商业决策'
+        },
+        design: {
+          section1: '设计基础',
+          section2: '用户研究',
+          section3: '交互设计',
+          section4: '视觉设计',
+          section5: '原型制作'
+        }
+      }
+      
+      return chapters[category]?.[sectionId] || ''
+    }
+    
+    // 获取视频标题
+    const getVideoTitle = (index) => {
+      const category = getCategoryFromCourse()
+      const titles = {
+        computer: [
+          '操作系统概述',
+          '进程概念',
+          '处理机调度',
+          '进程通信',
+          '死锁处理',
+          '内存管理',
+          '文件系统',
+          '设备管理',
+          '操作系统接口',
+          '系统安全'
+        ],
+        business: [
+          '商业分析定义',
+          '数据收集方法',
+          '描述性统计',
+          '预测模型',
+          '数据可视化',
+          '商业报告',
+          '案例分析',
+          '战略规划',
+          '决策支持',
+          '绩效评估'
+        ],
+        design: [
+          '设计思维',
+          '用户研究',
+          '信息架构',
+          '交互模式',
+          '视觉设计',
+          '原型工具',
+          '设计评审',
+          '用户体验',
+          '界面设计',
+          '设计交付'
+        ]
+      }
+      
+      return titles[category]?.[index - 1] || `课程内容 ${index}`
+    }
+    
+    // 获取习题标题
+    const getExerciseTitle = (index) => {
+      const category = getCategoryFromCourse()
+      const titles = {
+        computer: [
+          '操作系统基础',
+          '进程管理练习',
+          '调度算法应用',
+          '死锁问题解决',
+          '内存管理实践',
+          '文件系统操作',
+          '设备管理练习',
+          '系统接口应用',
+          '安全机制实践',
+          '综合案例分析'
+        ],
+        business: [
+          '商业分析基础',
+          '数据收集练习',
+          '统计分析应用',
+          '模型构建实践',
+          '报告撰写练习',
+          '案例研究分析',
+          '战略规划练习',
+          '决策模拟实践',
+          '绩效评估应用',
+          '综合商业分析'
+        ],
+        design: [
+          '设计思维练习',
+          '用户研究实践',
+          '交互设计任务',
+          '视觉设计练习',
+          '原型制作实践',
+          '设计评审练习',
+          '用户体验测试',
+          '界面设计任务',
+          '设计交付练习',
+          '综合设计项目'
+        ]
+      }
+      
+      return titles[category]?.[index - 1] || `基础练习 ${index}`
+    }
+    
+    // 获取视频时长
+    const getVideoDuration = (index) => {
+      const durations = ['45:20', '38:45', '52:10', '41:25', '48:30', '44:15', '50:20', '39:40', '47:30', '43:20']
+      return durations[index - 1] || '45:00'
+    }
+    
+    // 播放视频
+    const playVideo = (index, title) => {
+      const category = getCategoryFromCourse()
+      const videoList = videoUrls[category] || videoUrls.computer
+      
+      // 设置当前视频索引
+      currentVideoIndex.value = index
+      
+      // 设置视频URL（循环使用视频列表）
+      const videoIndex = (index - 1) % videoList.length
+      currentVideoUrl.value = videoList[videoIndex]
+      
+      // 更新课程标题为当前视频标题
+      if (title) {
+        course.value.title = title
+      }
+      
+      // 开始播放
+      setTimeout(() => {
+        if (videoElement.value) {
+          videoElement.value.load()
+          videoElement.value.play().then(() => {
+            isPlaying.value = true
+          }).catch(error => {
+            console.error('视频播放失败:', error)
+            showNotification('视频播放失败，请重试')
+          })
+        }
+      }, 100)
+      
+      showNotification(`正在播放：${title || getVideoTitle(index)}`)
+    }
+    
+    // 跳转到习题系列页面 - 修复路由参数问题
+    const goToExerciseSeries = (seriesId) => {
+      const category = getCategoryFromCourse()
+      const courseTitle = course.value.title
+
+      // 根据seriesId获取对应的习题标题
+      let exerciseTitle = ''
+      const chapterNumber = seriesId.split('_')[1] // 提取章号
+      const sectionNumber = seriesId.split('_')[2] // 提取节号
+
+      if (chapterNumber && sectionNumber) {
+        // 根据章节号获取对应的习题标题
+        const videoIndex = (parseInt(chapterNumber) - 1) * 2 + parseInt(sectionNumber)
+        exerciseTitle = getExerciseTitle(videoIndex)
+      } else {
+        exerciseTitle = '课后习题集'
+      }
+
+      // 完整的习题集标题
+      const fullTitle = `${chapterNumber}.${sectionNumber} 课后习题集：${exerciseTitle}`
+
+      // 保存习题信息到localStorage，供ExerciseSeries页面使用
+      const exerciseInfo = {
+        seriesId: seriesId,
+        courseTitle: courseTitle,
+        courseId: course.value.id,
+        category: category,
+        title: fullTitle, // 传递完整的标题
+        exerciseTitle: exerciseTitle // 单独传递习题标题
+      }
+
+      localStorage.setItem('currentExercise', JSON.stringify(exerciseInfo))
+
+      // 跳转到习题系列页面，传递正确的seriesId参数
+      router.push({
+        name: 'ExerciseSeries',
+        params: {
+          courseId: course.value.id,
+          seriesId: seriesId
+        },
+        query: {
+          title: fullTitle, // 在query中也传递标题
+          category: category,
+          exerciseTitle: exerciseTitle
+        }
+      })
+    }
+    
+    // 跳转到老师空间
+    const goToTeacherSpace = (teacher) => {
+      const teacherInfo = {
+        name: teacher.name,
+        userId: teacher.userId,
+        department: teacher.department,
+        avatar: teacher.avatar,
+        description: teacher.description
+      }
+      
+      localStorage.setItem('currentTeacherInfo', JSON.stringify(teacherInfo))
+      
+      router.push({
+        path: '/teacher-space',
+        query: {
+          teacherId: teacher.userId,
+          teacherName: teacher.name
+        }
+      })
+    }
+    
+    // 视频播放相关方法
     const togglePlay = () => {
       if (!videoElement.value) return
       
       if (videoElement.value.paused) {
-        videoElement.value.play()
-        isPlaying.value = true
+        videoElement.value.play().then(() => {
+          isPlaying.value = true
+        }).catch(error => {
+          console.error('播放失败:', error)
+          showNotification('播放失败，请重试')
+        })
       } else {
         videoElement.value.pause()
         isPlaying.value = false
@@ -491,7 +1146,7 @@ export default {
       videoElement.value.currentTime = percentage * duration.value
     }
     
-    // 新的全屏功能
+    // 全屏功能
     const toggleFullscreenV2 = () => {
       if (!videoContainer.value) return
       
@@ -518,7 +1173,6 @@ export default {
       isFullscreenV2.value = true
       showNotification('已进入沉浸式全屏模式')
       
-      // 全屏时添加特殊样式
       document.body.classList.add('video-fullscreen-active')
     }
     
@@ -536,7 +1190,6 @@ export default {
       isFullscreenV2.value = false
       showNotification('已退出全屏模式')
       
-      // 移除全屏样式
       document.body.classList.remove('video-fullscreen-active')
     }
     
@@ -554,28 +1207,19 @@ export default {
     }
     
     const prevVideo = () => {
-      if (currentItemId.value > 1) {
-        currentItemId.value -= 1
-        selectVideoById(currentItemId.value)
-        showNotification('切换到上一集')
+      if (currentVideoIndex.value > 1) {
+        playVideo(currentVideoIndex.value - 1, getVideoTitle(currentVideoIndex.value - 1))
       } else {
         showNotification('已经是第一集了')
       }
     }
     
     const nextVideo = () => {
-      if (currentItemId.value < 10) { // 假设有10个章节
-        currentItemId.value += 1
-        selectVideoById(currentItemId.value)
-        showNotification('切换到下一集')
+      if (currentVideoIndex.value < 10) {
+        playVideo(currentVideoIndex.value + 1, getVideoTitle(currentVideoIndex.value + 1))
       } else {
         showNotification('已经是最后一集了')
       }
-    }
-    
-    const selectVideoById = (id) => {
-      currentItemId.value = id
-      showNotification(`切换到第${id}节`)
     }
     
     // 关注/取消关注讲师
@@ -585,57 +1229,53 @@ export default {
       showNotification(isFollowing.value ? '已关注讲师' : '已取消关注')
     }
     
-    // 保存关注数据到 localStorage
     const saveFollowData = () => {
-      // 获取当前关注的老师列表
-      const followedTeachers = JSON.parse(localStorage.getItem('userFollowedTeachers') || '[]')
+      const currentUser = JSON.parse(localStorage.getItem('bgareaCurrentUser') || sessionStorage.getItem('bgareaCurrentUser') || '{}')
+      const userId = currentUser.userId || 'default'
+      const followedTeachers = JSON.parse(localStorage.getItem(`user_${userId}_followedTeachers`) || '[]')
       
       const teacherData = {
-        id: Date.now(), // 使用时间戳作为唯一ID
-        userId: instructor.value.userId || `teacher_${instructor.value.name}_${Date.now()}`, // 使用现有userId或生成新的
+        id: Date.now(),
+        userId: instructor.value.userId,
         name: instructor.value.name,
-        department: instructor.value.department || '计算机学院',
-        avatar: instructor.value.avatar || 'https://picsum.photos/48/48?random=' + Math.floor(Math.random() * 100),
+        department: instructor.value.department,
+        avatar: instructor.value.avatar,
         followedAt: new Date().toISOString().split('T')[0]
       }
 
       if (isFollowing.value) {
-        // 添加到关注列表（避免重复）
-        const existingIndex = followedTeachers.findIndex(t => t.name === teacherData.name)
+        const existingIndex = followedTeachers.findIndex(t => t.userId === teacherData.userId)
         if (existingIndex === -1) {
           followedTeachers.push(teacherData)
-          localStorage.setItem('userFollowedTeachers', JSON.stringify(followedTeachers))
+          localStorage.setItem(`user_${userId}_followedTeachers`, JSON.stringify(followedTeachers))
           
-          // 触发storage事件通知个人中心页面
           window.dispatchEvent(new StorageEvent('storage', {
             key: 'userFollowedTeachers',
             newValue: JSON.stringify(followedTeachers)
           }))
           
-          // 同时触发自定义事件（同页面内更新）
           window.dispatchEvent(new CustomEvent('followUpdated'))
         }
       } else {
-        // 从关注列表中移除
-        const updatedTeachers = followedTeachers.filter(t => t.name !== teacherData.name)
+        const updatedTeachers = followedTeachers.filter(t => t.userId !== teacherData.userId)
         localStorage.setItem('userFollowedTeachers', JSON.stringify(updatedTeachers))
         
-        // 触发storage事件
         window.dispatchEvent(new StorageEvent('storage', {
           key: 'userFollowedTeachers',
           newValue: JSON.stringify(updatedTeachers)
         }))
         
-        // 触发自定义事件
         window.dispatchEvent(new CustomEvent('followUpdated'))
       }
     }
     
-    // 加载关注状态 - 修复版本
+    // 加载关注状态
     const loadFollowStatus = () => {
-      const followedTeachers = JSON.parse(localStorage.getItem('userFollowedTeachers') || '[]')
-      // 检查当前讲师是否在关注列表中
-      const isTeacherFollowed = followedTeachers.some(teacher => teacher.name === instructor.value.name)
+      const currentUser = JSON.parse(localStorage.getItem('bgareaCurrentUser') || sessionStorage.getItem('bgareaCurrentUser') || '{}')
+      const userId = currentUser.userId || 'default'
+      const followedTeachers = JSON.parse(localStorage.getItem(`user_${userId}_followedTeachers`) || '[]')
+
+      const isTeacherFollowed = followedTeachers.some(teacher => teacher.userId === instructor.value.userId)
       isFollowing.value = isTeacherFollowed
     }
     
@@ -643,8 +1283,10 @@ export default {
       isLiked.value = !isLiked.value
       likeCount.value += isLiked.value ? 1 : -1
 
-      // 保存点赞数据到localStorage
-      const likes = JSON.parse(localStorage.getItem('userLikes') || '[]')
+      const currentUser = JSON.parse(localStorage.getItem('bgareaCurrentUser') || sessionStorage.getItem('bgareaCurrentUser') || '{}')
+      const userId = currentUser.userId || 'default'
+      const likes = JSON.parse(localStorage.getItem(`user_${userId}_likes`) || '[]')
+
       const likeData = {
         id: `like_${course.value.id}_${Date.now()}`,
         courseId: course.value.id,
@@ -655,21 +1297,18 @@ export default {
       }
 
       if (isLiked.value) {
-        // 添加到点赞列表
         if (!likes.find(l => l.courseId === course.value.id)) {
           likes.push(likeData)
         }
       } else {
-        // 从点赞列表中移除
         const index = likes.findIndex(l => l.courseId === course.value.id)
         if (index !== -1) {
           likes.splice(index, 1)
         }
       }
 
-      localStorage.setItem('userLikes', JSON.stringify(likes))
+      localStorage.setItem(`user_${userId}_likes`, JSON.stringify(likes))
 
-      // 触发storage事件通知收藏管理页面
       window.dispatchEvent(new StorageEvent('storage', {
         key: 'userLikes',
         newValue: JSON.stringify(likes)
@@ -682,34 +1321,33 @@ export default {
       isFavorited.value = !isFavorited.value
       favoriteCount.value += isFavorited.value ? 1 : -1
 
-      // 存储收藏数据
-      const favorites = JSON.parse(localStorage.getItem('userFavorites') || '[]')
+      const currentUser = JSON.parse(localStorage.getItem('bgareaCurrentUser') || sessionStorage.getItem('bgareaCurrentUser') || '{}')
+      const userId = currentUser.userId || 'default'
+      const favorites = JSON.parse(localStorage.getItem(`user_${userId}_favorites`) || '[]')
+
       const favoriteData = {
         id: course.value.id,
         name: course.value.title,
         teacher: instructor.value.name,
         status: 'ongoing',
         collectedAt: new Date().toISOString().split('T')[0],
-        category: 'computer',
+        category: getCategoryFromCourse(),
         description: course.value.description
       }
 
       if (isFavorited.value) {
-        // 添加到收藏
         if (!favorites.find(f => f.id === favoriteData.id)) {
           favorites.push(favoriteData)
         }
       } else {
-        // 从收藏中移除
         const index = favorites.findIndex(f => f.id === favoriteData.id)
         if (index !== -1) {
           favorites.splice(index, 1)
         }
       }
 
-      localStorage.setItem('userFavorites', JSON.stringify(favorites))
+      localStorage.setItem(`user_${userId}_favorites`, JSON.stringify(favorites))
 
-      // 触发storage事件通知收藏管理页面
       window.dispatchEvent(new StorageEvent('storage', {
         key: 'userFavorites',
         newValue: JSON.stringify(favorites)
@@ -722,7 +1360,6 @@ export default {
       toggleFavorite()
 
       if (isFavorited.value) {
-        // 显示跳转提示
         setTimeout(() => {
           if (confirm('收藏成功！是否前往收藏管理页面查看？')) {
             goToFavorites()
@@ -736,7 +1373,10 @@ export default {
     }
 
     const saveHistoryData = () => {
-      const history = JSON.parse(localStorage.getItem('userHistory') || '[]')
+      const currentUser = JSON.parse(localStorage.getItem('bgareaCurrentUser') || sessionStorage.getItem('bgareaCurrentUser') || '{}')
+      const userId = currentUser.userId || 'default'
+      const history = JSON.parse(localStorage.getItem(`user_${userId}_history`) || '[]')
+
       const historyData = {
         id: `history_${course.value.id}_${Date.now()}`,
         courseId: course.value.id,
@@ -746,22 +1386,17 @@ export default {
         progress: duration.value > 0 ? Math.floor((currentTime.value / duration.value) * 100) : 0
       }
 
-      // 检查是否已经有相同的历史记录
       const existingIndex = history.findIndex(h => h.courseId === course.value.id)
 
       if (existingIndex !== -1) {
-        // 更新现有的历史记录
         history[existingIndex] = historyData
       } else {
-        // 添加新的历史记录
         history.push(historyData)
       }
 
-      // 只保留最近的20条历史记录
       const recentHistory = history.slice(-20)
-      localStorage.setItem('userHistory', JSON.stringify(recentHistory))
+      localStorage.setItem(`user_${userId}_history`, JSON.stringify(recentHistory))
 
-      // 触发storage事件通知收藏管理页面
       window.dispatchEvent(new StorageEvent('storage', {
         key: 'userHistory',
         newValue: JSON.stringify(recentHistory)
@@ -801,48 +1436,6 @@ export default {
     
     const loadMoreComments = () => {
       showNotification('加载更多评论功能开发中')
-    }
-    
-    const toggleAutoPlay = () => {
-      showNotification(`自动播放 ${autoPlay.value ? '开启' : '关闭'}`)
-    }
-    
-    const selectPlaylistItem = (item) => {
-      currentItemId.value = item.id
-      
-      if (item.type === 'exercise') {
-        // 跳转到习题集页面
-        router.push(`/course/${course.value.id}/exercise/${item.seriesId}`)
-      } else if (item.type === 'video') {
-        // 播放视频
-        if (!isPlaying.value) {
-          togglePlay()
-        }
-        showNotification(`正在播放：${item.title}`)
-      }
-    }
-    
-    // 跳转到老师空间
-    const goToTeacherSpace = (teacher) => {
-      // 先保存当前老师信息到localStorage，供个人中心页面使用
-      const teacherInfo = {
-        name: teacher.name,
-        userId: teacher.userId || `teacher_${teacher.name}`,
-        department: teacher.department || '计算机学院',
-        avatar: teacher.avatar || 'https://picsum.photos/48/48?random=50',
-        description: teacher.description || '资深讲师'
-      }
-      
-      localStorage.setItem('currentTeacherInfo', JSON.stringify(teacherInfo))
-      
-      // 跳转到老师空间页面
-      router.push({
-        path: '/teacher-space',
-        query: {
-          teacherId: teacher.userId || `teacher_${teacher.name}`,
-          teacherName: teacher.name
-        }
-      })
     }
     
     const toggleSection = (section) => {
@@ -911,16 +1504,13 @@ export default {
     
     // 监听键盘快捷键
     const handleKeyDown = (event) => {
-      // F键进入/退出全屏
       if (event.key === 'f' || event.key === 'F') {
         event.preventDefault()
         toggleFullscreenV2()
       }
-      // ESC键退出全屏
       if (event.key === 'Escape' && isFullscreenV2.value) {
         toggleFullscreenV2()
       }
-      // 空格键播放/暂停
       if (event.key === ' ' && event.target.tagName !== 'TEXTAREA' && event.target.tagName !== 'INPUT') {
         event.preventDefault()
         togglePlay()
@@ -930,6 +1520,12 @@ export default {
     // 生命周期钩子
     onMounted(() => {
       initFontAwesome()
+      
+      // 加载课程数据
+      loadCourseData()
+
+      console.log('当前课程ID:', course.value.id)
+      console.log('当前老师信息:', instructor.value) // 添加调试信息
 
       // 添加事件监听器
       document.addEventListener('fullscreenchange', handleFullscreenChange)
@@ -941,40 +1537,23 @@ export default {
         router.push('/login')
       }
 
-      // 加载关注状态 - 调用修复后的方法
+      // 加载关注状态
       loadFollowStatus()
 
       // 检查当前课程是否已收藏和已点赞
-      const favorites = JSON.parse(localStorage.getItem('userFavorites') || '[]')
+      const currentUser = JSON.parse(localStorage.getItem('bgareaCurrentUser') || sessionStorage.getItem('bgareaCurrentUser') || '{}')
+      const userId = currentUser.userId || 'default'
+      const favorites = JSON.parse(localStorage.getItem(`user_${userId}_favorites`) || '[]')
       const courseId = course.value.id
       isFavorited.value = favorites.some(f => f.id === courseId)
 
-      const likes = JSON.parse(localStorage.getItem('userLikes') || '[]')
+      const likes = JSON.parse(localStorage.getItem(`user_${userId}_likes`) || '[]')
       isLiked.value = likes.some(l => l.courseId === courseId)
-
-      // 视频播放时定时保存历史记录
-      const historyInterval = setInterval(() => {
-        if (isPlaying.value && currentTime.value > 10) { // 观看超过10秒才记录
-          saveHistoryData()
-        }
-      }, 60000) // 每分钟保存一次
-
-      // 视频结束时保存历史记录
-      const videoEl = videoElement.value
-      if (videoEl) {
-        videoEl.addEventListener('ended', () => {
-          saveHistoryData()
-        })
-      }
 
       // 在组件卸载时清理
       onBeforeUnmount(() => {
-        clearInterval(historyInterval)
         document.removeEventListener('fullscreenchange', handleFullscreenChange)
         document.removeEventListener('keydown', handleKeyDown)
-        if (videoEl) {
-          videoEl.removeEventListener('ended', saveHistoryData)
-        }
       })
 
       // 添加动画样式
@@ -1000,13 +1579,35 @@ export default {
       document.removeEventListener('fullscreenchange', handleFullscreenChange)
       document.removeEventListener('keydown', handleKeyDown)
     })
+
+    // 从路由参数中获取老师信息
+    if (route.query.teacher) {
+      instructor.value.name = route.query.teacher
+    }
+
+    // 如果本地存储中有老师信息，使用它
+    const savedCourse = localStorage.getItem('selectedCourse')
+    if (savedCourse) {
+      try {
+        const courseData = JSON.parse(savedCourse)
+        if (courseData.teacher && !instructor.value.name) {
+          instructor.value.name = courseData.teacher
+        }
+      } catch (error) {
+        console.error('解析课程数据失败:', error)
+      }
+    }
     
     return {
       // 状态
+      categoryId,
+      categoryName,
       isPlaying,
       currentTime,
       duration,
       isFullscreenV2,
+      currentVideoIndex,
+      currentVideoUrl,
       isLiked,
       likeCount,
       isFavorited,
@@ -1016,14 +1617,13 @@ export default {
       sortBy,
       autoPlay,
       newComment,
-      currentItemId,
       section1Open,
       section2Open,
       openSections,
-      otherChapters,
       
       // 数据
       course,
+      courseTitle,
       instructor,
       comments,
       
@@ -1037,6 +1637,13 @@ export default {
       videoContainer,
       
       // 方法
+      getChapterName,
+      getVideoTitle,
+      getExerciseTitle,
+      getVideoDuration,
+      playVideo,
+      goToExerciseSeries,
+      goToTeacherSpace,
       togglePlay,
       updateProgress,
       onVideoLoaded,
@@ -1056,9 +1663,6 @@ export default {
       showReplyBox,
       submitComment,
       loadMoreComments,
-      toggleAutoPlay,
-      selectPlaylistItem,
-      goToTeacherSpace,
       toggleSection,
       toggleOtherSection
     }
@@ -1067,7 +1671,21 @@ export default {
 </script>
 
 <style scoped>
-/* 视频播放器样式 */
+/* 修复视频播放器样式 */
+.video-wrapper {
+  width: 100%;
+  height: 100%;
+  position: relative;
+}
+
+.video-element {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  background-color: #000;
+}
+
+/* 其他原有样式保持不变 */
 .container {
   max-width: 1400px;
   margin: 0 auto;
@@ -1136,6 +1754,7 @@ export default {
   display: flex;
   align-items: center;
   justify-content: center;
+  overflow: hidden;
 }
 
 @media (max-width: 768px) {

@@ -7,8 +7,8 @@
       <!-- 侧边栏导航 -->
       <aside class="w-64 bg-white border-r border-gray-200 flex-shrink-0 fixed top-[5rem] left-0 h-[calc(100vh-5rem)] overflow-y-auto z-30">
         <nav class="py-4 space-y-1 px-4">
-          <!-- 工作台 -->
-          <div class="sidebar-group">
+          <!-- 工作台 - 只有教师认证用户才显示 -->
+          <div v-if="isTeacherCertified" class="sidebar-group">
             <div class="sidebar-parent" :class="{ 'active': activeSidebar === 'dashboard' }" @click="goToTeacherDashboard">
               <div class="sidebar-parent-content">
                 <i class="fa fa-tachometer sidebar-icon"></i>
@@ -72,15 +72,6 @@
       <!-- 主内容区域 -->
       <main class="flex-1 overflow-y-auto p-6 ml-64">
         <div class="p-6">
-          <!-- 面包屑导航
-          <div class="text-sm text-gray-600 mb-6">
-            <span>用户中心</span>
-            <i class="fa fa-angle-right mx-1 text-gray-400"></i>
-            <span>收藏管理</span>
-            <i class="fa fa-angle-right mx-1 text-gray-400"></i>
-            <span class="text-gray-900 font-medium">{{ breadcrumbCurrent }}</span>
-          </div> -->
-
           <!-- 收藏管理页面 -->
           <div class="card p-6 card-shadow">
             <!-- 页面标题和批量操作 -->
@@ -323,6 +314,10 @@ export default {
       likes: [],
       history: [],
       
+      // 当前用户信息
+      currentUser: null,
+      isTeacherCertified: false,
+      
       // 页面配置
       pageConfig: {
         'collection': {
@@ -385,6 +380,14 @@ export default {
         return this.history.length > 0
       }
       return false
+    },
+    
+    // 获取当前用户的storage key
+    userStorageKey() {
+      if (!this.currentUser || !this.currentUser.userId) {
+        return 'user'
+      }
+      return `user_${this.currentUser.userId}`
     }
   },
   mounted() {
@@ -398,8 +401,14 @@ export default {
       this.activeSidebar = targetTab
     }
     
+    // 加载当前用户信息
+    this.loadCurrentUser()
+    
     // 加载用户数据
     this.loadUserData()
+
+    // 添加数据迁移（确保旧数据可以迁移到新格式）
+    this.migrateOldData()
     
     // 监听storage变化（当视频页面更新数据时）
     window.addEventListener('storage', this.handleStorageChange)
@@ -415,6 +424,23 @@ export default {
     }
   },
   methods: {
+    // 加载当前用户信息
+    loadCurrentUser() {
+      try {
+        const storedUser = localStorage.getItem('bgareaCurrentUser') || sessionStorage.getItem('bgareaCurrentUser')
+        if (storedUser) {
+          this.currentUser = JSON.parse(storedUser)
+          this.isTeacherCertified = this.currentUser.teacherCertStatus === '已认证'
+        } else {
+          // 如果没有登录，跳转到登录页
+          this.$router.push('/login')
+        }
+      } catch (error) {
+        console.error('加载用户信息失败:', error)
+        this.$router.push('/login')
+      }
+    },
+    
     // 跳转到工作台
     goToTeacherDashboard() {
       this.activeSidebar = 'dashboard'
@@ -450,57 +476,126 @@ export default {
       url.searchParams.set('tab', tab)
       window.history.replaceState({}, '', url)
     },
+
+    // 迁移旧数据到新格式
+    migrateOldData() {
+      if (!this.currentUser || !this.currentUser.userId) return
+
+      const userKey = this.userStorageKey
+
+      // 迁移收藏数据
+      const oldFavorites = JSON.parse(localStorage.getItem('userFavorites') || '[]')
+      if (oldFavorites.length > 0) {
+        const currentFavorites = JSON.parse(localStorage.getItem(`${userKey}_favorites`) || '[]')
+        // 合并数据，避免重复
+        const mergedFavorites = [...currentFavorites]
+        oldFavorites.forEach(item => {
+          if (!mergedFavorites.some(f => f.id === item.id)) {
+            mergedFavorites.push(item)
+          }
+        })
+        localStorage.setItem(`${userKey}_favorites`, JSON.stringify(mergedFavorites))
+        localStorage.removeItem('userFavorites')
+      }
+
+      // 迁移点赞数据
+      const oldLikes = JSON.parse(localStorage.getItem('userLikes') || '[]')
+      if (oldLikes.length > 0) {
+        const currentLikes = JSON.parse(localStorage.getItem(`${userKey}_likes`) || '[]')
+        const mergedLikes = [...currentLikes]
+        oldLikes.forEach(item => {
+          if (!mergedLikes.some(l => l.courseId === item.courseId)) {
+            mergedLikes.push(item)
+          }
+        })
+        localStorage.setItem(`${userKey}_likes`, JSON.stringify(mergedLikes))
+        localStorage.removeItem('userLikes')
+      }
+
+      // 迁移历史数据
+      const oldHistory = JSON.parse(localStorage.getItem('userHistory') || '[]')
+      if (oldHistory.length > 0) {
+        const currentHistory = JSON.parse(localStorage.getItem(`${userKey}_history`) || '[]')
+        const mergedHistory = [...currentHistory]
+        oldHistory.forEach(item => {
+          if (!mergedHistory.some(h => h.courseId === item.courseId)) {
+            mergedHistory.push(item)
+          }
+        })
+        localStorage.setItem(`${userKey}_history`, JSON.stringify(mergedHistory))
+        localStorage.removeItem('userHistory')
+      }
+    },
     
     // 加载用户数据
     loadUserData() {
       try {
-        // 收藏数据
-        const favorites = JSON.parse(localStorage.getItem('userFavorites') || '[]')
+        if (!this.currentUser || !this.currentUser.userId) {
+          return
+        }
+        
+        // 使用用户特定的storage key
+        const userKey = this.userStorageKey
+        
+        // 收藏数据 - 尝试新格式，兼容旧格式
+        let favorites = JSON.parse(localStorage.getItem(`${userKey}_favorites`) || '[]')
+        // 如果新格式为空，尝试旧格式（兼容性处理）
+        if (favorites.length === 0) {
+          const oldFavorites = JSON.parse(localStorage.getItem('userFavorites') || '[]')
+          if (oldFavorites.length > 0) {
+            favorites = oldFavorites
+            // 迁移到新格式
+            localStorage.setItem(`${userKey}_favorites`, JSON.stringify(favorites))
+            localStorage.removeItem('userFavorites')
+          }
+        }
         this.favorites = favorites
-        
-        // 点赞数据
-        const likes = JSON.parse(localStorage.getItem('userLikes') || '[]')
+
+        // 点赞数据 - 同样处理兼容性
+        let likes = JSON.parse(localStorage.getItem(`${userKey}_likes`) || '[]')
+        if (likes.length === 0) {
+          const oldLikes = JSON.parse(localStorage.getItem('userLikes') || '[]')
+          if (oldLikes.length > 0) {
+            likes = oldLikes
+            localStorage.setItem(`${userKey}_likes`, JSON.stringify(likes))
+            localStorage.removeItem('userLikes')
+          }
+        }
         this.likes = likes
-        
-        // 浏览历史数据
-        const history = JSON.parse(localStorage.getItem('userHistory') || '[]')
+
+        // 浏览历史数据 - 同样处理兼容性
+        let history = JSON.parse(localStorage.getItem(`${userKey}_history`) || '[]')
+        if (history.length === 0) {
+          const oldHistory = JSON.parse(localStorage.getItem('userHistory') || '[]')
+          if (oldHistory.length > 0) {
+            history = oldHistory
+            localStorage.setItem(`${userKey}_history`, JSON.stringify(history))
+            localStorage.removeItem('userHistory')
+          }
+        }
+
         // 按观看时间倒序排列
         this.history = history.sort((a, b) => new Date(b.watchedAt) - new Date(a.watchedAt))
       } catch (error) {
         console.error('加载用户数据失败:', error)
-        // 使用默认数据
-        this.favorites = this.getDefaultFavorites()
+        // 初始化为空数组
+        this.favorites = []
         this.likes = []
         this.history = []
       }
     },
     
-    // 获取默认收藏数据
-    getDefaultFavorites() {
-      return [
-        { 
-          id: 'CS202501', 
-          name: '计算机网络与通信', 
-          teacher: '徐冠雷', 
-          status: 'ongoing', 
-          collectedAt: '2025-11-28',
-          category: 'network'
-        },
-        { 
-          id: 'MG202501', 
-          name: '软件项目管理', 
-          teacher: '徐斌', 
-          status: 'ended', 
-          collectedAt: '2025-10-15',
-          category: 'management'
-        }
-      ]
-    },
-    
     // 处理storage变化
     handleStorageChange(event) {
-      if (event.key === 'userFavorites' || 
-          event.key === 'userLikes' || 
+      if (!this.currentUser || !this.currentUser.userId) return
+
+      const userKey = this.userStorageKey
+      if (event.key === `${userKey}_favorites` || 
+          event.key === `${userKey}_likes` || 
+          event.key === `${userKey}_history` ||
+          // 同时监听旧格式的键名，确保完全兼容
+          event.key === 'userFavorites' ||
+          event.key === 'userLikes' ||
           event.key === 'userHistory') {
         this.loadUserData()
       }
@@ -533,7 +628,7 @@ export default {
     removeFavorite(id) {
       if (confirm('确定要取消收藏吗？')) {
         this.favorites = this.favorites.filter(course => course.id !== id)
-        this.saveToLocalStorage('userFavorites', this.favorites)
+        this.saveToLocalStorage(`${this.userStorageKey}_favorites`, this.favorites)
         this.showToast('已取消收藏')
       }
     },
@@ -542,7 +637,7 @@ export default {
     removeLike(id) {
       if (confirm('确定要取消点赞吗？')) {
         this.likes = this.likes.filter(like => like.id !== id)
-        this.saveToLocalStorage('userLikes', this.likes)
+        this.saveToLocalStorage(`${this.userStorageKey}_likes`, this.likes)
         this.showToast('已取消点赞')
       }
     },
@@ -551,7 +646,7 @@ export default {
     removeHistory(id) {
       if (confirm('确定要删除这条历史记录吗？')) {
         this.history = this.history.filter(record => record.id !== id)
-        this.saveToLocalStorage('userHistory', this.history)
+        this.saveToLocalStorage(`${this.userStorageKey}_history`, this.history)
         this.showToast('已删除历史记录')
       }
     },
@@ -570,17 +665,17 @@ export default {
         if (this.currentTab === 'collection') {
           // 清空收藏
           this.favorites = []
-          this.saveToLocalStorage('userFavorites', this.favorites)
+          this.saveToLocalStorage(`${this.userStorageKey}_favorites`, this.favorites)
           
         } else if (this.currentTab === 'likes') {
           // 清空点赞
           this.likes = []
-          this.saveToLocalStorage('userLikes', this.likes)
+          this.saveToLocalStorage(`${this.userStorageKey}_likes`, this.likes)
           
         } else if (this.currentTab === 'history') {
           // 清空历史记录
           this.history = []
-          this.saveToLocalStorage('userHistory', this.history)
+          this.saveToLocalStorage(`${this.userStorageKey}_history`, this.history)
         }
         
         this.showToast(`${actionText}成功`)

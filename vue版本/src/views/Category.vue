@@ -157,7 +157,8 @@
                 </div>
                 <div class="text-xs text-gray-400">{{ course.teacher }}</div>
                 <div class="mt-2 flex items-center justify-between">
-                  <span class="text-xs px-2 py-1 bg-gray-100 rounded">{{ course.category }}</span>
+                  <!-- 显示原始分类名称 -->
+                  <span class="text-xs px-2 py-1 bg-gray-100 rounded">{{ course.categoryName || course.category }}</span>
                   <span class="text-xs font-medium text-primary" v-if="course.price === 'paid'">付费</span>
                   <span class="text-xs font-medium text-green-600" v-else>免费</span>
                 </div>
@@ -250,11 +251,11 @@ export default {
   data() {
     return {
       // 当前激活的分类
-      activeCategory: { id: 1, name: '推荐' },
+      activeCategory: { id: 1, name: '精彩课程' },
       
       // 分类数据（与Home页面一致）
       firstRowCategories: [
-        { id: 1, name: '推荐' },
+        { id: 1, name: '精彩课程' },
         { id: 2, name: '编程开发' },
         { id: 3, name: '人工智能' },
         { id: 4, name: '数据科学' },
@@ -313,30 +314,58 @@ export default {
   },
   computed: {
     // 过滤后的课程
+    // 修改 filteredCourses 计算属性
     filteredCourses() {
       let filtered = [...this.allCourses]
-      
+
       // 按分类筛选
       if (this.activeCategory.id !== 1) { // 如果不是"推荐"分类
-        filtered = filtered.filter(course => 
-          course.category === this.activeCategory.name
-        )
+        // 根据分类ID映射到对应的category字段
+        const categoryMap = {
+          2: 'computer', // 编程开发
+          3: 'computer', // 人工智能
+          4: 'computer', // 数据科学
+          5: 'business', // 商业管理
+          6: 'design',   // 设计创意
+          7: 'business', // 市场营销
+          8: 'other',    // 语言学习
+          9: 'business', // 职业技能
+          10: 'other',   // 考研考证
+          11: 'other',   // 生活兴趣
+          12: 'business', // 职场提升
+          13: 'business', // 创业指导
+          14: 'other',   // 教师成长
+          15: 'other',   // 学生专区
+          16: 'other'    // 更多分类
+        }
+
+        const categoryKey = categoryMap[this.activeCategory.id]
+        if (categoryKey && categoryKey !== 'other') {
+          filtered = filtered.filter(course => 
+            course.category === categoryKey
+          )
+        } else if (categoryKey === 'other') {
+          // 对于"其他"类别的课程，显示所有非computer/business/design的课程
+          filtered = filtered.filter(course => 
+            !['computer', 'business', 'design'].includes(course.category)
+          )
+        }
       }
-      
+
       // 按难度筛选
       if (this.selectedDifficulty !== 'all') {
         filtered = filtered.filter(course => 
           course.difficulty === this.selectedDifficulty
         )
       }
-      
+
       // 按价格筛选
       if (this.selectedPrice !== 'all') {
         filtered = filtered.filter(course => 
           course.price === this.selectedPrice
         )
       }
-      
+
       // 排序
       filtered.sort((a, b) => {
         switch (this.sortBy) {
@@ -350,7 +379,7 @@ export default {
             return 0
         }
       })
-      
+
       return filtered
     },
     
@@ -434,40 +463,59 @@ export default {
   mounted() {
     // 初始化数据
     this.generateCourses()
+    // 处理路由变化
     this.handleRouteChange(this.$route.params.categoryId)
+
+    // 如果是通过URL直接访问，确保课程数据正确
+    if (this.$route.params.categoryId) {
+      const categoryIdNum = parseInt(this.$route.params.categoryId)
+      const allCategories = [...this.firstRowCategories, ...this.secondRowCategories]
+      const category = allCategories.find(cat => cat.id === categoryIdNum)
+
+      if (category) {
+        this.activeCategory = category
+      }
+    }
   },
   methods: {
     // 处理路由变化
+    // 修改 handleRouteChange 方法
     handleRouteChange(categoryId) {
       if (categoryId) {
         const categoryIdNum = parseInt(categoryId)
         // 从所有分类中查找对应的分类
         const allCategories = [...this.firstRowCategories, ...this.secondRowCategories]
         const category = allCategories.find(cat => cat.id === categoryIdNum)
-        
+
         if (category) {
           this.activeCategory = category
+          // 重新生成课程数据
+          this.generateCourses()
         }
       }
-      
+
       // 重置分页和筛选
       this.resetPagination()
       this.resetFilters()
     },
     
     // 选择分类
+    // 修改 selectCategory 方法
     selectCategory(category) {
       this.activeCategory = category
-      
+
       // 更新URL但不刷新页面
       this.$router.replace({
         name: 'Category',
         params: { categoryId: category.id }
       }).catch(() => {})
-      
+
+      // 重新生成课程数据（根据选择的分类）
+      this.generateCourses()
+
       // 重置分页
       this.resetPagination()
-      
+
       // 滚动到顶部
       window.scrollTo({ top: 0, behavior: 'smooth' })
     },
@@ -558,77 +606,180 @@ export default {
     },
     
     // 跳转到课程详情
+    // 修改 goToCourseDetail 方法
     goToCourseDetail(course) {
+      if (!course || !course.id) {
+        console.warn('课程信息不完整')
+        return
+      }
+
+      // 保存完整的课程信息到 localStorage（与首页保持一致）
+      const courseData = {
+        id: course.id,
+        title: course.title,
+        teacher: course.teacher || '未知讲师',
+        views: course.views || '0播放',
+        comments: course.comments || '0',
+        duration: course.duration || '00:00',
+        timeAgo: course.timeAgo || '刚刚',
+        image: course.image || 'https://picsum.photos/400/225?random=1',
+        category: course.category || 'computer', // 使用与首页一致的category字段
+        description: course.description || `${course.title} - 精品课程，由${course.teacher}主讲`
+      }
+
+      console.log('从分类页保存课程数据:', courseData)
+      localStorage.setItem('selectedCourse', JSON.stringify(courseData))
+
+      // 跳转到视频播放页面
       this.$router.push({
         name: 'VideoPlayer',
-        params: { courseId: course.id }
+        params: { 
+          courseId: course.id,
+          category: course.category || 'computer'
+        }
       })
     },
     
     // 生成模拟课程数据
+    // 修改 generateCourses 方法
     generateCourses() {
       const categories = [
         '编程开发', '人工智能', '数据科学', '商业管理', '设计创意',
         '市场营销', '语言学习', '职业技能', '考研考证', '生活兴趣',
         '职场提升', '创业指导', '教师成长', '学生专区'
       ]
-      
+
       const difficulties = ['beginner', 'intermediate', 'advanced']
       const prices = ['free', 'paid']
-      const teachers = ['张老师', '李教授', '王工程师', '刘老师', '陈教授', '赵导师']
-      
+
+      // 教师映射，确保与首页的教师名称一致
+      const teachers = ['张老师', '李教授', '王工程师', '刘老师', '陈教授', '赵导师', '李经理', '王总监', '张营销总监', '陈财务顾问', '刘HR总监', '张设计师', '李创意总监', '王视频制作人', '陈3D艺术家', '刘品牌设计师']
+
       // 生成200个课程
       this.allCourses = Array.from({ length: 200 }, (_, index) => {
-        const category = categories[Math.floor(Math.random() * categories.length)]
+        const categoryName = categories[Math.floor(Math.random() * categories.length)]
         const difficulty = difficulties[Math.floor(Math.random() * difficulties.length)]
         const price = prices[Math.floor(Math.random() * prices.length)]
-        const teacher = teachers[Math.floor(Math.random() * teachers.length)]
-        
+
+        // 根据分类名称映射到与首页一致的category字段
+        let categoryKey = 'computer' // 默认
+        if (categoryName.includes('商业') || categoryName.includes('市场') || categoryName.includes('创业') || categoryName.includes('职业') || categoryName.includes('职场')) {
+          categoryKey = 'business'
+        } else if (categoryName.includes('设计')) {
+          categoryKey = 'design'
+        }
+
+        // 根据分类选择教师
+        let teacher;
+        if (categoryKey === 'computer') {
+          teacher = ['张老师', '李教授', '王工程师', '刘老师', '陈教授'][Math.floor(Math.random() * 5)]
+        } else if (categoryKey === 'business') {
+          teacher = ['李经理', '王总监', '张营销总监', '陈财务顾问', '刘HR总监'][Math.floor(Math.random() * 5)]
+        } else if (categoryKey === 'design') {
+          teacher = ['张设计师', '李创意总监', '王视频制作人', '陈3D艺术家', '刘品牌设计师'][Math.floor(Math.random() * 5)]
+        } else {
+          teacher = teachers[Math.floor(Math.random() * teachers.length)]
+        }
+
+        const title = this.getCourseTitle(categoryKey, difficulty)
+
         return {
           id: index + 1,
-          title: this.getCourseTitle(category, difficulty),
+          title: title,
           teacher: teacher,
           views: `${(Math.random() * 100 + 5).toFixed(1)}万播放`,
           comments: `${Math.floor(Math.random() * 10000 + 1000)}`,
           duration: `${Math.floor(Math.random() * 60 + 10)}:${Math.floor(Math.random() * 60).toString().padStart(2, '0')}`,
           timeAgo: `${Math.floor(Math.random() * 30 + 1)}天前`,
-          category: category,
+          category: categoryKey, // 使用与首页一致的category字段
+          categoryName: categoryName, // 保留原分类名称用于显示
           difficulty: difficulty,
           price: price,
           rating: (Math.random() * 2 + 3).toFixed(1), // 3.0-5.0
           hotScore: Math.random() * 100, // 热度分数
           createdAt: new Date(Date.now() - Math.random() * 30 * 24 * 60 * 60 * 1000).toISOString(), // 30天内
-          image: `https://picsum.photos/400/225?random=${index + 1000}`
+          image: `https://picsum.photos/400/225?random=${index + 1000}`,
+          description: `${title} - 由${teacher}主讲，课程评分${(Math.random() * 2 + 3).toFixed(1)}分，涵盖${categoryName}相关内容`
         }
       })
     },
     
     // 根据分类和难度生成课程标题
-    getCourseTitle(category, difficulty) {
+    // 修改 getCourseTitle 方法
+    getCourseTitle(categoryKey, difficulty) {
       const titles = {
-        '编程开发': {
-          beginner: ['Python入门教程', 'Java基础编程', 'HTML/CSS网页设计'],
-          intermediate: ['Spring Boot实战', 'React高级应用', 'Docker容器化'],
-          advanced: ['微服务架构设计', '分布式系统原理', '高性能网络编程']
+        computer: {
+          beginner: [
+            'Python入门教程', 
+            'Java基础编程', 
+            'HTML/CSS网页设计',
+            'Spring Boot企业级开发',
+            'React Hooks深度解析'
+          ],
+          intermediate: [
+            'TypeScript高级技巧',
+            'Docker容器化实践',
+            '微服务架构设计',
+            'Redis缓存优化',
+            'MySQL性能调优'
+          ],
+          advanced: [
+            'Web安全攻防实战',
+            '深度学习实战：从零搭建AI模型',
+            '机器学习算法精讲与实战',
+            '数据结构与算法面试',
+            'Python自动化办公'
+          ]
         },
-        '人工智能': {
-          beginner: ['AI基础入门', '机器学习概览', 'Python数据科学'],
-          intermediate: ['深度学习实战', '神经网络原理', 'TensorFlow应用'],
-          advanced: ['强化学习进阶', '计算机视觉算法', '自然语言处理']
+        business: {
+          beginner: [
+            '管理学基础', 
+            '市场营销入门', 
+            '财务管理基础',
+            '领导力与团队管理',
+            '商业模式创新'
+          ],
+          intermediate: [
+            '战略管理', 
+            '组织行为学', 
+            '人力资源管理',
+            '财务报表分析',
+            '客户关系管理'
+          ],
+          advanced: [
+            '企业战略规划', 
+            '领导力发展', 
+            '商业创新管理',
+            '商业分析实战：数据驱动决策',
+            '项目管理PMP认证全攻略'
+          ]
         },
-        '数据科学': {
-          beginner: ['数据分析基础', 'Excel数据分析', 'SQL查询入门'],
-          intermediate: ['Python数据分析', '数据可视化实战', '统计建模'],
-          advanced: ['大数据处理', '机器学习算法', '商业智能分析']
-        },
-        '商业管理': {
-          beginner: ['管理学基础', '市场营销入门', '财务管理基础'],
-          intermediate: ['战略管理', '组织行为学', '人力资源管理'],
-          advanced: ['企业战略规划', '领导力发展', '商业创新管理']
+        design: {
+          beginner: [
+            'UI/UX设计从入门到精通',
+            '平面设计创意与实战',
+            '视频剪辑与特效制作',
+            '色彩理论与应用',
+            '字体设计原理'
+          ],
+          intermediate: [
+            '包装设计实战',
+            'UI交互动效',
+            '品牌视觉系统',
+            '海报设计创意',
+            '网页设计规范'
+          ],
+          advanced: [
+            '移动端设计适配',
+            '3D建模与动画设计',
+            '品牌设计全流程',
+            '插画设计与创作',
+            '摄影构图与后期'
+          ]
         }
       }
-      
-      const categoryTitles = titles[category] || titles['编程开发']
+
+      const categoryTitles = titles[categoryKey] || titles.computer
       const difficultyTitles = categoryTitles[difficulty] || categoryTitles.beginner
       return difficultyTitles[Math.floor(Math.random() * difficultyTitles.length)]
     }
