@@ -869,7 +869,7 @@ export default {
     // 加载用户数据
     loadUserData() {
       const storedUser = localStorage.getItem('bgareaCurrentUser') || sessionStorage.getItem('bgareaCurrentUser')
-      
+
       if (storedUser) {
         const user = JSON.parse(storedUser)
         this.userData = {
@@ -882,14 +882,20 @@ export default {
           school: user.school || '',
           followers: user.followers || 0,
           courses: user.courses || 0,
-          avatar: user.avatar || 'https://picsum.photos/200/200?random=1',
+          // 优先从 sessionStorage 获取头像，如果不存在则使用默认
+          avatar: sessionStorage.getItem('userAvatar_' + user.userId) || 
+                  user.avatar || 
+                  'https://picsum.photos/200/200?random=1',
           signature: user.signature || '',
           email: user.email || '',
           teacherCertStatus: user.teacherCertStatus || '未认证'
         }
-        
-        // 保存到userData便于其他页面使用
-        localStorage.setItem('bgareaUserData', JSON.stringify(this.userData))
+
+        // 保存到 userData（不包含大图片）
+        const userDataToStore = { ...this.userData }
+        // 移除 base64 头像数据
+        delete userDataToStore.avatar
+        localStorage.setItem('bgareaUserData', JSON.stringify(userDataToStore))
       }
     },
     
@@ -1051,8 +1057,19 @@ export default {
     
     // 更新用户数据到本地存储
     updateUserData() {
-      // 更新bgareaUserData
-      localStorage.setItem('bgareaUserData', JSON.stringify(this.userData))
+      // 创建不包含大图片的副本
+      const userDataToStore = { ...this.userData }
+
+      // 检查是否是 base64 图片（如果是，则不存储到 localStorage）
+      if (this.userData.avatar && this.userData.avatar.startsWith('data:image')) {
+        // 这是 base64 图片，保存到 sessionStorage
+        sessionStorage.setItem('userAvatar_' + this.userData.userId, this.userData.avatar)
+        // 从要存储的数据中移除
+        userDataToStore.avatar = 'custom_avatar' // 只存储一个标记
+      }
+
+      // 更新 bgareaUserData（不包含大图片）
+      localStorage.setItem('bgareaUserData', JSON.stringify(userDataToStore))
       
       // 同时更新bgareaCurrentUser和bgareaUsers中的对应数据
       const storedUser = localStorage.getItem('bgareaCurrentUser') || sessionStorage.getItem('bgareaCurrentUser')
@@ -1208,19 +1225,106 @@ export default {
     handleAvatarUpload(event) {
       const file = event.target.files[0]
       if (!file) return
-      
+
       if (!file.type.startsWith('image/')) {
         alert('请选择图片文件')
         return
       }
-      
+
+      // 限制文件大小（例如最大 500KB）
+      const maxSize = 1024 * 1024 // 500KB
+      if (file.size > maxSize) {
+        alert('头像图片不能超过 1MB')
+        return
+      }
+
+      // 创建缩略图或压缩图片
+      this.compressImage(file, (compressedDataUrl) => {
+        this.userData.avatar = compressedDataUrl
+        // 注意：这里不再存储完整图片到 localStorage
+        // 只更新用户信息的引用
+        this.updateUserDataWithAvatarRef(file.name)
+        alert('头像上传成功！')
+      })
+    },
+
+    // 压缩图片
+    compressImage(file, callback) {
       const reader = new FileReader()
       reader.onload = (e) => {
-        this.userData.avatar = e.target.result
-        this.updateUserData()
-        alert('头像上传成功！')
+        const img = new Image()
+        img.onload = () => {
+          const canvas = document.createElement('canvas')
+
+          // 设置最大尺寸
+          const maxWidth = 200
+          const maxHeight = 200
+          let width = img.width
+          let height = img.height
+
+          if (width > height) {
+            if (width > maxWidth) {
+              height *= maxWidth / width
+              width = maxWidth
+            }
+          } else {
+            if (height > maxHeight) {
+              width *= maxHeight / height
+              height = maxHeight
+            }
+          }
+
+          canvas.width = width
+          canvas.height = height
+
+          const ctx = canvas.getContext('2d')
+          ctx.drawImage(img, 0, 0, width, height)
+
+          // 转换为较低质量的 base64
+          const compressedDataUrl = canvas.toDataURL('image/jpeg', 0.7)
+          callback(compressedDataUrl)
+        }
+        img.src = e.target.result
       }
       reader.readAsDataURL(file)
+    },
+
+    // 更新用户数据（不存储完整图片）
+    updateUserDataWithAvatarRef(avatarFileName) {
+      // 只存储头像引用信息，不存储完整的base64
+      const userDataToStore = {
+        ...this.userData,
+        avatar: avatarFileName // 或使用一个引用标识
+      }
+
+      // 同时保存压缩后的图片到 sessionStorage（会话期间有效）
+      sessionStorage.setItem('userAvatar_' + this.userData.userId, this.userData.avatar)
+
+      // 更新主要用户数据（不包含大图片）
+      localStorage.setItem('bgareaUserData', JSON.stringify(userDataToStore))
+
+      // 更新当前用户信息
+      const storedUser = localStorage.getItem('bgareaCurrentUser') || sessionStorage.getItem('bgareaCurrentUser')
+      if (storedUser) {
+        const user = JSON.parse(storedUser)
+        const users = JSON.parse(localStorage.getItem('bgareaUsers') || '[]')
+        const userIndex = users.findIndex(u => u.userId === user.userId)
+
+        if (userIndex > -1) {
+          // 更新用户列表（只存储引用）
+          users[userIndex].avatar = avatarFileName
+          localStorage.setItem('bgareaUsers', JSON.stringify(users))
+
+          // 更新当前用户
+          user.avatar = avatarFileName
+
+          if (localStorage.getItem('bgareaCurrentUser')) {
+            localStorage.setItem('bgareaCurrentUser', JSON.stringify(user))
+          } else {
+            sessionStorage.setItem('bgareaCurrentUser', JSON.stringify(user))
+          }
+        }
+      }
     },
     
     // 自动保存签名

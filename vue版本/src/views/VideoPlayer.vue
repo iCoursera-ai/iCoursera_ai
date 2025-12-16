@@ -19,12 +19,12 @@
           <!-- 视频容器 -->
           <div class="video-container" ref="videoContainer">
             <!-- 视频播放器 -->
-            <div class="video-player" id="videoPlayer" @click="togglePlay">
-              <div class="video-placeholder" v-if="!isPlaying">
+            <div class="video-player" id="videoPlayer" @click="handleVideoPlayerClick">
+              <div class="video-placeholder" v-if="!isPlaying && !hasStartedPlaying">
                 <i class="fa fa-play-circle text-white text-6xl mb-4 opacity-70 cursor-pointer hover:opacity-100 transition-opacity"></i>
                 <p class="text-white text-lg">点击播放视频</p>
               </div>
-              <div v-if="isPlaying" class="video-wrapper">
+              <div v-if="hasStartedPlaying" class="video-wrapper">
                 <video 
                   class="video-element w-full h-full object-contain"
                   ref="videoElement"
@@ -239,7 +239,6 @@
                     <i class="fa fa-play text-xs"></i>
                   </div>
                   <span>1.1 {{ getVideoTitle(1) }}</span>
-                  <span class="ml-auto text-xs text-gray-500">{{ getVideoDuration(1) }}</span>
                 </div>
                 <div 
                   class="course-item" 
@@ -260,7 +259,6 @@
                     <i class="fa fa-play text-xs"></i>
                   </div>
                   <span>1.2 {{ getVideoTitle(2) }}</span>
-                  <span class="ml-auto text-xs text-gray-500">{{ getVideoDuration(2) }}</span>
                 </div>
                 <div 
                   class="course-item" 
@@ -291,7 +289,6 @@
                     <i class="fa fa-play text-xs"></i>
                   </div>
                   <span>2.1 {{ getVideoTitle(3) }}</span>
-                  <span class="ml-auto text-xs text-gray-500">{{ getVideoDuration(3) }}</span>
                 </div>
                 <div 
                   class="course-item" 
@@ -312,7 +309,6 @@
                     <i class="fa fa-play text-xs"></i>
                   </div>
                   <span>2.2 {{ getVideoTitle(4) }}</span>
-                  <span class="ml-auto text-xs text-gray-500">{{ getVideoDuration(4) }}</span>
                 </div>
                 <div 
                   class="course-item" 
@@ -343,7 +339,6 @@
                     <i class="fa fa-play text-xs"></i>
                   </div>
                   <span>3.1 {{ getVideoTitle(5) }}</span>
-                  <span class="ml-auto text-xs text-gray-500">{{ getVideoDuration(5) }}</span>
                 </div>
                 <div 
                   class="course-item" 
@@ -364,7 +359,6 @@
                     <i class="fa fa-play text-xs"></i>
                   </div>
                   <span>3.2 {{ getVideoTitle(6) }}</span>
-                  <span class="ml-auto text-xs text-gray-500">{{ getVideoDuration(6) }}</span>
                 </div>
                 <div 
                   class="course-item" 
@@ -395,7 +389,6 @@
                     <i class="fa fa-play text-xs"></i>
                   </div>
                   <span>4.1 {{ getVideoTitle(7) }}</span>
-                  <span class="ml-auto text-xs text-gray-500">{{ getVideoDuration(7) }}</span>
                 </div>
                 <div 
                   class="course-item" 
@@ -416,7 +409,6 @@
                     <i class="fa fa-play text-xs"></i>
                   </div>
                   <span>4.2 {{ getVideoTitle(8) }}</span>
-                  <span class="ml-auto text-xs text-gray-500">{{ getVideoDuration(8) }}</span>
                 </div>
                 <div 
                   class="course-item" 
@@ -447,7 +439,6 @@
                     <i class="fa fa-play text-xs"></i>
                   </div>
                   <span>5.1 {{ getVideoTitle(9) }}</span>
-                  <span class="ml-auto text-xs text-gray-500">{{ getVideoDuration(9) }}</span>
                 </div>
                 <div 
                   class="course-item" 
@@ -468,7 +459,6 @@
                     <i class="fa fa-play text-xs"></i>
                   </div>
                   <span>5.2 {{ getVideoTitle(10) }}</span>
-                  <span class="ml-auto text-xs text-gray-500">{{ getVideoDuration(10) }}</span>
                 </div>
                 <div 
                   class="course-item" 
@@ -512,7 +502,7 @@ export default {
     const categoryId = ref('2')
     const categoryName = ref('编程开发')
     
-    // 视频播放状态
+    // 视频播放状态 - 添加 hasStartedPlaying 状态
     const isPlaying = ref(false)
     const currentTime = ref(0)
     const duration = ref(0)
@@ -520,6 +510,7 @@ export default {
     const autoPlay = ref(true)
     const currentVideoIndex = ref(1) // 当前播放的视频索引
     const currentVideoUrl = ref('') // 当前视频URL
+    const hasStartedPlaying = ref(false) // 添加：是否已经开始播放
     
     // 互动状态
     const isLiked = ref(false)
@@ -697,7 +688,6 @@ export default {
     }
     
     // 加载课程信息
-    // 修改 loadCourseData() 函数（约在第230行开始）：
     const loadCourseData = () => {
       const savedCourse = localStorage.getItem('selectedCourse')
       if (savedCourse) {
@@ -768,11 +758,6 @@ export default {
             instructor.value.avatar = `https://picsum.photos/48/48?random=${nameHash}`
           }
 
-          // 设置初始视频
-          setTimeout(() => {
-            playVideo(1, course.value.title)
-          }, 100)
-
         } catch (error) {
           console.error('解析课程数据失败:', error)
           setDefaultCourseDetails()
@@ -821,7 +806,6 @@ export default {
     }
     
     // 根据类别设置讲师信息
-    // 修改 setInstructorByCategory() 函数（约在第380行）：
     const setInstructorByCategory = (category) => {
       // 如果已经有老师信息（从首页传递的），就不要覆盖
       if (instructor.value.name && instructor.value.name !== '') {
@@ -863,9 +847,6 @@ export default {
       const category = 'computer'
       setCourseDetailsByCategory(category)
       setIntroTitle(category, course.value.title)
-      setTimeout(() => {
-        playVideo(1, course.value.title)
-      }, 100)
     }
     
     // 获取章节名称
@@ -994,7 +975,17 @@ export default {
       return durations[index - 1] || '45:00'
     }
     
-    // 播放视频
+    // 初始化视频播放 - 修改：在页面加载时初始化第一集视频
+    const initFirstVideo = () => {
+      const category = getCategoryFromCourse()
+      const videoList = videoUrls[category] || videoUrls.computer
+      
+      // 设置初始视频URL
+      currentVideoUrl.value = videoList[0]
+      hasStartedPlaying.value = false // 初始时不显示视频，等待用户点击
+    }
+    
+    // 播放视频 - 修改：添加参数处理，用于章节导航点击
     const playVideo = (index, title) => {
       const category = getCategoryFromCourse()
       const videoList = videoUrls[category] || videoUrls.computer
@@ -1011,6 +1002,9 @@ export default {
         course.value.title = title
       }
       
+      // 标记已开始播放
+      hasStartedPlaying.value = true
+      
       // 开始播放
       setTimeout(() => {
         if (videoElement.value) {
@@ -1025,6 +1019,18 @@ export default {
       }, 100)
       
       showNotification(`正在播放：${title || getVideoTitle(index)}`)
+    }
+    
+    // 修改：处理视频播放器点击事件
+    const handleVideoPlayerClick = () => {
+      // 如果是第一次点击（还没有开始播放）
+      if (!hasStartedPlaying.value) {
+        // 初始化并播放第一集视频
+        playVideo(1, course.value.title)
+      } else {
+        // 如果已经开始播放，则切换播放/暂停
+        togglePlay()
+      }
     }
     
     // 跳转到习题系列页面 - 修复路由参数问题
@@ -1096,7 +1102,7 @@ export default {
       })
     }
     
-    // 视频播放相关方法
+    // 视频播放相关方法 - 修改：简化播放逻辑，参考第一个视频
     const togglePlay = () => {
       if (!videoElement.value) return
       
@@ -1523,6 +1529,9 @@ export default {
       
       // 加载课程数据
       loadCourseData()
+      
+      // 初始化第一集视频
+      initFirstVideo()
 
       console.log('当前课程ID:', course.value.id)
       console.log('当前老师信息:', instructor.value) // 添加调试信息
@@ -1608,6 +1617,7 @@ export default {
       isFullscreenV2,
       currentVideoIndex,
       currentVideoUrl,
+      hasStartedPlaying, // 添加：暴露给模板
       isLiked,
       likeCount,
       isFavorited,
@@ -1642,6 +1652,7 @@ export default {
       getExerciseTitle,
       getVideoDuration,
       playVideo,
+      handleVideoPlayerClick, // 添加：处理视频播放器点击
       goToExerciseSeries,
       goToTeacherSpace,
       togglePlay,
