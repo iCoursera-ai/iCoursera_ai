@@ -527,6 +527,9 @@ export default {
     const section2Open = ref(false)
     const openSections = ref({})
     
+    // 历史记录更新时间戳
+    const lastHistoryUpdate = ref(Date.now())
+    
     // 课程数据
     const course = ref({
       id: parseInt(route.params.courseId) || 1,
@@ -687,6 +690,24 @@ export default {
       return 'computer'
     }
     
+    // 根据课程标题判断类别
+    const getCategoryFromCourseTitle = (title) => {
+      if (!title) return 'computer'
+      
+      const computerKeywords = ['编程', '代码', '算法', '计算机', 'Python', 'Java', 'Web', '前端', '后端', '操作系统']
+      const businessKeywords = ['商业', '管理', '市场', '营销', '财务', '投资', 'MBA', '分析']
+      const designKeywords = ['设计', 'UI', 'UX', '视觉', '创意', '美术', '插画', '平面']
+      
+      if (computerKeywords.some(keyword => title.includes(keyword))) {
+        return 'computer'
+      } else if (businessKeywords.some(keyword => title.includes(keyword))) {
+        return 'business'
+      } else if (designKeywords.some(keyword => title.includes(keyword))) {
+        return 'design'
+      }
+      return 'computer'
+    }
+    
     // 加载课程信息
     const loadCourseData = () => {
       const savedCourse = localStorage.getItem('selectedCourse')
@@ -695,68 +716,26 @@ export default {
           const courseData = JSON.parse(savedCourse)
           console.log('从首页传递的课程数据:', courseData) // 调试用
 
-          // 更新课程信息
+          // 更新课程信息 - 确保所有字段都有值
           course.value.id = courseData.id || course.value.id
-          course.value.title = courseData.title || course.value.title
-          course.value.description = courseData.description || course.value.description
+          course.value.title = courseData.title || courseData.name || course.value.title
+          course.value.description = courseData.description || `${course.value.title} - 精品课程`
+          course.value.updateTime = courseData.updateTime || new Date().toISOString().split('T')[0]
 
           // 根据类别设置课程信息
-          const category = courseData.category || 'computer'
+          const category = courseData.category || getCategoryFromCourseTitle(courseData.title) || 'computer'
           setCourseDetailsByCategory(category)
 
           // 设置课程简介标题
-          setIntroTitle(category, courseData.title)
+          setIntroTitle(category, course.value.title)
 
-          // 关键：从首页数据中获取老师信息
+          // 关键：从课程数据中获取老师信息
           if (courseData.teacher) {
-            // 直接使用首页传递的老师名字
             instructor.value.name = courseData.teacher
-
-            // 根据课程类型设置老师信息
-            if (category === 'computer') {
-              instructor.value.description = '计算机教育专家，专注编程和计算机基础教学'
-              instructor.value.department = '计算机学院'
-            } else if (category === 'business') {
-              instructor.value.description = '商业分析专家，拥有多年企业咨询经验'
-              instructor.value.department = '商学院'
-            } else {
-              instructor.value.description = '设计专家，拥有丰富的创意设计经验'
-              instructor.value.department = '设计学院'
-            }
-
-            // 生成用户ID（简单处理，移除特殊字符）
             instructor.value.userId = `teacher_${courseData.teacher.replace(/[^\w\u4e00-\u9fa5]/g, '_')}`
-
-            // 根据观看量估算粉丝数
-            if (courseData.views) {
-              const viewsStr = courseData.views
-              let viewsNum = 0
-
-              if (viewsStr.includes('万')) {
-                viewsNum = parseFloat(viewsStr) * 10000
-              } else if (viewsStr.includes('千')) {
-                viewsNum = parseFloat(viewsStr) * 1000
-              } else {
-                viewsNum = parseInt(viewsStr) || 0
-              }
-
-              // 假设5%的观看者成为粉丝
-              const fans = Math.floor(viewsNum * 0.05)
-              if (fans >= 10000) {
-                instructor.value.fans = `${(fans / 10000).toFixed(1)}万`
-              } else if (fans >= 1000) {
-                instructor.value.fans = `${(fans / 1000).toFixed(1)}千`
-              } else {
-                instructor.value.fans = fans.toString()
-              }
-            } else {
-              instructor.value.fans = '1.2万'
-            }
-
-            // 设置头像（使用老师名字生成不同的随机头像）
-            const nameHash = courseData.teacher.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0)
-            instructor.value.avatar = `https://picsum.photos/48/48?random=${nameHash}`
           }
+
+          console.log('加载后的老师信息:', instructor.value)
 
         } catch (error) {
           console.error('解析课程数据失败:', error)
@@ -1121,12 +1100,22 @@ export default {
     
     const updateProgress = () => {
       if (!videoElement.value) return
+      
       currentTime.value = videoElement.value.currentTime
+      
+      // 每30秒或进度超过10%时更新一次历史记录
+      if (Date.now() - lastHistoryUpdate.value > 30000 || 
+          (duration.value > 0 && (currentTime.value / duration.value) > 0.1)) {
+        saveHistoryData()
+        lastHistoryUpdate.value = Date.now()
+      }
     }
     
     const onVideoLoaded = () => {
       if (videoElement.value) {
         duration.value = videoElement.value.duration
+        // 视频加载时保存历史记录
+        saveHistoryData()
       }
     }
     
@@ -1228,6 +1217,54 @@ export default {
       }
     }
     
+    // 保存历史记录
+    const saveHistoryData = () => {
+      const currentUser = JSON.parse(localStorage.getItem('bgareaCurrentUser') || sessionStorage.getItem('bgareaCurrentUser') || '{}')
+      const userId = currentUser.userId || 'default'
+      const history = JSON.parse(localStorage.getItem(`user_${userId}_history`) || '[]')
+
+      const historyData = {
+        id: `history_${course.value.id}_${Date.now()}`,
+        courseId: course.value.id,
+        courseName: course.value.title,
+        teacher: instructor.value.name,
+        watchedAt: new Date().toISOString().split('T')[0] + ' ' + 
+                   new Date().toTimeString().split(' ')[0].substring(0, 5),
+        progress: duration.value > 0 ? Math.floor((currentTime.value / duration.value) * 100) : 0,
+        // 添加课程相关信息，用于跳转回视频页面
+        courseData: {
+          id: course.value.id,
+          title: course.value.title,
+          category: getCategoryFromCourse(),
+          teacher: instructor.value.name,
+          description: course.value.description,
+          views: '已学习'
+        }
+      }
+
+      // 检查是否已存在相同课程的记录
+      const existingIndex = history.findIndex(h => h.courseId === course.value.id)
+      
+      if (existingIndex !== -1) {
+        // 更新已有记录
+        history[existingIndex] = historyData
+      } else {
+        // 添加新记录，最多保留20条
+        history.unshift(historyData)
+        if (history.length > 20) {
+          history.pop()
+        }
+      }
+
+      localStorage.setItem(`user_${userId}_history`, JSON.stringify(history))
+
+      // 触发storage事件，让收藏管理页面能够感知到变化
+      window.dispatchEvent(new StorageEvent('storage', {
+        key: `user_${userId}_history`,
+        newValue: JSON.stringify(history)
+      }))
+    }
+    
     // 关注/取消关注讲师
     const toggleFollow = () => {
       isFollowing.value = !isFollowing.value
@@ -1237,9 +1274,12 @@ export default {
     
     const saveFollowData = () => {
       const currentUser = JSON.parse(localStorage.getItem('bgareaCurrentUser') || sessionStorage.getItem('bgareaCurrentUser') || '{}')
-      const userId = currentUser.userId || 'default'
-      const followedTeachers = JSON.parse(localStorage.getItem(`user_${userId}_followedTeachers`) || '[]')
-      
+      const userId = currentUser.userId || currentUser.email || 'default'
+
+      // 使用用户特定的存储键名
+      const userSpecificKey = `userFollowedTeachers_${userId}`
+      const followedTeachers = JSON.parse(localStorage.getItem(userSpecificKey) || '[]')
+
       const teacherData = {
         id: Date.now(),
         userId: instructor.value.userId,
@@ -1253,24 +1293,26 @@ export default {
         const existingIndex = followedTeachers.findIndex(t => t.userId === teacherData.userId)
         if (existingIndex === -1) {
           followedTeachers.push(teacherData)
-          localStorage.setItem(`user_${userId}_followedTeachers`, JSON.stringify(followedTeachers))
-          
+          localStorage.setItem(userSpecificKey, JSON.stringify(followedTeachers))
+
+          // 触发事件通知其他组件
           window.dispatchEvent(new StorageEvent('storage', {
-            key: 'userFollowedTeachers',
+            key: userSpecificKey,
             newValue: JSON.stringify(followedTeachers)
           }))
-          
+
           window.dispatchEvent(new CustomEvent('followUpdated'))
         }
       } else {
         const updatedTeachers = followedTeachers.filter(t => t.userId !== teacherData.userId)
-        localStorage.setItem('userFollowedTeachers', JSON.stringify(updatedTeachers))
-        
+        localStorage.setItem(userSpecificKey, JSON.stringify(updatedTeachers))
+
+        // 触发事件通知其他组件
         window.dispatchEvent(new StorageEvent('storage', {
-          key: 'userFollowedTeachers',
+          key: userSpecificKey,
           newValue: JSON.stringify(updatedTeachers)
         }))
-        
+
         window.dispatchEvent(new CustomEvent('followUpdated'))
       }
     }
@@ -1278,8 +1320,11 @@ export default {
     // 加载关注状态
     const loadFollowStatus = () => {
       const currentUser = JSON.parse(localStorage.getItem('bgareaCurrentUser') || sessionStorage.getItem('bgareaCurrentUser') || '{}')
-      const userId = currentUser.userId || 'default'
-      const followedTeachers = JSON.parse(localStorage.getItem(`user_${userId}_followedTeachers`) || '[]')
+      const userId = currentUser.userId || currentUser.email || 'default'
+
+      // 使用用户特定的存储键名
+      const userSpecificKey = `userFollowedTeachers_${userId}`
+      const followedTeachers = JSON.parse(localStorage.getItem(userSpecificKey) || '[]')
 
       const isTeacherFollowed = followedTeachers.some(teacher => teacher.userId === instructor.value.userId)
       isFollowing.value = isTeacherFollowed
@@ -1376,37 +1421,6 @@ export default {
     
     const goToFavorites = () => {
       router.push('/favorites-management?tab=collection')
-    }
-
-    const saveHistoryData = () => {
-      const currentUser = JSON.parse(localStorage.getItem('bgareaCurrentUser') || sessionStorage.getItem('bgareaCurrentUser') || '{}')
-      const userId = currentUser.userId || 'default'
-      const history = JSON.parse(localStorage.getItem(`user_${userId}_history`) || '[]')
-
-      const historyData = {
-        id: `history_${course.value.id}_${Date.now()}`,
-        courseId: course.value.id,
-        courseName: course.value.title,
-        watchedAt: new Date().toISOString().split('T')[0] + ' ' + 
-                   new Date().toTimeString().split(' ')[0].substring(0, 5),
-        progress: duration.value > 0 ? Math.floor((currentTime.value / duration.value) * 100) : 0
-      }
-
-      const existingIndex = history.findIndex(h => h.courseId === course.value.id)
-
-      if (existingIndex !== -1) {
-        history[existingIndex] = historyData
-      } else {
-        history.push(historyData)
-      }
-
-      const recentHistory = history.slice(-20)
-      localStorage.setItem(`user_${userId}_history`, JSON.stringify(recentHistory))
-
-      window.dispatchEvent(new StorageEvent('storage', {
-        key: 'userHistory',
-        newValue: JSON.stringify(recentHistory)
-      }))
     }
     
     const likeComment = (commentId) => {
@@ -1534,7 +1548,7 @@ export default {
       initFirstVideo()
 
       console.log('当前课程ID:', course.value.id)
-      console.log('当前老师信息:', instructor.value) // 添加调试信息
+      console.log('当前老师信息:', instructor.value)
 
       // 添加事件监听器
       document.addEventListener('fullscreenchange', handleFullscreenChange)
@@ -1549,9 +1563,21 @@ export default {
       // 加载关注状态
       loadFollowStatus()
 
-      // 检查当前课程是否已收藏和已点赞
+      // 检查是否是新用户第一次访问
       const currentUser = JSON.parse(localStorage.getItem('bgareaCurrentUser') || sessionStorage.getItem('bgareaCurrentUser') || '{}')
-      const userId = currentUser.userId || 'default'
+      const userId = currentUser.userId || currentUser.email || 'default'
+
+      const userFirstVisitKey = `userFirstVisit_${userId}`
+      const hasVisited = localStorage.getItem(userFirstVisitKey)
+
+      if (!hasVisited) {
+        // 新用户第一次访问，重置关注列表
+        const userSpecificKey = `userFollowedTeachers_${userId}`
+        localStorage.setItem(userSpecificKey, JSON.stringify([]))
+        localStorage.setItem(userFirstVisitKey, 'true')
+      }
+
+      // 检查当前课程是否已收藏和已点赞
       const favorites = JSON.parse(localStorage.getItem(`user_${userId}_favorites`) || '[]')
       const courseId = course.value.id
       isFavorited.value = favorites.some(f => f.id === courseId)
@@ -1580,6 +1606,11 @@ export default {
           }
         `
         document.head.appendChild(style)
+      }
+      
+      // 检查是否从历史记录跳转过来
+      if (route.query.fromHistory && route.query.historyId) {
+        console.log('从历史记录跳转过来:', route.query.historyId)
       }
     })
     
@@ -1617,7 +1648,7 @@ export default {
       isFullscreenV2,
       currentVideoIndex,
       currentVideoUrl,
-      hasStartedPlaying, // 添加：暴露给模板
+      hasStartedPlaying,
       isLiked,
       likeCount,
       isFavorited,
@@ -1652,7 +1683,7 @@ export default {
       getExerciseTitle,
       getVideoDuration,
       playVideo,
-      handleVideoPlayerClick, // 添加：处理视频播放器点击
+      handleVideoPlayerClick,
       goToExerciseSeries,
       goToTeacherSpace,
       togglePlay,

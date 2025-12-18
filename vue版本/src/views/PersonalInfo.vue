@@ -118,7 +118,8 @@
                 <div class="lg:col-span-2 card p-6 card-shadow">
                   <div class="flex justify-between items-center mb-6">
                     <h3 class="text-lg font-semibold text-dark">我的课程</h3>
-                    <button 
+                    <button
+                      v-if="myCourses.length > 6"
                       class="text-link text-sm hover:underline flex items-center gap-1"
                       @click="toggleExpandCourses"
                     >
@@ -127,23 +128,31 @@
                     </button>
                   </div>
                   
+                  <!-- 空状态 -->
+                  <div v-if="myCourses.length === 0" class="text-center py-12 text-gray-500">
+                    <i class="fa fa-book text-4xl mb-4"></i>
+                    <p class="text-sm">暂无课程</p>
+                    <p class="text-xs mt-1">开始学习或创建课程吧</p>
+                  </div>
+
                   <!-- 课程网格 -->
-                  <div 
+                  <div
+                    v-else
                     class="grid gap-4 transition-all duration-300"
                     :class="showAllCourses ? 'grid-cols-1 sm:grid-cols-2 md:grid-cols-3' : 'grid-cols-1 sm:grid-cols-2 md:grid-cols-3 max-h-[400px] overflow-hidden'"
                   >
                     <!-- 课程卡片 - 使用主页视频样式 -->
-                    <div 
-                      v-for="course in displayedCourses" 
+                    <div
+                      v-for="course in displayedCourses"
                       :key="course.id"
                       class="bg-white rounded-lg overflow-hidden cursor-pointer hover:shadow-lg transition-all duration-300 group video-card"
                       @click="goToCourse(course)"
                     >
                       <!-- 视频封面 - 16:9比例 -->
                       <div class="relative" style="aspect-ratio: 16/9;">
-                        <img 
-                          :src="course.image" 
-                          :alt="course.title" 
+                        <img
+                          :src="course.image"
+                          :alt="course.title"
                           class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                         >
                         <!-- 播放按钮 -->
@@ -613,6 +622,7 @@
 <script>
 import Header from '@/components/Header.vue'
 import Footer from '@/components/Footer.vue'
+import { isTestAccount, getTestAccountData } from '@/data/mockData.js'
 
 export default {
   name: 'PersonalInformation',
@@ -685,81 +695,8 @@ export default {
         organizationCode: ''
       },
       
-      // 我的课程数据 - 使用主页视频样式
-      myCourses: [
-        { 
-          id: 1, 
-          title: '操作系统', 
-          image: 'https://picsum.photos/400/225?random=100',
-          subject: '计算机基础'
-        },
-        { 
-          id: 2, 
-          title: '互联网原理与应用', 
-          image: 'https://picsum.photos/400/225?random=101',
-          subject: '网络技术'
-        },
-        { 
-          id: 3, 
-          title: '数据结构与算法', 
-          image: 'https://picsum.photos/400/225?random=102',
-          subject: '编程基础'
-        },
-        { 
-          id: 4, 
-          title: '数据库系统原理', 
-          image: 'https://picsum.photos/400/225?random=103',
-          subject: '数据管理'
-        },
-        { 
-          id: 5, 
-          title: '计算机网络', 
-          image: 'https://picsum.photos/400/225?random=104',
-          subject: '网络工程'
-        },
-        { 
-          id: 6, 
-          title: '软件工程', 
-          image: 'https://picsum.photos/400/225?random=105',
-          subject: '软件开发'
-        },
-        { 
-          id: 7, 
-          title: '人工智能基础', 
-          image: 'https://picsum.photos/400/225?random=106',
-          subject: '人工智能'
-        },
-        { 
-          id: 8, 
-          title: '机器学习入门', 
-          image: 'https://picsum.photos/400/225?random=107',
-          subject: '机器学习'
-        },
-        { 
-          id: 9, 
-          title: 'Web前端开发', 
-          image: 'https://picsum.photos/400/225?random=108',
-          subject: '前端技术'
-        },
-        { 
-          id: 10, 
-          title: '移动应用开发', 
-          image: 'https://picsum.photos/400/225?random=109',
-          subject: '移动开发'
-        },
-        { 
-          id: 11, 
-          title: '云计算基础', 
-          image: 'https://picsum.photos/400/225?random=110',
-          subject: '云计算'
-        },
-        { 
-          id: 12, 
-          title: '网络安全技术', 
-          image: 'https://picsum.photos/400/225?random=111',
-          subject: '网络安全'
-        }
-      ],
+      // 我的课程数据 - 通过 loadCoursesData 方法加载
+      myCourses: [],
       // 我的关注老师 - 从localStorage加载
       followedTeachers: [],
       
@@ -799,11 +736,12 @@ export default {
     if (page && (page === 'user-info' || page === 'user-settings')) {
       this.activePage = page
     }
-    
+
     this.loadUserData()
+    this.loadCoursesData()
     this.loadFollowedTeachers()
     this.loadTeacherCertInfo()
-    
+
     // 监听关注更新事件
     window.addEventListener('storage', this.handleStorageEvent)
     // 监听自定义事件（同页面内更新）
@@ -872,6 +810,15 @@ export default {
 
       if (storedUser) {
         const user = JSON.parse(storedUser)
+
+        // 根据是否是测试账号设置粉丝数和课程数
+        let followers = 0
+        let courses = 0
+        if (isTestAccount(user.email)) {
+          followers = user.followers || 15200
+          courses = user.courses || 20
+        }
+
         this.userData = {
           username: user.username || '',
           realname: user.realname || '',
@@ -880,11 +827,11 @@ export default {
           phone: user.phone || '',
           location: user.location || '',
           school: user.school || '',
-          followers: user.followers || 0,
-          courses: user.courses || 0,
+          followers: followers,
+          courses: courses,
           // 优先从 sessionStorage 获取头像，如果不存在则使用默认
-          avatar: sessionStorage.getItem('userAvatar_' + user.userId) || 
-                  user.avatar || 
+          avatar: sessionStorage.getItem('userAvatar_' + user.userId) ||
+                  user.avatar ||
                   'https://picsum.photos/200/200?random=1',
           signature: user.signature || '',
           email: user.email || '',
@@ -898,6 +845,25 @@ export default {
         localStorage.setItem('bgareaUserData', JSON.stringify(userDataToStore))
       }
     },
+
+    // 加载课程数据
+    loadCoursesData() {
+      const storedUser = localStorage.getItem('bgareaCurrentUser') || sessionStorage.getItem('bgareaCurrentUser')
+      if (storedUser) {
+        const user = JSON.parse(storedUser)
+        if (isTestAccount(user.email)) {
+          const data = getTestAccountData()
+          this.myCourses = data.courses.slice(0, 12).map(course => ({
+            id: course.id,
+            title: course.name,
+            image: course.avatar,
+            subject: course.tag
+          }))
+        } else {
+          this.myCourses = []
+        }
+      }
+    },
     
     // 加载教师认证信息
     loadTeacherCertInfo() {
@@ -909,42 +875,51 @@ export default {
     
     // 加载关注的老师
     loadFollowedTeachers() {
+      const storedUser = localStorage.getItem('bgareaCurrentUser') || sessionStorage.getItem('bgareaCurrentUser')
       const followed = localStorage.getItem('userFollowedTeachers')
+
       if (followed) {
         this.followedTeachers = JSON.parse(followed)
+      } else if (storedUser) {
+        const user = JSON.parse(storedUser)
+        // 只有测试账号才加载默认关注
+        if (isTestAccount(user.email)) {
+          this.followedTeachers = [
+            {
+              id: 1,
+              name: '汪老师',
+              department: '计算机学院',
+              avatar: 'https://picsum.photos/48/48?random=30',
+              userId: 'teacher_001'
+            },
+            {
+              id: 2,
+              name: '董老师',
+              department: '信息工程学院',
+              avatar: 'https://picsum.photos/48/48?random=31',
+              userId: 'teacher_002'
+            },
+            {
+              id: 3,
+              name: '沈老师',
+              department: '软件学院',
+              avatar: 'https://picsum.photos/48/48?random=32',
+              userId: 'teacher_003'
+            },
+            {
+              id: 4,
+              name: '何老师',
+              department: '数据科学系',
+              avatar: 'https://picsum.photos/48/48?random=33',
+              userId: 'teacher_004'
+            }
+          ]
+          localStorage.setItem('userFollowedTeachers', JSON.stringify(this.followedTeachers))
+        } else {
+          this.followedTeachers = []
+        }
       } else {
-        // 默认关注的老师
-        this.followedTeachers = [
-          { 
-            id: 1, 
-            name: '汪老师', 
-            department: '计算机学院', 
-            avatar: 'https://picsum.photos/48/48?random=30',
-            userId: 'teacher_001'
-          },
-          { 
-            id: 2, 
-            name: '董老师', 
-            department: '信息工程学院', 
-            avatar: 'https://picsum.photos/48/48?random=31',
-            userId: 'teacher_002'
-          },
-          { 
-            id: 3, 
-            name: '沈老师', 
-            department: '软件学院', 
-            avatar: 'https://picsum.photos/48/48?random=32',
-            userId: 'teacher_003'
-          },
-          { 
-            id: 4, 
-            name: '何老师', 
-            department: '数据科学系', 
-            avatar: 'https://picsum.photos/48/48?random=33',
-            userId: 'teacher_004'
-          }
-        ]
-        localStorage.setItem('userFollowedTeachers', JSON.stringify(this.followedTeachers))
+        this.followedTeachers = []
       }
     },
     

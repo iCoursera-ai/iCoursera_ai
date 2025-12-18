@@ -10,7 +10,12 @@
         <div class="flex items-center mb-8">
           <div class="relative">
             <div class="w-24 h-24 rounded-full overflow-hidden border-4 border-white shadow-sm">
-              <img :src="teacher.avatar" :alt="teacher.name" class="w-full h-full object-cover">
+              <!-- 使用默认头像或实际头像 -->
+              <div v-if="!teacher.avatar || teacher.avatar === '👤'" 
+                   class="w-full h-full bg-gradient-to-br from-blue-400 to-purple-600 flex items-center justify-center text-white text-3xl">
+                {{ getInitials(teacher.name) }}
+              </div>
+              <img v-else :src="teacher.avatar" :alt="teacher.name" class="w-full h-full object-cover">
             </div>
           </div>
           <div class="ml-6">
@@ -18,19 +23,17 @@
             <div class="flex flex-wrap items-center gap-x-6 gap-y-2 text-sm text-secondary">
               <div class="flex items-center gap-1">
                 <i class="fa fa-graduation-cap text-primary"></i>
-                <span>{{ teacher.department }}</span>
+                <span>{{ teacher.department || '未设置学院' }}</span>
               </div>
               <div class="flex items-center gap-1">
-                <i class="fa fa-map-marker text-primary"></i>
-                <span>{{ teacher.location || '未设置位置' }}</span>
-              </div>
-              <div class="flex items-center gap-1">
-                <i class="fa fa-star text-yellow-500"></i>
-                <span>粉丝数: <span>{{ teacher.followers || 0 }}</span></span>
-              </div>
-              <div class="flex items-center gap-1">
-                <i class="fa fa-book text-primary"></i>
-                <span>发布课程: <span>{{ totalCourses }}</span></span>
+                <i class="fa fa-user-plus text-green-500"></i>
+                <button 
+                  @click.stop="toggleFollowTeacher"
+                  class="px-3 py-1 text-xs rounded-full transition-colors"
+                  :class="isFollowingTeacher ? 'bg-blue-100 text-blue-600' : 'bg-gray-100 text-gray-600 hover:bg-blue-50 hover:text-blue-600'"
+                >
+                  {{ isFollowingTeacher ? '已关注' : '关注' }}
+                </button>
               </div>
             </div>
           </div>
@@ -44,65 +47,69 @@
         <!-- 课程区域 -->
         <div class="mt-8">
           <div class="flex justify-between items-center mb-6">
-            <h3 class="text-lg font-semibold text-dark">教师的课程 ({{ totalCourses }})</h3>
-            <!-- 只有一个查看更多/收起按钮 -->
+            <h3 class="text-lg font-semibold text-dark">
+              老师的课程 ({{ displayedCourses.length }})
+            </h3>
+            
+            <!-- 查看更多/收起按钮 -->
             <button 
               v-if="teacherCourses.length > initialCourseCount"
               class="text-link text-sm hover:underline flex items-center gap-1 px-3 py-1.5 rounded-md hover:bg-blue-50 transition-colors"
               @click="toggleExpandCourses"
             >
-              {{ showAllCourses ? '收起课程' : `查看更多 (${totalCourses - initialCourseCount}个课程)` }}
+              {{ showAllCourses ? '收起课程' : `查看更多 (${teacherCourses.length - initialCourseCount}个课程)` }}
               <i class="fa" :class="showAllCourses ? 'fa-angle-up' : 'fa-angle-down'"></i>
             </button>
           </div>
           
+          <!-- 空状态 -->
+          <div v-if="displayedCourses.length === 0" class="text-center py-12 bg-gray-50 rounded-lg">
+            <i class="fa fa-video-slash text-4xl text-gray-300 mb-4"></i>
+            <p class="text-gray-500 mb-4">该老师暂无课程</p>
+          </div>
+          
           <!-- 课程网格 -->
           <div 
-            class="grid gap-4 transition-all duration-300"
+            v-else
+            class="grid gap-6 transition-all duration-300"
             :class="gridColsClass"
           >
             <!-- 课程卡片 -->
             <div 
               v-for="course in displayedCourses" 
               :key="course.id"
-              class="bg-white rounded-lg overflow-hidden cursor-pointer hover:shadow-lg transition-all duration-300 group video-card"
-              @click="goToCourse(course)"
+              class="bg-white rounded-xl overflow-hidden cursor-pointer hover:shadow-xl transition-all duration-300 group video-card border border-gray-100"
+              @click="goToVideoPlayer(course)"
             >
               <!-- 视频封面 -->
               <div class="relative" style="aspect-ratio: 16/9;">
-                <img 
-                  :src="course.image" 
-                  :alt="course.title" 
-                  class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                >
-                <!-- 播放按钮 -->
-                <div class="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 bg-black/20">
-                  <div class="w-12 h-12 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center">
-                    <i class="fa fa-play text-white text-lg"></i>
+                <!-- 使用真实课程图片 -->
+                <div class="w-full h-full relative">
+                  <img :src="course.image" :alt="course.title" 
+                       class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300">
+                  
+                  <!-- 播放按钮 -->
+                  <div class="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 bg-black/30">
+                    <div class="w-16 h-16 rounded-full bg-white/30 backdrop-blur-sm flex items-center justify-center">
+                      <i class="fa fa-play text-white text-2xl"></i>
+                    </div>
                   </div>
                 </div>
               </div>
+              
               <!-- 课程信息 -->
-              <div class="p-3">
-                <h4 class="text-sm font-medium line-clamp-2 group-hover:text-primary transition-colors mb-1">
+              <div class="p-4">
+                <h4 class="text-base font-semibold line-clamp-2 group-hover:text-primary transition-colors">
                   {{ course.title }}
                 </h4>
-                <div class="text-xs text-gray-500">{{ course.subject }}</div>
-                <div class="text-xs text-gray-400 mt-1">{{ course.createdAt }}</div>
               </div>
             </div>
-          </div>
-          
-          <!-- 空状态 -->
-          <div v-if="teacherCourses.length === 0" class="text-center py-12">
-            <i class="fa fa-book-open text-4xl text-gray-300 mb-4"></i>
-            <p class="text-gray-500">该老师还没有发布任何课程</p>
           </div>
         </div>
         
         <!-- 返回按钮 -->
         <div class="mt-8 pt-6 border-t border-gray-200">
-          <button @click="goBack" class="px-6 py-2.5 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors duration-200">
+          <button @click="goBack" class="px-6 py-2.5 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors duration-200 shadow-sm">
             <i class="fa fa-arrow-left mr-2"></i>返回上一页
           </button>
         </div>
@@ -117,6 +124,7 @@
 import Header from '@/components/Header.vue'
 import Footer from '@/components/Footer.vue'
 import { useRoute, useRouter } from 'vue-router'
+import { ref, computed, onMounted } from 'vue'
 
 export default {
   name: 'TeacherSpace',
@@ -128,7 +136,93 @@ export default {
     const route = useRoute()
     const router = useRouter()
     
-    const teacher = JSON.parse(localStorage.getItem('currentTeacherInfo') || '{}')
+    // 从本地存储获取老师信息
+    const teacher = ref(JSON.parse(localStorage.getItem('currentTeacherInfo') || '{}'))
+    
+    // 关注状态
+    const isFollowingTeacher = ref(false)
+    
+    // 检查是否已关注该老师
+    const checkFollowStatus = () => {
+      const currentUser = JSON.parse(localStorage.getItem('bgareaCurrentUser') || sessionStorage.getItem('bgareaCurrentUser') || '{}')
+      const userId = currentUser.userId || currentUser.email || 'default'
+      const userSpecificKey = `userFollowedTeachers_${userId}`
+      const followedTeachers = JSON.parse(localStorage.getItem(userSpecificKey) || '[]')
+      
+      isFollowingTeacher.value = followedTeachers.some(t => t.userId === teacher.value.userId)
+    }
+    
+    // 关注/取消关注老师
+    const toggleFollowTeacher = () => {
+      const currentUser = JSON.parse(localStorage.getItem('bgareaCurrentUser') || sessionStorage.getItem('bgareaCurrentUser') || '{}')
+      const userId = currentUser.userId || currentUser.email || 'default'
+      const userSpecificKey = `userFollowedTeachers_${userId}`
+      const followedTeachers = JSON.parse(localStorage.getItem(userSpecificKey) || '[]')
+      
+      if (isFollowingTeacher.value) {
+        // 取消关注
+        const updatedTeachers = followedTeachers.filter(t => t.userId !== teacher.value.userId)
+        localStorage.setItem(userSpecificKey, JSON.stringify(updatedTeachers))
+        isFollowingTeacher.value = false
+      } else {
+        // 关注
+        const teacherData = {
+          id: Date.now(),
+          userId: teacher.value.userId,
+          name: teacher.value.name,
+          department: teacher.value.department,
+          avatar: teacher.value.avatar,
+          description: teacher.value.description,
+          followedAt: new Date().toISOString().split('T')[0]
+        }
+        
+        followedTeachers.push(teacherData)
+        localStorage.setItem(userSpecificKey, JSON.stringify(followedTeachers))
+        isFollowingTeacher.value = true
+      }
+      
+      window.dispatchEvent(new CustomEvent('followUpdated'))
+    }
+    
+    // 获取姓名首字母
+    const getInitials = (name) => {
+      if (!name) return '教'
+      const chineseName = name.trim()
+      if (chineseName.length >= 2) {
+        return chineseName.substring(0, 2)
+      }
+      return chineseName || '教'
+    }
+    
+    // 跳转到视频播放页面
+    const goToVideoPlayer = (course) => {
+      // 准备课程数据
+      const courseData = {
+        id: course.id,
+        name: course.title,
+        title: course.title,
+        description: `${course.title} - 由${teacher.value.name}主讲`,
+        category: course.category,
+        teacher: teacher.value.name,
+        image: course.image
+      }
+      
+      // 保存课程数据到localStorage
+      localStorage.setItem('selectedCourse', JSON.stringify(courseData))
+      
+      // 跳转到视频播放页面
+      router.push({
+        name: 'VideoPlayer',
+        params: { 
+          courseId: course.id 
+        },
+        query: {
+          teacher: teacher.value.name,
+          category: course.category,
+          fromTeacherSpace: 'true'
+        }
+      })
+    }
     
     const goBack = () => {
       router.go(-1)
@@ -136,205 +230,173 @@ export default {
     
     return {
       teacher,
-      goBack
+      goBack,
+      goToVideoPlayer,
+      getInitials,
+      isFollowingTeacher,
+      toggleFollowTeacher,
+      checkFollowStatus
     }
   },
   data() {
     return {
       showAllCourses: false,
-      initialCourseCount: 8, // 初始显示的课程数量
-      teacherCourses: [
-        { 
-          id: 1, 
-          title: '操作系统', 
-          image: 'https://picsum.photos/400/225?random=100',
-          subject: '计算机基础',
-          createdAt: '2024-01-15'
-        },
-        { 
-          id: 2, 
-          title: '互联网原理与应用', 
-          image: 'https://picsum.photos/400/225?random=101',
-          subject: '网络技术',
-          createdAt: '2024-01-20'
-        },
-        { 
-          id: 3, 
-          title: '数据结构与算法', 
-          image: 'https://picsum.photos/400/225?random=102',
-          subject: '编程基础',
-          createdAt: '2024-01-25'
-        },
-        { 
-          id: 4, 
-          title: '数据库系统原理', 
-          image: 'https://picsum.photos/400/225?random=103',
-          subject: '数据管理',
-          createdAt: '2024-02-01'
-        },
-        { 
-          id: 5, 
-          title: '计算机网络', 
-          image: 'https://picsum.photos/400/225?random=104',
-          subject: '网络工程',
-          createdAt: '2024-02-10'
-        },
-        { 
-          id: 6, 
-          title: '软件工程', 
-          image: 'https://picsum.photos/400/225?random=105',
-          subject: '软件开发',
-          createdAt: '2024-02-15'
-        },
-        { 
-          id: 7, 
-          title: '人工智能基础', 
-          image: 'https://picsum.photos/400/225?random=106',
-          subject: '人工智能',
-          createdAt: '2024-02-20'
-        },
-        { 
-          id: 8, 
-          title: '机器学习入门', 
-          image: 'https://picsum.photos/400/225?random=107',
-          subject: '机器学习',
-          createdAt: '2024-02-25'
-        },
-        // 更多课程数据（点击查看更多才会出现）
-        { 
-          id: 9, 
-          title: '深度学习应用', 
-          image: 'https://picsum.photos/400/225?random=108',
-          subject: '人工智能',
-          createdAt: '2024-03-01'
-        },
-        { 
-          id: 10, 
-          title: '计算机图形学', 
-          image: 'https://picsum.photos/400/225?random=109',
-          subject: '计算机科学',
-          createdAt: '2024-03-05'
-        },
-        { 
-          id: 11, 
-          title: '编译原理', 
-          image: 'https://picsum.photos/400/225?random=110',
-          subject: '编程语言',
-          createdAt: '2024-03-10'
-        },
-        { 
-          id: 12, 
-          title: '计算机体系结构', 
-          image: 'https://picsum.photos/400/225?random=111',
-          subject: '硬件基础',
-          createdAt: '2024-03-15'
-        },
-        { 
-          id: 13, 
-          title: '嵌入式系统设计', 
-          image: 'https://picsum.photos/400/225?random=112',
-          subject: '嵌入式开发',
-          createdAt: '2024-03-20'
-        },
-        { 
-          id: 14, 
-          title: '移动应用开发', 
-          image: 'https://picsum.photos/400/225?random=113',
-          subject: '移动开发',
-          createdAt: '2024-03-25'
-        },
-        { 
-          id: 15, 
-          title: 'Web前端技术', 
-          image: 'https://picsum.photos/400/225?random=114',
-          subject: '前端开发',
-          createdAt: '2024-04-01'
-        },
-        { 
-          id: 16, 
-          title: '后端开发实践', 
-          image: 'https://picsum.photos/400/225?random=115',
-          subject: '后端开发',
-          createdAt: '2024-04-05'
-        },
-        { 
-          id: 17, 
-          title: '云计算基础', 
-          image: 'https://picsum.photos/400/225?random=116',
-          subject: '云计算',
-          createdAt: '2024-04-10'
-        },
-        { 
-          id: 18, 
-          title: '大数据技术', 
-          image: 'https://picsum.photos/400/225?random=117',
-          subject: '大数据',
-          createdAt: '2024-04-15'
-        },
-        { 
-          id: 19, 
-          title: '网络安全基础', 
-          image: 'https://picsum.photos/400/225?random=118',
-          subject: '网络安全',
-          createdAt: '2024-04-20'
-        },
-        { 
-          id: 20, 
-          title: '软件测试与质量保证', 
-          image: 'https://picsum.photos/400/225?random=119',
-          subject: '软件测试',
-          createdAt: '2024-04-25'
-        }
-      ]
+      initialCourseCount: 8,
+      teacherCourses: [],
+      allCoursesData: []
     }
   },
   computed: {
+    // 直接显示所有课程
     displayedCourses() {
       if (this.showAllCourses) {
-        // 点击"查看更多"后显示全部课程
         return this.teacherCourses
       }
-      // 默认只显示前8个课程
       return this.teacherCourses.slice(0, this.initialCourseCount)
     },
     
-    totalCourses() {
-      return this.teacherCourses.length
-    },
-    
+    // 移除所有统计计算属性
     gridColsClass() {
-      // 基础网格布局
-      const baseClass = 'grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4'
+      const baseClass = 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4'
       if (this.showAllCourses) {
-        // 展开时显示完整网格
         return baseClass
       }
-      // 收起时限制高度并隐藏溢出
-      return `${baseClass} max-h-[500px] overflow-hidden`
+      return `${baseClass} max-h-[600px] overflow-hidden`
     }
   },
   mounted() {
-    // 如果从路由参数中获取了老师ID，可以加载对应老师的课程
-    const teacherId = this.$route.query.teacherId
-    if (teacherId) {
-      this.loadTeacherCourses(teacherId)
-    }
+    this.loadAllCourses()
+    this.loadTeacherCourses()
+    this.checkFollowStatus()
   },
   methods: {
     toggleExpandCourses() {
       this.showAllCourses = !this.showAllCourses
     },
     
-    goToCourse(course) {
-      this.$router.push({
-        name: 'VideoPlayer',
-        params: { courseId: course.id }
-      })
+    // 加载所有课程数据
+    async loadAllCourses() {
+      try {
+        // 尝试从localStorage获取课程数据
+        const savedCourses = localStorage.getItem('allCourses')
+        if (savedCourses) {
+          this.allCoursesData = JSON.parse(savedCourses)
+        } else {
+          // 如果没有保存的数据，生成新的课程数据
+          this.allCoursesData = this.generateAllCourses()
+          // 保存到localStorage供下次使用
+          localStorage.setItem('allCourses', JSON.stringify(this.allCoursesData))
+        }
+      } catch (error) {
+        console.error('加载课程数据失败:', error)
+        this.allCoursesData = this.generateAllCourses()
+      }
     },
     
-    loadTeacherCourses(teacherId) {
-      // 这里可以根据teacherId从API加载对应老师的课程
-      console.log('加载老师课程:', teacherId)
+    // 加载老师课程
+    loadTeacherCourses() {
+      const teacherName = this.teacher.name
+      
+      if (!teacherName) {
+        console.warn('没有老师信息，无法加载课程')
+        this.teacherCourses = []
+        return
+      }
+      
+      try {
+        // 从所有课程数据中筛选出该老师的课程（去重）
+        this.teacherCourses = this.getTeacherCoursesFromData(teacherName)
+      } catch (error) {
+        console.error('加载老师课程失败:', error)
+        this.teacherCourses = []
+      }
+    },
+    
+    // 从数据中获取老师课程（去重）
+    getTeacherCoursesFromData(teacherName) {
+      if (!teacherName || this.allCoursesData.length === 0) {
+        return []
+      }
+      
+      // 1. 筛选出该老师的课程
+      const teacherCourses = this.allCoursesData.filter(course => 
+        course.teacher && course.teacher.includes(teacherName)
+      )
+      
+      // 2. 去重：同名课程只保留第一个
+      const uniqueCourses = []
+      const seenTitles = new Set()
+      
+      teacherCourses.forEach(course => {
+        if (!seenTitles.has(course.title)) {
+          seenTitles.add(course.title)
+          uniqueCourses.push(course)
+        }
+      })
+      
+      return uniqueCourses
+    },
+    
+    // 生成所有课程数据（简化版）
+    generateAllCourses() {
+      // 教师映射
+      const teachers = {
+        computer: ['张老师', '李教授', '王工程师', '刘老师', '陈教授', '赵导师'],
+        business: ['李经理', '王总监', '张营销总监', '陈财务顾问', '刘HR总监'],
+        design: ['张设计师', '李创意总监', '王视频制作人', '陈3D艺术家', '刘品牌设计师']
+      }
+
+      // 课程标题库
+      const courseTitles = {
+        computer: [
+          'Python入门教程', 'Java基础编程', 'HTML/CSS网页设计', 'Spring Boot企业级开发', 
+          'React Hooks深度解析', 'TypeScript高级技巧', 'Docker容器化实践', '微服务架构设计',
+          'Redis缓存优化', 'MySQL性能调优', 'Web安全攻防实战', '深度学习实战'
+        ],
+        business: [
+          '管理学基础', '市场营销入门', '财务管理基础', '领导力与团队管理', 
+          '商业模式创新', '战略管理', '组织行为学', '人力资源管理',
+          '财务报表分析', '客户关系管理', '企业战略规划', '商业分析实战'
+        ],
+        design: [
+          'UI/UX设计从入门到精通', '平面设计创意与实战', '视频剪辑与特效制作', 
+          '色彩理论与应用', '字体设计原理', '包装设计实战', 'UI交互动效',
+          '品牌视觉系统', '海报设计创意', '网页设计规范', '移动端设计适配', '3D建模与动画设计'
+        ]
+      }
+
+      // 生成课程数据
+      const allCourses = []
+      let courseId = 1
+      
+      // 为每个老师生成课程
+      for (const category in teachers) {
+        const categoryTeachers = teachers[category]
+        const categoryTitles = courseTitles[category] || courseTitles.computer
+        
+        categoryTeachers.forEach(teacher => {
+          // 每个老师有3-6个课程
+          const courseCount = 3 + Math.floor(Math.random() * 3)
+          
+          for (let i = 0; i < courseCount; i++) {
+            // 选择课程标题
+            const titleIndex = (courseId - 1) % categoryTitles.length
+            const title = categoryTitles[titleIndex]
+            
+            allCourses.push({
+              id: courseId,
+              title: title,
+              teacher: teacher,
+              category: category,
+              image: `https://picsum.photos/400/225?random=${courseId + 1000}`
+            })
+            
+            courseId++
+          }
+        })
+      }
+      
+      return allCourses
     }
   }
 }
@@ -344,12 +406,12 @@ export default {
 /* 视频卡片样式 */
 .video-card {
   transition: all 0.3s ease;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
 }
 
 .video-card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  transform: translateY(-6px);
+  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.12);
 }
 
 .line-clamp-2 {
@@ -362,5 +424,10 @@ export default {
 /* 查看更多按钮样式 */
 .text-link {
   @apply text-blue-600 hover:text-blue-800 transition-colors duration-200;
+}
+
+/* 图片缩放效果 */
+.group-hover\:scale-105 {
+  transition: transform 0.3s ease;
 }
 </style>

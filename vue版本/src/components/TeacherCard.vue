@@ -134,31 +134,39 @@ export default {
     
     toggleFollow() {
       this.isFollowing = !this.isFollowing
-      
-      // 更新本地存储
-      let following = JSON.parse(localStorage.getItem('bgareaFollowing') || '[]')
-      
+
+      let followedTeachers = JSON.parse(localStorage.getItem('userFollowedTeachers') || '[]')
+
       if (this.isFollowing) {
-        if (!following.some(item => item.id === this.teacher.id)) {
-          following.push({
+        if (!followedTeachers.some(item => item.id === this.teacher.id)) {
+          followedTeachers.push({
             id: this.teacher.id,
+            userId: this.teacher.userId || this.teacher.id,
             name: this.teacher.name,
             avatar: this.teacher.avatar,
-            followTime: new Date().getTime()
+            department: this.teacher.department || '',
+            followedAt: new Date().toISOString().split('T')[0]
           })
         }
       } else {
-        following = following.filter(item => item.id !== this.teacher.id)
+        followedTeachers = followedTeachers.filter(item => item.id !== this.teacher.id)
       }
-      
-      localStorage.setItem('bgareaFollowing', JSON.stringify(following))
+
+      localStorage.setItem('userFollowedTeachers', JSON.stringify(followedTeachers))
+
+      window.dispatchEvent(new StorageEvent('storage', {
+        key: 'userFollowedTeachers',
+        newValue: JSON.stringify(followedTeachers)
+      }))
+
+      window.dispatchEvent(new CustomEvent('followUpdated'))
+
       this.$emit('follow-change', { teacher: this.teacher, isFollowing: this.isFollowing })
     }
   },
   mounted() {
-    // 检查是否已关注
-    const following = JSON.parse(localStorage.getItem('bgareaFollowing') || '[]')
-    this.isFollowing = following.some(item => item.id === this.teacher.id)
+    const followedTeachers = JSON.parse(localStorage.getItem('userFollowedTeachers') || '[]')
+    this.isFollowing = followedTeachers.some(item => item.id === this.teacher.id)
   }
 }
 </script>

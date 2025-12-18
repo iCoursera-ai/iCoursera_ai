@@ -102,6 +102,7 @@
 
 <script>
 import Footer from '@/components/Footer.vue'
+import { initTestAccount } from '@/data/mockData.js'
 
 export default {
   name: 'Login',
@@ -158,7 +159,12 @@ export default {
           } else {
             sessionStorage.setItem('bgareaCurrentUser', JSON.stringify(user))
           }
-          
+
+          // 如果是测试账号，设置偏好设置已完成
+          if (user.email === 'test@bgarea.com') {
+            localStorage.setItem('preferencesCompleted', 'true')
+          }
+
           // 发送登录状态变化事件
           window.dispatchEvent(new CustomEvent('user-auth-change'))
 
@@ -168,7 +174,7 @@ export default {
           // 检查用户偏好设置状态
           const preferencesCompleted = localStorage.getItem('preferencesCompleted') === 'true'
           const preferencesSkipped = localStorage.getItem('preferencesSkipped') === 'true'
-          
+
           // 如果用户是新用户或没有偏好设置记录，则跳转到偏好设置页面
           if (!preferencesCompleted && !preferencesSkipped) {
             setTimeout(() => {
@@ -198,17 +204,19 @@ export default {
     }
   },
   mounted() {
+    initTestAccount()
+
     // 检查是否有注册成功的提示
     if (this.$route.query.registered === 'true') {
       this.showToast('注册成功，请登录您的账户', 'success')
     }
-    
+
     // 如果用户已登录，直接跳转到相应页面
     const currentUser = localStorage.getItem('bgareaCurrentUser') || sessionStorage.getItem('bgareaCurrentUser')
     if (currentUser) {
       const preferencesCompleted = localStorage.getItem('preferencesCompleted') === 'true'
       const preferencesSkipped = localStorage.getItem('preferencesSkipped') === 'true'
-      
+
       if (!preferencesCompleted && !preferencesSkipped) {
         this.$router.push('/preferences-setup')
       } else {

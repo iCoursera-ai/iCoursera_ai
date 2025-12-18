@@ -9,8 +9,8 @@
         <span class="text-lg font-semibold text-dark">BGarea</span>
       </div>
 
-      <!-- 中间搜索框区域 -->
-      <div class="flex-1 mx-6 md:mx-10 lg:mx-16">
+      <!-- 中间搜索框区域 - 只在非搜索页面显示 -->
+      <div v-if="!isSearchPage" class="flex-1 mx-6 md:mx-10 lg:mx-16">
         <div class="relative max-w-2xl mx-auto">
           <input 
             type="text" 
@@ -29,10 +29,17 @@
         </div>
       </div>
 
+      <!-- 如果是在搜索页面，这里留空以保持布局 -->
+      <div v-else class="flex-1"></div>
+
       <!-- 右侧用户操作区域 -->
       <div class="flex items-center gap-4">
-        <!-- 移动端搜索按钮 -->
-        <button @click="showMobileSearch = !showMobileSearch" class="md:hidden text-secondary hover:text-primary text-sm font-medium transition-colors duration-200 flex items-center gap-1">
+        <!-- 移动端搜索按钮 - 只在非搜索页面显示 -->
+        <button 
+          v-if="!isSearchPage"
+          @click="showMobileSearch = !showMobileSearch" 
+          class="md:hidden text-secondary hover:text-primary text-sm font-medium transition-colors duration-200 flex items-center gap-1"
+        >
           <i class="fa fa-search"></i>
         </button>
         
@@ -60,8 +67,8 @@
       </div>
     </div>
 
-    <!-- 移动端搜索框 -->
-    <div v-if="showMobileSearch" class="absolute top-full left-0 right-0 bg-white p-4 shadow-lg border-t z-40">
+    <!-- 移动端搜索框 - 只在非搜索页面显示 -->
+    <div v-if="showMobileSearch && !isSearchPage" class="absolute top-full left-0 right-0 bg-white p-4 shadow-lg border-t z-40">
       <div class="relative">
         <input 
           type="text" 
@@ -97,14 +104,34 @@ export default {
       showUserMenu: false,
       currentUser: null,
       isLoggedIn: false,
-      userMenuTimeout: null
+      userMenuTimeout: null,
+      isSearchPage: false // 新增：判断是否在搜索页面
+    }
+  },
+  watch: {
+    // 监听路由变化
+    '$route'(to) {
+      this.checkPageType(to)
     }
   },
   mounted() {
     this.checkLoginStatus()
     this.setupClickOutsideListener()
+    // 初始化时检查当前页面类型
+    this.checkPageType(this.$route)
+  },
+  beforeUnmount() {
+    // 清理事件监听器
+    if (this.userMenuTimeout) {
+      clearTimeout(this.userMenuTimeout)
+    }
   },
   methods: {
+    // 检查当前页面类型
+    checkPageType(route) {
+      this.isSearchPage = route.path === '/search'
+    },
+    
     handleSearch() {
       if (this.searchQuery.trim()) {
         // 跳转到搜索页面并传递搜索参数
@@ -129,6 +156,7 @@ export default {
           }
         })
         this.showMobileSearch = false
+        this.mobileSearchQuery = ''
       }
     },
     
@@ -158,23 +186,28 @@ export default {
     checkLoginStatus() {
       const user = localStorage.getItem('bgareaCurrentUser') || sessionStorage.getItem('bgareaCurrentUser')
       if (user) {
-        this.currentUser = JSON.parse(user)
-        this.isLoggedIn = true
+        try {
+          this.currentUser = JSON.parse(user)
+          this.isLoggedIn = true
+        } catch (error) {
+          console.error('解析用户数据失败:', error)
+          this.clearUserData()
+        }
       }
     },
     
     logout() {
+      this.clearUserData()
+      this.$router.push('/')
+      window.dispatchEvent(new CustomEvent('user-auth-change'))
+    },
+    
+    clearUserData() {
       localStorage.removeItem('bgareaCurrentUser')
       sessionStorage.removeItem('bgareaCurrentUser')
       this.isLoggedIn = false
       this.currentUser = null
       this.showUserMenu = false
-
-      // 发送登录状态变化事件
-      window.dispatchEvent(new CustomEvent('user-auth-change'))
-      
-      this.$router.push('/')
-      
     },
     
     setupClickOutsideListener() {
@@ -216,5 +249,10 @@ input:focus {
 /* 搜索按钮样式优化 */
 button[class*="absolute"]:hover {
   background-color: transparent;
+}
+
+/* 当在搜索页面时，右侧区域可能需要调整 */
+.flex-1 {
+  transition: all 0.3s ease;
 }
 </style>

@@ -278,7 +278,7 @@ export default {
       // 所有课程数据
       allCourses: [],
       
-      // 排序选项
+      // 排序选项 - 简化：热度就是播放量
       sortOptions: [
         { value: 'hot', label: '按热度' },
         { value: 'new', label: '按时间' },
@@ -313,8 +313,7 @@ export default {
     }
   },
   computed: {
-    // 过滤后的课程
-    // 修改 filteredCourses 计算属性
+    // 过滤后的课程 - 简化：热度=播放量
     filteredCourses() {
       let filtered = [...this.allCourses]
 
@@ -366,15 +365,21 @@ export default {
         )
       }
 
-      // 排序
+      // 真正的有序排序逻辑 - 简化：热度=播放量
       filtered.sort((a, b) => {
         switch (this.sortBy) {
           case 'hot':
-            return parseFloat(b.hotScore) - parseFloat(a.hotScore)
+            // 按热度排序 = 按播放量排序
+            return b.rawViews - a.rawViews
+            
           case 'new':
-            return new Date(b.createdAt) - new Date(a.createdAt)
+            // 按时间排序：最新的在前（时间戳越大越新）
+            return b.rawCreatedAt - a.rawCreatedAt
+            
           case 'rating':
+            // 按评分排序：评分高的在前
             return parseFloat(b.rating) - parseFloat(a.rating)
+            
           default:
             return 0
         }
@@ -479,7 +484,6 @@ export default {
   },
   methods: {
     // 处理路由变化
-    // 修改 handleRouteChange 方法
     handleRouteChange(categoryId) {
       if (categoryId) {
         const categoryIdNum = parseInt(categoryId)
@@ -500,7 +504,6 @@ export default {
     },
     
     // 选择分类
-    // 修改 selectCategory 方法
     selectCategory(category) {
       this.activeCategory = category
 
@@ -606,7 +609,6 @@ export default {
     },
     
     // 跳转到课程详情
-    // 修改 goToCourseDetail 方法
     goToCourseDetail(course) {
       if (!course || !course.id) {
         console.warn('课程信息不完整')
@@ -640,8 +642,17 @@ export default {
       })
     },
     
-    // 生成模拟课程数据
-    // 修改 generateCourses 方法
+    // 时间显示格式化方法
+    getTimeAgo(days) {
+      if (days === 0) return '今天'
+      if (days === 1) return '昨天'
+      if (days < 7) return `${days}天前`
+      if (days < 30) return `${Math.floor(days / 7)}周前`
+      if (days < 365) return `${Math.floor(days / 30)}个月前`
+      return `${Math.floor(days / 365)}年前`
+    },
+    
+    // 生成模拟课程数据 - 简化：热度=播放量
     generateCourses() {
       const categories = [
         '编程开发', '人工智能', '数据科学', '商业管理', '设计创意',
@@ -655,11 +666,11 @@ export default {
       // 教师映射，确保与首页的教师名称一致
       const teachers = ['张老师', '李教授', '王工程师', '刘老师', '陈教授', '赵导师', '李经理', '王总监', '张营销总监', '陈财务顾问', '刘HR总监', '张设计师', '李创意总监', '王视频制作人', '陈3D艺术家', '刘品牌设计师']
 
-      // 生成200个课程
+      // 生成200个课程 - 确保数据有规律
       this.allCourses = Array.from({ length: 200 }, (_, index) => {
-        const categoryName = categories[Math.floor(Math.random() * categories.length)]
-        const difficulty = difficulties[Math.floor(Math.random() * difficulties.length)]
-        const price = prices[Math.floor(Math.random() * prices.length)]
+        const categoryName = categories[index % categories.length]
+        const difficulty = difficulties[index % difficulties.length]
+        const price = prices[index % prices.length]
 
         // 根据分类名称映射到与首页一致的category字段
         let categoryKey = 'computer' // 默认
@@ -672,40 +683,60 @@ export default {
         // 根据分类选择教师
         let teacher;
         if (categoryKey === 'computer') {
-          teacher = ['张老师', '李教授', '王工程师', '刘老师', '陈教授'][Math.floor(Math.random() * 5)]
+          teacher = ['张老师', '李教授', '王工程师', '刘老师', '陈教授'][index % 5]
         } else if (categoryKey === 'business') {
-          teacher = ['李经理', '王总监', '张营销总监', '陈财务顾问', '刘HR总监'][Math.floor(Math.random() * 5)]
+          teacher = ['李经理', '王总监', '张营销总监', '陈财务顾问', '刘HR总监'][index % 5]
         } else if (categoryKey === 'design') {
-          teacher = ['张设计师', '李创意总监', '王视频制作人', '陈3D艺术家', '刘品牌设计师'][Math.floor(Math.random() * 5)]
+          teacher = ['张设计师', '李创意总监', '王视频制作人', '陈3D艺术家', '刘品牌设计师'][index % 5]
         } else {
-          teacher = teachers[Math.floor(Math.random() * teachers.length)]
+          teacher = teachers[index % teachers.length]
         }
 
+        // 生成有规律的课程数据
         const title = this.getCourseTitle(categoryKey, difficulty)
+        
+        // 1. 时间戳：越新的课程ID越大（模拟真实时间顺序）
+        // 200个课程分布在过去30天内
+        const daysAgo = 30 - Math.floor(index * 30 / 200) // 从30天前到1天前
+        const createdAt = new Date(Date.now() - daysAgo * 24 * 60 * 60 * 1000)
+        
+        // 2. 播放量：有规律地分布（热度=播放量）
+        // 热门课程播放量高，新课程播放量相对较低
+        const baseViews = 5000 + (200 - index) * 100 // ID越小（越老）播放量越高
+        const randomFactor = Math.random() * 0.5 + 0.75 // 0.75-1.25的随机因子
+        const viewsNum = Math.floor(baseViews * randomFactor)
+        
+        // 3. 评论数和评分
+        const commentsNum = Math.floor(viewsNum * 0.05) + Math.floor(Math.random() * 100)
+        const rating = (3.5 + Math.random() * 1.5).toFixed(1) // 3.5-5.0
 
         return {
           id: index + 1,
           title: title,
           teacher: teacher,
-          views: `${(Math.random() * 100 + 5).toFixed(1)}万播放`,
-          comments: `${Math.floor(Math.random() * 10000 + 1000)}`,
-          duration: `${Math.floor(Math.random() * 60 + 10)}:${Math.floor(Math.random() * 60).toString().padStart(2, '0')}`,
-          timeAgo: `${Math.floor(Math.random() * 30 + 1)}天前`,
-          category: categoryKey, // 使用与首页一致的category字段
-          categoryName: categoryName, // 保留原分类名称用于显示
+          views: `${(viewsNum / 10000).toFixed(1)}万播放`, // 转换为"万播放"格式
+          comments: `${commentsNum}`,
+          duration: `${Math.floor(Math.random() * 40 + 10)}:${Math.floor(Math.random() * 60).toString().padStart(2, '0')}`,
+          timeAgo: this.getTimeAgo(daysAgo), // 使用计算出的天数
+          category: categoryKey,
+          categoryName: categoryName,
           difficulty: difficulty,
           price: price,
-          rating: (Math.random() * 2 + 3).toFixed(1), // 3.0-5.0
-          hotScore: Math.random() * 100, // 热度分数
-          createdAt: new Date(Date.now() - Math.random() * 30 * 24 * 60 * 60 * 1000).toISOString(), // 30天内
+          rating: rating,
+          // 热度分数 = 播放量（简化）
+          hotScore: viewsNum,
+          createdAt: createdAt.toISOString(),
+          // 用于排序的原始数值
+          rawViews: viewsNum, // 播放量就是热度
+          rawComments: commentsNum,
+          rawCreatedAt: createdAt.getTime(),
           image: `https://picsum.photos/400/225?random=${index + 1000}`,
-          description: `${title} - 由${teacher}主讲，课程评分${(Math.random() * 2 + 3).toFixed(1)}分，涵盖${categoryName}相关内容`
+          description: `${title} - 由${teacher}主讲，课程评分${rating}分，${daysAgo}天前发布，已有${viewsNum}次播放`
         }
       })
     },
     
     // 根据分类和难度生成课程标题
-    // 修改 getCourseTitle 方法
     getCourseTitle(categoryKey, difficulty) {
       const titles = {
         computer: {

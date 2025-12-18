@@ -284,6 +284,7 @@
 import Header from '@/components/Header.vue'
 import Footer from '@/components/Footer.vue'
 import Chart from 'chart.js/auto'
+import { isTestAccount, getTestAccountData, getEmptyData } from '@/data/mockData.js'
 
 export default {
   name: 'TeacherDashboard',
@@ -385,9 +386,15 @@ export default {
       this.$router.push('/personal-information')
       return
     }
-    
+
+    // 根据用户身份加载数据
+    if (isTestAccount(this.currentUser.email)) {
+      this.loadTestAccountData()
+    } else {
+      this.loadEmptyData()
+    }
+
     this.initChart()
-    this.generateAllCourses() // 生成所有课程数据
     this.setActivePage() // 设置当前激活页面
   },
   beforeUnmount() {
@@ -415,6 +422,24 @@ export default {
         console.error('加载用户信息失败:', error)
         this.$router.push('/login')
       }
+    },
+
+    // 加载测试账号数据
+    loadTestAccountData() {
+      const data = getTestAccountData()
+      this.videoStats = data.dashboardData.videoStats
+      this.expandedCourses = data.dashboardData.courses
+      this.courses = this.expandedCourses.slice(0, 3)
+      this.originalCourses = [...this.courses]
+    },
+
+    // 加载空数据
+    loadEmptyData() {
+      const data = getEmptyData()
+      this.videoStats = data.dashboardData.videoStats
+      this.expandedCourses = []
+      this.courses = []
+      this.originalCourses = []
     },
     
     // 设置当前激活页面
@@ -477,7 +502,11 @@ export default {
     },
 
     syncData() {
-      this.generateRandomData()
+      if (isTestAccount(this.currentUser?.email)) {
+        this.generateRandomData()
+      } else {
+        this.generateEmptyChart()
+      }
       this.updateLastSyncTime()
     },
 
@@ -492,12 +521,20 @@ export default {
     },
 
     updateDataByType() {
-      this.generateRandomData()
+      if (isTestAccount(this.currentUser?.email)) {
+        this.generateRandomData()
+      } else {
+        this.generateEmptyChart()
+      }
       this.updateChartTitle()
     },
 
     updateDataByDate() {
-      this.generateRandomData()
+      if (isTestAccount(this.currentUser?.email)) {
+        this.generateRandomData()
+      } else {
+        this.generateEmptyChart()
+      }
       this.updateChartTitle()
     },
 
@@ -699,7 +736,27 @@ export default {
     },
 
     initChart() {
-      this.generateRandomData()
+      if (isTestAccount(this.currentUser?.email)) {
+        this.generateRandomData()
+      } else {
+        this.generateEmptyChart()
+      }
+    },
+
+    generateEmptyChart() {
+      const days = this.getDateRangeDays()
+      const dates = []
+      const playCounts = []
+
+      let currentDate = new Date(this.startDate)
+      for (let i = 0; i < days; i++) {
+        const dateStr = currentDate.toISOString().split('T')[0]
+        dates.push(dateStr)
+        playCounts.push(0)
+        currentDate.setDate(currentDate.getDate() + 1)
+      }
+
+      this.updateChart(dates, playCounts)
     }
   }
 }

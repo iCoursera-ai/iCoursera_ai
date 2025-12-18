@@ -264,6 +264,7 @@
 <script>
 import Header from '@/components/Header.vue'
 import Footer from '@/components/Footer.vue'
+import { isTestAccount, getTestAccountData, getEmptyData } from '@/data/mockData.js'
 
 export default {
   name: 'CourseManagement',
@@ -283,18 +284,7 @@ export default {
         endDate: '',
         id: ''
       },
-      courses: [
-        { id: 232, name: '操作系统', tag: '操作系统', author: '张三', playCount: 315, createdAt: '2021-02-28 10:30', status: '审核请求' },
-        { id: 254, name: '物联网', tag: '操作系统', author: '李四', playCount: 295, createdAt: '2021-02-28 10:30', status: '举报中' },
-        { id: 46, name: '计算机网络', tag: '操作系统', author: '王五', playCount: 315, createdAt: '2021-02-28 10:30', status: '已上线' },
-        { id: 577, name: '网络信息安全', tag: '操作系统', author: '赵六', playCount: 295, createdAt: '2021-02-28 10:30', status: '已上线' },
-        { id: 233, name: '每日推荐视频集', tag: '操作系统', author: '钱七', playCount: 315, createdAt: '2021-02-28 10:30', status: '已上线' },
-        { id: 255, name: '每日推荐视频集', tag: '操作系统', author: '孙八', playCount: 295, createdAt: '2021-02-28 10:30', status: '已上线' },
-        { id: 47, name: '每日推荐视频集', tag: '操作系统', author: '周九', playCount: 315, createdAt: '2021-02-28 10:30', status: '已上线' },
-        { id: 578, name: '每日推荐视频集', tag: '操作系统', author: '吴十', playCount: 295, createdAt: '2021-02-28 10:30', status: '已上线' },
-        { id: 234, name: '每日推荐视频集', tag: '操作系统', author: '郑十一', playCount: 315, createdAt: '2021-02-28 10:30', status: '已上线' },
-        { id: 256, name: '每日推荐视频集', tag: '操作系统', author: '王十二', playCount: 295, createdAt: '2021-02-28 10:30', status: '已上线' }
-      ],
+      courses: [],
       filteredCourses: [],
       currentPage: 1,
       itemsPerPage: 10
@@ -347,6 +337,15 @@ export default {
     }
   },
   mounted() {
+    const currentUser = JSON.parse(localStorage.getItem('bgareaCurrentUser') || sessionStorage.getItem('bgareaCurrentUser') || '{}')
+
+    if (isTestAccount(currentUser.email)) {
+      const data = getTestAccountData()
+      this.courses = data.courses
+    } else {
+      this.courses = []
+    }
+
     this.filteredCourses = [...this.courses]
   },
   methods: {

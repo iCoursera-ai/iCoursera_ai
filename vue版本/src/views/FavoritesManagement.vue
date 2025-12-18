@@ -147,7 +147,7 @@
                         :key="course.id"
                         class="border-b border-gray-200 table-row-hover">
                       <td class="py-3 px-2 text-gray-500">{{ course.id }}</td>
-                      <td class="py-3 px-2 text-gray-900">{{ course.name }}</td>
+                      <td class="py-3 px-2 text-gray-900">{{ course.name || course.title }}</td>
                       <td class="py-3 px-2 text-gray-900">{{ course.teacher }}</td>
                       <td class="py-3 px-2">
                         <span :class="getStatusClass(course.status)" class="text-xs">
@@ -156,10 +156,16 @@
                       </td>
                       <td class="py-3 px-2 text-gray-500">{{ course.collectedAt }}</td>
                       <td class="py-3 px-2">
-                        <button class="text-blue-600 hover:text-blue-800 text-sm" 
-                                @click="removeFavorite(course.id)">
-                          取消收藏
-                        </button>
+                        <div class="flex gap-2">
+                          <button class="text-blue-600 hover:text-blue-800 text-sm px-2 py-1 border border-blue-600 rounded hover:bg-blue-50 transition-colors" 
+                                  @click="goToCourseFromFavorite(course)">
+                            继续学习
+                          </button>
+                          <button class="text-red-600 hover:text-red-800 text-sm px-2 py-1 border border-red-600 rounded hover:bg-red-50 transition-colors" 
+                                  @click="removeFavorite(course.id)">
+                            取消收藏
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   </tbody>
@@ -200,10 +206,16 @@
                       <td class="py-3 px-2 text-gray-900">{{ like.teacher }}</td>
                       <td class="py-3 px-2 text-gray-500">{{ like.likedAt }}</td>
                       <td class="py-3 px-2">
-                        <button class="text-red-600 hover:text-red-800 text-sm" 
-                                @click="removeLike(like.id)">
-                          取消点赞
-                        </button>
+                        <div class="flex gap-2">
+                          <button class="text-blue-600 hover:text-blue-800 text-sm px-2 py-1 border border-blue-600 rounded hover:bg-blue-50 transition-colors" 
+                                  @click="goToCourseFromLike(like)">
+                            查看课程
+                          </button>
+                          <button class="text-red-600 hover:text-red-800 text-sm px-2 py-1 border border-red-600 rounded hover:bg-red-50 transition-colors" 
+                                  @click="removeLike(like.id)">
+                            取消点赞
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   </tbody>
@@ -235,18 +247,19 @@
                       </div>
                       <div>
                         <h4 class="font-medium text-gray-900 mb-1">{{ record.courseName }}</h4>
-                        <p class="text-sm text-gray-500">观看时间: {{ record.watchedAt }}</p>
+                        <p class="text-sm text-gray-500">授课教师: {{ record.teacher || '未知' }}</p>
+                        <p class="text-sm text-gray-500 mt-1">观看时间: {{ record.watchedAt }}</p>
                         <p class="text-sm text-gray-500 mt-1">
                           观看进度: <span class="font-medium">{{ record.progress }}%</span>
                         </p>
                       </div>
                     </div>
                     <div class="flex gap-2">
-                      <button class="text-xs text-blue-600 hover:text-blue-800 px-3 py-1 border border-blue-600 rounded"
-                              @click="continueWatching(record.courseId)">
+                      <button class="text-xs text-blue-600 hover:text-blue-800 px-3 py-1 border border-blue-600 rounded hover:bg-blue-50 transition-colors"
+                              @click="continueWatching(record)">
                         继续观看
                       </button>
-                      <button class="text-xs text-red-600 hover:text-red-800" 
+                      <button class="text-xs text-red-600 hover:text-red-800 px-2 py-1 border border-red-600 rounded hover:bg-red-50 transition-colors" 
                               @click="removeHistory(record.id)">
                         删除
                       </button>
@@ -385,9 +398,9 @@ export default {
     // 获取当前用户的storage key
     userStorageKey() {
       if (!this.currentUser || !this.currentUser.userId) {
-        return 'user'
+        return 'default'
       }
-      return `user_${this.currentUser.userId}`
+      return this.currentUser.userId
     }
   },
   mounted() {
@@ -481,12 +494,10 @@ export default {
     migrateOldData() {
       if (!this.currentUser || !this.currentUser.userId) return
 
-      const userKey = this.userStorageKey
-
       // 迁移收藏数据
       const oldFavorites = JSON.parse(localStorage.getItem('userFavorites') || '[]')
       if (oldFavorites.length > 0) {
-        const currentFavorites = JSON.parse(localStorage.getItem(`${userKey}_favorites`) || '[]')
+        const currentFavorites = JSON.parse(localStorage.getItem(`user_${this.userStorageKey}_favorites`) || '[]')
         // 合并数据，避免重复
         const mergedFavorites = [...currentFavorites]
         oldFavorites.forEach(item => {
@@ -494,35 +505,35 @@ export default {
             mergedFavorites.push(item)
           }
         })
-        localStorage.setItem(`${userKey}_favorites`, JSON.stringify(mergedFavorites))
+        localStorage.setItem(`user_${this.userStorageKey}_favorites`, JSON.stringify(mergedFavorites))
         localStorage.removeItem('userFavorites')
       }
 
       // 迁移点赞数据
       const oldLikes = JSON.parse(localStorage.getItem('userLikes') || '[]')
       if (oldLikes.length > 0) {
-        const currentLikes = JSON.parse(localStorage.getItem(`${userKey}_likes`) || '[]')
+        const currentLikes = JSON.parse(localStorage.getItem(`user_${this.userStorageKey}_likes`) || '[]')
         const mergedLikes = [...currentLikes]
         oldLikes.forEach(item => {
-          if (!mergedLikes.some(l => l.courseId === item.courseId)) {
+          if (!mergedLikes.some(l => l.id === item.id)) {
             mergedLikes.push(item)
           }
         })
-        localStorage.setItem(`${userKey}_likes`, JSON.stringify(mergedLikes))
+        localStorage.setItem(`user_${this.userStorageKey}_likes`, JSON.stringify(mergedLikes))
         localStorage.removeItem('userLikes')
       }
 
       // 迁移历史数据
       const oldHistory = JSON.parse(localStorage.getItem('userHistory') || '[]')
       if (oldHistory.length > 0) {
-        const currentHistory = JSON.parse(localStorage.getItem(`${userKey}_history`) || '[]')
+        const currentHistory = JSON.parse(localStorage.getItem(`user_${this.userStorageKey}_history`) || '[]')
         const mergedHistory = [...currentHistory]
         oldHistory.forEach(item => {
-          if (!mergedHistory.some(h => h.courseId === item.courseId)) {
+          if (!mergedHistory.some(h => h.id === item.id)) {
             mergedHistory.push(item)
           }
         })
-        localStorage.setItem(`${userKey}_history`, JSON.stringify(mergedHistory))
+        localStorage.setItem(`user_${this.userStorageKey}_history`, JSON.stringify(mergedHistory))
         localStorage.removeItem('userHistory')
       }
     },
@@ -538,44 +549,48 @@ export default {
         const userKey = this.userStorageKey
         
         // 收藏数据 - 尝试新格式，兼容旧格式
-        let favorites = JSON.parse(localStorage.getItem(`${userKey}_favorites`) || '[]')
+        let favorites = JSON.parse(localStorage.getItem(`user_${userKey}_favorites`) || '[]')
         // 如果新格式为空，尝试旧格式（兼容性处理）
         if (favorites.length === 0) {
           const oldFavorites = JSON.parse(localStorage.getItem('userFavorites') || '[]')
           if (oldFavorites.length > 0) {
             favorites = oldFavorites
             // 迁移到新格式
-            localStorage.setItem(`${userKey}_favorites`, JSON.stringify(favorites))
+            localStorage.setItem(`user_${userKey}_favorites`, JSON.stringify(favorites))
             localStorage.removeItem('userFavorites')
           }
         }
         this.favorites = favorites
 
         // 点赞数据 - 同样处理兼容性
-        let likes = JSON.parse(localStorage.getItem(`${userKey}_likes`) || '[]')
+        let likes = JSON.parse(localStorage.getItem(`user_${userKey}_likes`) || '[]')
         if (likes.length === 0) {
           const oldLikes = JSON.parse(localStorage.getItem('userLikes') || '[]')
           if (oldLikes.length > 0) {
             likes = oldLikes
-            localStorage.setItem(`${userKey}_likes`, JSON.stringify(likes))
+            localStorage.setItem(`user_${userKey}_likes`, JSON.stringify(likes))
             localStorage.removeItem('userLikes')
           }
         }
         this.likes = likes
 
         // 浏览历史数据 - 同样处理兼容性
-        let history = JSON.parse(localStorage.getItem(`${userKey}_history`) || '[]')
+        let history = JSON.parse(localStorage.getItem(`user_${userKey}_history`) || '[]')
         if (history.length === 0) {
           const oldHistory = JSON.parse(localStorage.getItem('userHistory') || '[]')
           if (oldHistory.length > 0) {
             history = oldHistory
-            localStorage.setItem(`${userKey}_history`, JSON.stringify(history))
+            localStorage.setItem(`user_${userKey}_history`, JSON.stringify(history))
             localStorage.removeItem('userHistory')
           }
         }
 
         // 按观看时间倒序排列
-        this.history = history.sort((a, b) => new Date(b.watchedAt) - new Date(a.watchedAt))
+        this.history = history.sort((a, b) => {
+          const dateA = new Date(a.watchedAt || 0)
+          const dateB = new Date(b.watchedAt || 0)
+          return dateB - dateA
+        })
       } catch (error) {
         console.error('加载用户数据失败:', error)
         // 初始化为空数组
@@ -590,9 +605,9 @@ export default {
       if (!this.currentUser || !this.currentUser.userId) return
 
       const userKey = this.userStorageKey
-      if (event.key === `${userKey}_favorites` || 
-          event.key === `${userKey}_likes` || 
-          event.key === `${userKey}_history` ||
+      if (event.key === `user_${userKey}_favorites` || 
+          event.key === `user_${userKey}_likes` || 
+          event.key === `user_${userKey}_history` ||
           // 同时监听旧格式的键名，确保完全兼容
           event.key === 'userFavorites' ||
           event.key === 'userLikes' ||
@@ -628,7 +643,7 @@ export default {
     removeFavorite(id) {
       if (confirm('确定要取消收藏吗？')) {
         this.favorites = this.favorites.filter(course => course.id !== id)
-        this.saveToLocalStorage(`${this.userStorageKey}_favorites`, this.favorites)
+        localStorage.setItem(`user_${this.userStorageKey}_favorites`, JSON.stringify(this.favorites))
         this.showToast('已取消收藏')
       }
     },
@@ -637,7 +652,7 @@ export default {
     removeLike(id) {
       if (confirm('确定要取消点赞吗？')) {
         this.likes = this.likes.filter(like => like.id !== id)
-        this.saveToLocalStorage(`${this.userStorageKey}_likes`, this.likes)
+        localStorage.setItem(`user_${this.userStorageKey}_likes`, JSON.stringify(this.likes))
         this.showToast('已取消点赞')
       }
     },
@@ -646,14 +661,109 @@ export default {
     removeHistory(id) {
       if (confirm('确定要删除这条历史记录吗？')) {
         this.history = this.history.filter(record => record.id !== id)
-        this.saveToLocalStorage(`${this.userStorageKey}_history`, this.history)
+        localStorage.setItem(`user_${this.userStorageKey}_history`, JSON.stringify(this.history))
         this.showToast('已删除历史记录')
       }
     },
     
-    // 继续观看
-    continueWatching(courseId) {
-      this.$router.push(`/course/${courseId}/player`)
+    // 继续观看历史记录
+    continueWatching(record) {
+      // 确保课程信息完整
+      const courseData = record.courseData || {
+        id: record.courseId,
+        title: record.courseName,
+        teacher: record.teacher || '未知教师',
+        category: this.getCategoryFromCourseTitle(record.courseName),
+        description: `${record.courseName} - 学习记录`,
+        views: '已学习',
+        progress: record.progress || 0
+      }
+      
+      console.log('从历史记录跳转的课程数据:', courseData)
+      localStorage.setItem('selectedCourse', JSON.stringify(courseData))
+      
+      this.$router.push({
+        name: 'VideoPlayer',
+        params: {
+          courseId: record.courseId
+        },
+        query: {
+          fromHistory: true,
+          historyId: record.id
+        }
+      })
+    },
+    
+    // 从收藏跳转到课程
+    goToCourseFromFavorite(course) {
+      // 确保课程信息完整
+      const courseData = {
+        id: course.id,
+        title: course.name || course.title,
+        teacher: course.teacher || '未知教师',
+        category: course.category || this.getCategoryFromCourseTitle(course.name || course.title),
+        description: course.description || `${course.name || course.title} - 收藏课程`,
+        views: course.views || '0播放',
+        comments: course.comments || '0',
+        duration: course.duration || '00:00',
+        image: course.image || 'https://picsum.photos/400/225?random=' + course.id
+      }
+      
+      console.log('从收藏跳转的课程数据:', courseData)
+      localStorage.setItem('selectedCourse', JSON.stringify(courseData))
+      
+      this.$router.push({
+        name: 'VideoPlayer',
+        params: {
+          courseId: course.id
+        },
+        query: {
+          fromFavorite: true
+        }
+      })
+    },
+    
+    // 从点赞跳转到课程
+    goToCourseFromLike(like) {
+      const courseData = {
+        id: like.courseId,
+        title: like.courseName,
+        teacher: like.teacher || '未知教师',
+        category: this.getCategoryFromCourseTitle(like.courseName),
+        description: `${like.courseName} - 点赞课程`,
+        views: '已点赞'
+      }
+      
+      console.log('从点赞跳转的课程数据:', courseData)
+      localStorage.setItem('selectedCourse', JSON.stringify(courseData))
+      
+      this.$router.push({
+        name: 'VideoPlayer',
+        params: {
+          courseId: like.courseId
+        },
+        query: {
+          fromLike: true
+        }
+      })
+    },
+    
+    // 根据课程标题判断类别
+    getCategoryFromCourseTitle(title) {
+      if (!title) return 'computer'
+      
+      const computerKeywords = ['编程', '代码', '算法', '计算机', 'Python', 'Java', 'Web', '前端', '后端', '操作系统']
+      const businessKeywords = ['商业', '管理', '市场', '营销', '财务', '投资', 'MBA', '分析']
+      const designKeywords = ['设计', 'UI', 'UX', '视觉', '创意', '美术', '插画', '平面']
+      
+      if (computerKeywords.some(keyword => title.includes(keyword))) {
+        return 'computer'
+      } else if (businessKeywords.some(keyword => title.includes(keyword))) {
+        return 'business'
+      } else if (designKeywords.some(keyword => title.includes(keyword))) {
+        return 'design'
+      }
+      return 'computer'
     },
     
     // 批量操作
@@ -665,32 +775,21 @@ export default {
         if (this.currentTab === 'collection') {
           // 清空收藏
           this.favorites = []
-          this.saveToLocalStorage(`${this.userStorageKey}_favorites`, this.favorites)
+          localStorage.setItem(`user_${this.userStorageKey}_favorites`, JSON.stringify(this.favorites))
           
         } else if (this.currentTab === 'likes') {
           // 清空点赞
           this.likes = []
-          this.saveToLocalStorage(`${this.userStorageKey}_likes`, this.likes)
+          localStorage.setItem(`user_${this.userStorageKey}_likes`, JSON.stringify(this.likes))
           
         } else if (this.currentTab === 'history') {
           // 清空历史记录
           this.history = []
-          this.saveToLocalStorage(`${this.userStorageKey}_history`, this.history)
+          localStorage.setItem(`user_${this.userStorageKey}_history`, JSON.stringify(this.history))
         }
         
         this.showToast(`${actionText}成功`)
       }
-    },
-    
-    // 保存数据到localStorage
-    saveToLocalStorage(key, data) {
-      localStorage.setItem(key, JSON.stringify(data))
-      
-      // 触发storage事件，让其他页面也能感知到变化
-      window.dispatchEvent(new StorageEvent('storage', {
-        key: key,
-        newValue: JSON.stringify(data)
-      }))
     },
     
     // 显示提示信息
