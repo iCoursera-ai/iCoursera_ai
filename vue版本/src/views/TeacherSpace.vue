@@ -138,6 +138,20 @@ export default {
     
     // 从本地存储获取老师信息
     const teacher = ref(JSON.parse(localStorage.getItem('currentTeacherInfo') || '{}'))
+
+    // 如果本地存储没有，尝试从路由参数获取
+    if (!teacher.value.name && route.query.teacherName) {
+      teacher.value = {
+        name: route.query.teacherName,
+        userId: route.query.teacherId || `teacher_${route.query.teacherName}`,
+        department: route.query.department || '未设置学院',
+        avatar: '👤',
+        description: route.query.description || `${route.query.teacherName} - 老师`,
+        fans: route.query.fans || '0'
+      }
+    }
+
+    console.log('教师空间加载的老师信息:', teacher.value)
     
     // 关注状态
     const isFollowingTeacher = ref(false)
@@ -150,6 +164,7 @@ export default {
       const followedTeachers = JSON.parse(localStorage.getItem(userSpecificKey) || '[]')
       
       isFollowingTeacher.value = followedTeachers.some(t => t.userId === teacher.value.userId)
+      console.log('检查关注状态:', isFollowingTeacher.value, '老师ID:', teacher.value.userId)
     }
     
     // 关注/取消关注老师
@@ -164,6 +179,7 @@ export default {
         const updatedTeachers = followedTeachers.filter(t => t.userId !== teacher.value.userId)
         localStorage.setItem(userSpecificKey, JSON.stringify(updatedTeachers))
         isFollowingTeacher.value = false
+        alert('已取消关注')
       } else {
         // 关注
         const teacherData = {
@@ -173,13 +189,21 @@ export default {
           department: teacher.value.department,
           avatar: teacher.value.avatar,
           description: teacher.value.description,
+          fans: teacher.value.fans,
           followedAt: new Date().toISOString().split('T')[0]
         }
         
         followedTeachers.push(teacherData)
         localStorage.setItem(userSpecificKey, JSON.stringify(followedTeachers))
         isFollowingTeacher.value = true
+        alert('已关注老师')
       }
+      
+      // 触发更新事件
+      window.dispatchEvent(new StorageEvent('storage', {
+        key: userSpecificKey,
+        newValue: JSON.stringify(followedTeachers)
+      }))
       
       window.dispatchEvent(new CustomEvent('followUpdated'))
     }

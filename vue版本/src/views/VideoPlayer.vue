@@ -170,16 +170,29 @@
             <!-- 评论列表 -->
             <div class="comments-list">
               <div class="comment" v-for="comment in sortedComments" :key="comment.id">
-                <div class="comment-avatar">{{ comment.avatar }}</div>
+                <div 
+                  class="comment-avatar" 
+                  :style="{ backgroundColor: comment.avatarBgColor || '#667eea' }"
+                >
+                  {{ comment.avatar || '👤' }}
+                </div>
                 <div class="comment-content">
                   <div class="comment-header">
                     <span class="comment-author">{{ comment.author }}</span>
-                    <span class="comment-time">{{ comment.time }}</span>
+                    <span class="comment-time">{{ formatCommentTime(comment.timestamp) }}</span>
                   </div>
                   <p>{{ comment.content }}</p>
                   <div class="comment-stats">
                     <span @click="likeComment(comment.id)">👍 {{ comment.likes }}</span>
                     <span @click="showReplyBox(comment.id)">💬 回复</span>
+                    <!-- 添加删除按钮 -->
+                    <span 
+                      v-if="getCurrentUserId() === comment.userId" 
+                      @click="deleteComment(comment.id)"
+                      class="delete-btn"
+                    >
+                      🗑️ 删除
+                    </span>
                   </div>
                 </div>
               </div>
@@ -486,7 +499,6 @@ import Header from '@/components/Header.vue'
 import Footer from '@/components/Footer.vue'
 import { ref, computed, onMounted, onBeforeUnmount, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import pinyin from 'pinyin'
 
 export default {
   name: 'VideoPlayer',
@@ -563,8 +575,7 @@ export default {
     })
 
     // 格式化粉丝数
-    const formatFansCount = (views) => {
-      const fans = Math.floor(views * 0.05) // 假设5%的观看者成为粉丝
+    const formatFansCount = (fans) => {
       if (fans >= 10000) {
         return `${(fans / 10000).toFixed(1)}万`
       } else if (fans >= 1000) {
@@ -582,39 +593,103 @@ export default {
       }
       return departments[category] || '未分类学院'
     }
+
+    // 生成用户头像的函数
+    const generateUserAvatar = (name) => {
+      if (!name) return '👤'
+      
+      // 如果是emoji直接返回
+      if (name.length === 2 && /\p{Emoji}/u.test(name)) {
+        return name
+      }
+      
+      // 如果是中文名，取第一个字
+      if (/[\u4e00-\u9fa5]/.test(name)) {
+        return name.charAt(0)
+      }
+      
+      // 如果是英文名，取第一个字母
+      if (/^[A-Za-z]/.test(name)) {
+        return name.charAt(0).toUpperCase()
+      }
+      
+      // 默认返回emoji
+      return '👤'
+    }
+
+    // 使用更丰富的头像颜色方案
+    const generateUserAvatarWithColor = (name, userId) => {
+      const avatarText = generateUserAvatar(name)
+      
+      // 根据用户ID生成固定的背景色
+      const colors = [
+        '#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4', '#FFEAA7',
+        '#DDA0DD', '#98D8C8', '#F7DC6F', '#BB8FCE', '#85C1E9'
+      ]
+      
+      // 使用用户ID的hash值来选择颜色
+      let hash = 0
+      for (let i = 0; i < (userId || 'default').length; i++) {
+        hash = (hash << 5) - hash + (userId || 'default').charCodeAt(i)
+        hash |= 0
+      }
+      const colorIndex = Math.abs(hash) % colors.length
+      
+      return {
+        text: avatarText,
+        bgColor: colors[colorIndex]
+      }
+    }
+
+    // 生成默认评论数据
+    const generateDefaultComments = () => {
+      const user1 = generateUserAvatarWithColor('研究生挣M001', 'user_001')
+      const user2 = generateUserAvatarWithColor('计算机爱好小陈', 'user_002')
+      const user3 = generateUserAvatarWithColor('程序员小王', 'user_003')
+      
+      return [
+        {
+          id: 1,
+          avatar: user1.text,
+          avatarBgColor: user1.bgColor,
+          author: '研究生挣M001',
+          time: '2天前',
+          content: '已经在备考二遍了，讲解寿命清晰，特别是关于电视和视频的讲评，移学谢阳月阳！感谢王道田的协作者们认认，以人为刚能高于上班课程学生们！',
+          likes: 1472,
+          timestamp: Date.now() - 2 * 24 * 60 * 60 * 1000,
+          userId: 'user_001'
+        },
+        {
+          id: 2,
+          avatar: user2.text,
+          avatarBgColor: user2.bgColor,
+          author: '计算机爱好小陈',
+          time: '3天前',
+          content: '我听的安全卸载了，操作系统成绩出迈了对考研中心以以考察专家理？我都是跟做题的，做题还发动分的问题分，重要特别理解是如果？',
+          likes: 356,
+          timestamp: Date.now() - 3 * 24 * 60 * 60 * 1000,
+          userId: 'user_002'
+        },
+        {
+          id: 3,
+          avatar: user3.text,
+          avatarBgColor: user3.bgColor,
+          author: '程序员小王',
+          time: '1周前',
+          content: '作为已经上了的的群组，回头来看这套视频依然很感谢，真的带来量！服装上过个正能讲课的问题，对天奋业评的无的成就了我优，模式大学好好坚，不事只是教方才是便那学过。',
+          likes: 2856,
+          timestamp: Date.now() - 7 * 24 * 60 * 60 * 1000,
+          userId: 'user_003'
+        }
+      ]
+    }
     
     // 评论数据
-    const comments = ref([
-      {
-        id: 1,
-        avatar: '👤',
-        author: '研究生挣M001',
-        time: '2天前',
-        content: '已经在备考二遍了，讲解寿命清晰，特别是关于电视和视频的讲评，移学谢阳月阳！感谢王道田的协作者们认认，以人为刚能高于上班课程学生们！',
-        likes: 1472
-      },
-      {
-        id: 2,
-        avatar: '👤',
-        author: '计算机爱好小陈',
-        time: '3天前',
-        content: '我听的安全卸载了，操作系统成绩出迈了对考研中心以以考察专家理？我都是跟做题的，做题还发动分的问题分，重要特别理解是如果？',
-        likes: 356
-      },
-      {
-        id: 3,
-        avatar: '👤',
-        author: '程序员小王',
-        time: '1周前',
-        content: '作为已经上了的的群组，回头来看这套视频依然很感谢，真的带来量！服装上过个正能讲课的问题，对天奋业评的无的成就了我优，模式大学好好坚，不事只是教方才是便那学过。',
-        likes: 2856
-      }
-    ])
+    const comments = ref(generateDefaultComments())
     
     // 视频URL列表 - 使用国内可访问的视频源
     const videoUrls = {
       computer: [
-        // 国内可访问的视频源
         'https://sf1-cdn-tos.huoshanstatic.com/obj/media-fe/xgplayer_doc_video/mp4/xgplayer-demo-360p.mp4',
         'https://sf1-cdn-tos.huoshanstatic.com/obj/media-fe/xgplayer_doc_video/mp4/xgplayer-demo-360p.mp4',
         'https://media.w3.org/2010/05/video/movie_300.mp4',
@@ -669,10 +744,20 @@ export default {
     })
     
     const sortedComments = computed(() => {
+      let sorted = [...comments.value]
+      
+      // 按时间戳倒序排列（最新在前）
+      sorted.sort((a, b) => {
+        const timeA = a.timestamp || 0
+        const timeB = b.timestamp || 0
+        return timeB - timeA
+      })
+      
       if (sortBy.value === 'hot') {
-        return [...comments.value].sort((a, b) => b.likes - a.likes)
+        sorted.sort((a, b) => b.likes - a.likes)
       }
-      return comments.value
+      
+      return sorted
     })
     
     // 方法
@@ -688,6 +773,41 @@ export default {
         }
       }
       return 'computer'
+    }
+    
+    // 获取当前用户ID
+    const getCurrentUserId = () => {
+      const currentUser = JSON.parse(localStorage.getItem('bgareaCurrentUser') || sessionStorage.getItem('bgareaCurrentUser') || '{}')
+      return currentUser.userId || currentUser.email || 'default'
+    }
+    
+    // 加载保存的评论
+    const loadSavedComments = () => {
+      const userId = getCurrentUserId()
+      const userSpecificKey = `userComments_${userId}_course_${course.value.id}`
+      const savedComments = JSON.parse(localStorage.getItem(userSpecificKey) || '[]')
+      
+      if (savedComments.length > 0) {
+        // 确保每条评论都有头像背景色
+        comments.value = savedComments.map(comment => {
+          if (!comment.avatarBgColor) {
+            const avatarInfo = generateUserAvatarWithColor(comment.author, comment.userId)
+            return {
+              ...comment,
+              avatar: comment.avatar || avatarInfo.text,
+              avatarBgColor: avatarInfo.bgColor
+            }
+          }
+          return comment
+        })
+      }
+    }
+    
+    // 保存评论到本地存储
+    const saveCommentsToStorage = () => {
+      const userId = getCurrentUserId()
+      const userSpecificKey = `userComments_${userId}_course_${course.value.id}`
+      localStorage.setItem(userSpecificKey, JSON.stringify(comments.value))
     }
     
     // 根据课程标题判断类别
@@ -714,9 +834,9 @@ export default {
       if (savedCourse) {
         try {
           const courseData = JSON.parse(savedCourse)
-          console.log('从首页传递的课程数据:', courseData) // 调试用
+          console.log('从首页传递的课程数据:', courseData)
 
-          // 更新课程信息 - 确保所有字段都有值
+          // 更新课程信息
           course.value.id = courseData.id || course.value.id
           course.value.title = courseData.title || courseData.name || course.value.title
           course.value.description = courseData.description || `${course.value.title} - 精品课程`
@@ -729,10 +849,13 @@ export default {
           // 设置课程简介标题
           setIntroTitle(category, course.value.title)
 
-          // 关键：从课程数据中获取老师信息
+          // 关键修复：确保老师信息完整
           if (courseData.teacher) {
-            instructor.value.name = courseData.teacher
-            instructor.value.userId = `teacher_${courseData.teacher.replace(/[^\w\u4e00-\u9fa5]/g, '_')}`
+            // 设置完整的老师信息
+            setTeacherInfo(courseData.teacher, category)
+          } else {
+            // 如果没有传递老师信息，使用类别对应的默认老师
+            setInstructorByCategory(category)
           }
 
           console.log('加载后的老师信息:', instructor.value)
@@ -744,6 +867,31 @@ export default {
       } else {
         setDefaultCourseDetails()
       }
+    }
+    
+    // 新增：设置老师信息的完整方法
+    const setTeacherInfo = (teacherName, category) => {
+      // 根据老师姓名和类别生成完整的老师信息
+      instructor.value.name = teacherName
+      instructor.value.userId = `teacher_${teacherName.replace(/[^\w\u4e00-\u9fa5]/g, '_')}_${Date.now()}`
+      
+      // 根据类别设置老师描述和粉丝数
+      const descriptions = {
+        computer: '计算机教育专家，专注操作系统和计算机基础教学，培养了大量计算机专业人才。',
+        business: '资深商业分析师，拥有丰富企业咨询和数据分析经验，擅长数据驱动决策。',
+        design: '知名UI/UX设计师，设计作品获得多项国际大奖，专注于用户体验设计。'
+      }
+      
+      const fansCounts = {
+        computer: Math.floor(Math.random() * 50000) + 50000,
+        business: Math.floor(Math.random() * 30000) + 30000,
+        design: Math.floor(Math.random() * 80000) + 80000
+      }
+      
+      instructor.value.description = descriptions[category] || descriptions.computer
+      instructor.value.fans = formatFansCount(fansCounts[category] || 50000)
+      instructor.value.department = getDepartmentByCategory(category)
+      instructor.value.avatar = '👤'  // 默认头像
     }
     
     // 设置课程简介标题
@@ -779,38 +927,29 @@ export default {
       }
       
       course.value.tags = tagsByCategory[category] || course.value.tags
-      
-      // 设置讲师信息
-      setInstructorByCategory(category)
     }
     
     // 根据类别设置讲师信息
     const setInstructorByCategory = (category) => {
-      // 如果已经有老师信息（从首页传递的），就不要覆盖
-      if (instructor.value.name && instructor.value.name !== '') {
-        console.log('使用首页传递的老师信息:', instructor.value.name)
-        return
-      }
-
       // 只有在没有老师信息时才使用默认值
       const instructorsByCategory = {
         computer: {
           name: '王道计算机',
-          fans: '123.0万',
+          fans: formatFansCount(123000),
           description: '计算机教育专家，专注操作系统和计算机基础教学15年，培养了大量计算机专业人才。',
           userId: 'teacher_wangdao',
           department: '计算机学院'
         },
         business: {
           name: '李商业分析师',
-          fans: '89.5万',
+          fans: formatFansCount(89500),
           description: '资深商业分析师，拥有10年企业咨询和数据分析经验，擅长数据驱动决策。',
           userId: 'teacher_business_li',
           department: '商学院'
         },
         design: {
           name: '张设计师',
-          fans: '156.3万',
+          fans: formatFansCount(156300),
           description: '知名UI/UX设计师，曾任多家互联网公司设计总监，设计作品获得多项国际大奖。',
           userId: 'teacher_design_zhang',
           department: '设计学院'
@@ -826,6 +965,7 @@ export default {
       const category = 'computer'
       setCourseDetailsByCategory(category)
       setIntroTitle(category, course.value.title)
+      setInstructorByCategory(category)
     }
     
     // 获取章节名称
@@ -1067,9 +1207,11 @@ export default {
         userId: teacher.userId,
         department: teacher.department,
         avatar: teacher.avatar,
-        description: teacher.description
+        description: teacher.description,
+        fans: teacher.fans
       }
       
+      console.log('保存到教师空间的老师信息:', teacherInfo)
       localStorage.setItem('currentTeacherInfo', JSON.stringify(teacherInfo))
       
       router.push({
@@ -1201,6 +1343,31 @@ export default {
       return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`
     }
     
+    // 格式化评论时间
+    const formatCommentTime = (timestamp) => {
+      if (!timestamp) return '刚刚'
+      
+      const now = Date.now()
+      const diff = now - timestamp
+      const diffSeconds = Math.floor(diff / 1000)
+      const diffMinutes = Math.floor(diff / (1000 * 60))
+      const diffHours = Math.floor(diff / (1000 * 60 * 60))
+      const diffDays = Math.floor(diff / (1000 * 60 * 60 * 24))
+      
+      if (diffSeconds < 60) {
+        return '刚刚'
+      } else if (diffMinutes < 60) {
+        return `${diffMinutes}分钟前`
+      } else if (diffHours < 24) {
+        return `${diffHours}小时前`
+      } else if (diffDays < 7) {
+        return `${diffDays}天前`
+      } else {
+        const date = new Date(timestamp)
+        return `${date.getFullYear()}-${(date.getMonth() + 1).toString().padStart(2, '0')}-${date.getDate().toString().padStart(2, '0')}`
+      }
+    }
+    
     const prevVideo = () => {
       if (currentVideoIndex.value > 1) {
         playVideo(currentVideoIndex.value - 1, getVideoTitle(currentVideoIndex.value - 1))
@@ -1280,16 +1447,20 @@ export default {
       const userSpecificKey = `userFollowedTeachers_${userId}`
       const followedTeachers = JSON.parse(localStorage.getItem(userSpecificKey) || '[]')
 
+      // 准备完整的老师数据
       const teacherData = {
-        id: Date.now(),
+        id: Date.now(),  // 唯一ID
         userId: instructor.value.userId,
         name: instructor.value.name,
         department: instructor.value.department,
         avatar: instructor.value.avatar,
+        description: instructor.value.description,
+        fans: instructor.value.fans,
         followedAt: new Date().toISOString().split('T')[0]
       }
 
       if (isFollowing.value) {
+        // 关注：检查是否已关注
         const existingIndex = followedTeachers.findIndex(t => t.userId === teacherData.userId)
         if (existingIndex === -1) {
           followedTeachers.push(teacherData)
@@ -1304,6 +1475,7 @@ export default {
           window.dispatchEvent(new CustomEvent('followUpdated'))
         }
       } else {
+        // 取消关注
         const updatedTeachers = followedTeachers.filter(t => t.userId !== teacherData.userId)
         localStorage.setItem(userSpecificKey, JSON.stringify(updatedTeachers))
 
@@ -1424,9 +1596,31 @@ export default {
     }
     
     const likeComment = (commentId) => {
-      const comment = comments.value.find(c => c.id === commentId)
-      if (comment) {
-        comment.likes += 1
+      const commentIndex = comments.value.findIndex(c => c.id === commentId)
+      if (commentIndex !== -1) {
+        comments.value[commentIndex].likes += 1
+        
+        // 保存到本地存储
+        saveCommentsToStorage()
+      }
+    }
+    
+    const deleteComment = (commentId) => {
+      const commentIndex = comments.value.findIndex(c => c.id === commentId)
+      if (commentIndex !== -1) {
+        // 检查是否是当前用户的评论
+        const currentUserId = getCurrentUserId()
+        const commentUserId = comments.value[commentIndex].userId
+        
+        if (currentUserId === commentUserId) {
+          if (confirm('确定要删除这条评论吗？')) {
+            comments.value.splice(commentIndex, 1)
+            saveCommentsToStorage()
+            showNotification('评论已删除')
+          }
+        } else {
+          showNotification('只能删除自己的评论')
+        }
       }
     }
     
@@ -1440,17 +1634,32 @@ export default {
         return
       }
       
+      // 获取当前用户信息
+      const currentUser = JSON.parse(localStorage.getItem('bgareaCurrentUser') || sessionStorage.getItem('bgareaCurrentUser') || '{}')
+      const userName = currentUser.username || currentUser.name || '当前用户'
+      const userId = currentUser.userId || currentUser.email || 'default'
+      
+      // 生成用户头像信息
+      const avatarInfo = generateUserAvatarWithColor(userName, userId)
+      
       const newCommentObj = {
-        id: comments.value.length + 1,
-        avatar: '👤',
-        author: '当前用户',
+        id: Date.now(), // 使用时间戳作为唯一ID
+        avatar: avatarInfo.text, // 只存储文本
+        avatarBgColor: avatarInfo.bgColor, // 存储背景色
+        author: userName,
         time: '刚刚',
         content: newComment.value,
-        likes: 0
+        likes: 0,
+        timestamp: Date.now(), // 添加时间戳用于排序
+        userId: userId
       }
       
       comments.value.unshift(newCommentObj)
       newComment.value = ''
+      
+      // 保存到本地存储
+      saveCommentsToStorage()
+      
       showNotification('评论发送成功')
     }
     
@@ -1468,6 +1677,21 @@ export default {
     
     const toggleOtherSection = (sectionId) => {
       openSections.value[sectionId] = !openSections.value[sectionId]
+    }
+    
+    // storage事件处理函数
+    const handleStorageChange = (event) => {
+      const userId = getCurrentUserId()
+      const userSpecificKey = `userComments_${userId}_course_${course.value.id}`
+      
+      if (event.key === userSpecificKey) {
+        try {
+          const newComments = JSON.parse(event.newValue || '[]')
+          comments.value = newComments
+        } catch (error) {
+          console.error('解析评论数据失败:', error)
+        }
+      }
     }
     
     const showNotification = (message) => {
@@ -1585,10 +1809,17 @@ export default {
       const likes = JSON.parse(localStorage.getItem(`user_${userId}_likes`) || '[]')
       isLiked.value = likes.some(l => l.courseId === courseId)
 
+      // 加载保存的评论
+      loadSavedComments()
+      
+      // 添加storage事件监听，用于在多个标签页间同步评论
+      window.addEventListener('storage', handleStorageChange)
+
       // 在组件卸载时清理
       onBeforeUnmount(() => {
         document.removeEventListener('fullscreenchange', handleFullscreenChange)
         document.removeEventListener('keydown', handleKeyDown)
+        window.removeEventListener('storage', handleStorageChange)
       })
 
       // 添加动画样式
@@ -1618,6 +1849,7 @@ export default {
       // 移除事件监听器
       document.removeEventListener('fullscreenchange', handleFullscreenChange)
       document.removeEventListener('keydown', handleKeyDown)
+      window.removeEventListener('storage', handleStorageChange)
     })
 
     // 从路由参数中获取老师信息
@@ -1682,6 +1914,7 @@ export default {
       getVideoTitle,
       getExerciseTitle,
       getVideoDuration,
+      getCurrentUserId,
       playVideo,
       handleVideoPlayerClick,
       goToExerciseSeries,
@@ -1694,6 +1927,7 @@ export default {
       seekToTime,
       toggleFullscreenV2,
       formatTime,
+      formatCommentTime,
       prevVideo,
       nextVideo,
       toggleLike,
@@ -1702,6 +1936,7 @@ export default {
       goToFavorites,
       toggleFollow,
       likeComment,
+      deleteComment,
       showReplyBox,
       submitComment,
       loadMoreComments,
@@ -2235,12 +2470,13 @@ export default {
   width: 40px;
   height: 40px;
   border-radius: 50%;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
   font-size: 18px;
+  font-weight: bold;
+  color: white;
 }
 
 .comment-content {
@@ -2284,10 +2520,22 @@ export default {
   display: flex;
   align-items: center;
   gap: 4px;
+  padding: 4px 8px;
+  border-radius: 4px;
 }
 
 .comment-stats span:hover {
   color: #1890ff;
+  background: #f5f5f5;
+}
+
+.delete-btn {
+  color: #f5222d;
+}
+
+.delete-btn:hover {
+  color: #ff4d4f;
+  background: #fff1f0;
 }
 
 .load-more {
@@ -2506,6 +2754,11 @@ export default {
   
   .comment-sort {
     gap: 10px;
+  }
+  
+  .comment-stats {
+    flex-direction: column;
+    gap: 8px;
   }
 }
 

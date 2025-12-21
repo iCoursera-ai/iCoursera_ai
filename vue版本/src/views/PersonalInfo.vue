@@ -187,16 +187,20 @@
                       @click="goToTeacherSpace(teacher)"
                     >
                       <div class="relative">
-                        <img :src="teacher.avatar" :alt="teacher.name" class="w-10 h-10 rounded-full">
+                        <div v-if="!teacher.avatar || teacher.avatar === '👤'" 
+                             class="w-10 h-10 rounded-full bg-gradient-to-br from-blue-400 to-purple-600 flex items-center justify-center text-white">
+                          {{ getTeacherInitials(teacher.name) }}
+                        </div>
+                        <img v-else :src="teacher.avatar" :alt="teacher.name" class="w-10 h-10 rounded-full">
                         <div class="absolute -bottom-1 -right-1 w-4 h-4 bg-green-500 rounded-full border-2 border-white"></div>
                       </div>
                       <div class="flex-1">
                         <div class="font-medium text-dark">{{ teacher.name }}</div>
-                        <div class="text-xs text-secondary">{{ teacher.department }}</div>
+                        <div class="text-xs text-secondary">{{ teacher.department || '未设置学院' }}</div>
                       </div>
                       <button 
                         class="text-xs px-2 py-1 rounded text-primary hover:bg-primary/10 transition-colors"
-                        @click.stop="unfollowTeacher(teacher.id)"
+                        @click.stop="unfollowTeacher(teacher.userId)"
                       >
                         取消关注
                       </button>
@@ -752,6 +756,16 @@ export default {
     window.removeEventListener('followUpdated', this.loadFollowedTeachers)
   },
   methods: {
+    // 获取老师姓名首字母
+    getTeacherInitials(name) {
+      if (!name) return '老'
+      const chineseName = name.trim()
+      if (chineseName.length >= 2) {
+        return chineseName.substring(0, 2)
+      }
+      return chineseName || '老'
+    },
+
     // 跳转到工作台
     goToTeacherDashboard() {
       this.$router.push('/teacher-dashboard')
@@ -789,17 +803,58 @@ export default {
     
     // 跳转到老师空间
     goToTeacherSpace(teacher) {
+      // 确保老师信息完整
+      const teacherInfo = {
+        name: teacher.name,
+        userId: teacher.userId,
+        department: teacher.department || '未设置学院',
+        avatar: teacher.avatar || '👤',
+        description: teacher.description || `${teacher.name} - 老师`,
+        fans: teacher.fans || '0'
+      }
+      
+      console.log('跳转老师信息:', teacherInfo)
+      
+      // 保存到localStorage
+      localStorage.setItem('currentTeacherInfo', JSON.stringify(teacherInfo))
+      
+      // 跳转到教师空间
       this.$router.push({
         path: '/teacher-space',
-        query: { teacherId: teacher.userId, teacherName: teacher.name }
+        query: {
+          teacherId: teacher.userId,
+          teacherName: teacher.name
+        }
       })
     },
     
     // 取消关注老师
-    unfollowTeacher(teacherId) {
+    unfollowTeacher(teacherUserId) {
       if (confirm('确定要取消关注这位老师吗？')) {
-        this.followedTeachers = this.followedTeachers.filter(teacher => teacher.id !== teacherId)
-        localStorage.setItem('userFollowedTeachers', JSON.stringify(this.followedTeachers))
+        const storedUser = localStorage.getItem('bgareaCurrentUser') || sessionStorage.getItem('bgareaCurrentUser')
+        const userId = storedUser ? JSON.parse(storedUser).userId || JSON.parse(storedUser).email : 'default'
+        
+        // 使用用户特定的键名
+        const userSpecificKey = `userFollowedTeachers_${userId}`
+        const currentFollowed = JSON.parse(localStorage.getItem(userSpecificKey) || '[]')
+        
+        // 过滤掉要取消关注的老师
+        const updatedTeachers = currentFollowed.filter(teacher => teacher.userId !== teacherUserId)
+        
+        // 保存更新后的列表
+        localStorage.setItem(userSpecificKey, JSON.stringify(updatedTeachers))
+        
+        // 更新本地数据
+        this.followedTeachers = updatedTeachers
+        
+        // 触发更新事件
+        window.dispatchEvent(new StorageEvent('storage', {
+          key: userSpecificKey,
+          newValue: JSON.stringify(updatedTeachers)
+        }))
+        
+        window.dispatchEvent(new CustomEvent('followUpdated'))
+        
         alert('已取消关注')
       }
     },
@@ -865,68 +920,47 @@ export default {
       }
     },
     
+    // 加载关注的老师
+    loadFollowedTeachers() {
+      const storedUser = localStorage.getItem('bgareaCurrentUser') || sessionStorage.getItem('bgareaCurrentUser')
+      const userId = storedUser ? JSON.parse(storedUser).userId || JSON.parse(storedUser).email : 'default'
+      
+      // 使用用户特定的键名
+      const userSpecificKey = `userFollowedTeachers_${userId}`
+      const followed = localStorage.getItem(userSpecificKey)
+
+      if (followed) {
+        this.followedTeachers = JSON.parse(followed)
+        
+        // 确保每个老师都有完整的字段
+        this.followedTeachers = this.followedTeachers.map(teacher => ({
+          id: teacher.id || Date.now(),
+          userId: teacher.userId || `teacher_${teacher.name}_${Date.now()}`,
+          name: teacher.name,
+          department: teacher.department || '未设置学院',
+          avatar: teacher.avatar || '👤',
+          description: teacher.description || `${teacher.name} - 老师`,
+          fans: teacher.fans || '0'
+        }))
+      } else {
+        this.followedTeachers = []
+      }
+      
+      console.log('加载的关注老师:', this.followedTeachers)
+    },
+    
+    // 处理storage事件，用于接收来自视频播放器的关注更新
+    handleStorageEvent(event) {
+      if (event.key && event.key.startsWith('userFollowedTeachers_')) {
+        this.loadFollowedTeachers()
+      }
+    },
+    
     // 加载教师认证信息
     loadTeacherCertInfo() {
       const storedCertInfo = localStorage.getItem('teacherCertificationInfo')
       if (storedCertInfo) {
         this.teacherCertInfo = JSON.parse(storedCertInfo)
-      }
-    },
-    
-    // 加载关注的老师
-    loadFollowedTeachers() {
-      const storedUser = localStorage.getItem('bgareaCurrentUser') || sessionStorage.getItem('bgareaCurrentUser')
-      const followed = localStorage.getItem('userFollowedTeachers')
-
-      if (followed) {
-        this.followedTeachers = JSON.parse(followed)
-      } else if (storedUser) {
-        const user = JSON.parse(storedUser)
-        // 只有测试账号才加载默认关注
-        if (isTestAccount(user.email)) {
-          this.followedTeachers = [
-            {
-              id: 1,
-              name: '汪老师',
-              department: '计算机学院',
-              avatar: 'https://picsum.photos/48/48?random=30',
-              userId: 'teacher_001'
-            },
-            {
-              id: 2,
-              name: '董老师',
-              department: '信息工程学院',
-              avatar: 'https://picsum.photos/48/48?random=31',
-              userId: 'teacher_002'
-            },
-            {
-              id: 3,
-              name: '沈老师',
-              department: '软件学院',
-              avatar: 'https://picsum.photos/48/48?random=32',
-              userId: 'teacher_003'
-            },
-            {
-              id: 4,
-              name: '何老师',
-              department: '数据科学系',
-              avatar: 'https://picsum.photos/48/48?random=33',
-              userId: 'teacher_004'
-            }
-          ]
-          localStorage.setItem('userFollowedTeachers', JSON.stringify(this.followedTeachers))
-        } else {
-          this.followedTeachers = []
-        }
-      } else {
-        this.followedTeachers = []
-      }
-    },
-    
-    // 处理storage事件，用于接收来自视频播放器的关注更新
-    handleStorageEvent(event) {
-      if (event.key === 'userFollowedTeachers') {
-        this.loadFollowedTeachers()
       }
     },
     

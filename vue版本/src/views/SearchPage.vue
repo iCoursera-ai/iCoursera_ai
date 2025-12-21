@@ -240,9 +240,9 @@
                   </div>
                 </div>
                 
-                <button @click="applyFilters" class="w-full mt-4 px-4 py-2 bg-primary text-white rounded-md hover:bg-primary/90 transition-colors">
+                <!-- <button @click="applyFilters" class="w-full mt-4 px-4 py-2 bg-primary text-white rounded-md hover:bg-primary/90 transition-colors">
                   应用筛选
-                </button>
+                </button> -->
               </div>
             </div>
 
@@ -522,7 +522,6 @@ export default {
         }
       ],
       categories: [
-        { value: 'all', label: '全部分类' },
         { value: 'computer', label: '计算机与编程' },
         { value: 'business', label: '商业管理' },
         { value: 'design', label: '设计创意' },
